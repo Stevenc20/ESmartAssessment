@@ -1,0 +1,262 @@
+@import 'tailwindcss';
+@import './landing-part1.css';
+@import './auth.css';
+
+@import 'tw-animate-css';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    --font-sans:
+        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-brand-pink: var(--brand-pink);
+    --color-brand-pink-light: var(--brand-pink-light);
+    --color-brand-blue: var(--brand-blue);
+    --color-brand-blue-light: var(--brand-blue-light);
+    --color-brand-surface: var(--brand-surface);
+    --color-brand-pink-deep: var(--brand-pink-deep);
+    --color-brand-blue-deep: var(--brand-blue-deep);
+}
+
+/* =============================================
+   LIGHT MODE ONLY — Dark mode disabled
+   ESmartAssessment: Cherry Blossom Pink + Misty Rose + Lapis Lazuli
+   Brand colors:
+     Primary   → Cherry Blossom Pink  #F2AEBC
+     Secondary → Lapis Lazuli         #436391
+     Surface   → Misty Rose           #F2DCDB
+   ============================================= */
+:root {
+    /* Page background — slate-50 (cool gray) */
+    --background: #f8fafc;
+    --foreground: #1a2236;
+
+    --card: #ffffff;
+    --card-foreground: #1a2236;
+    --popover: #ffffff;
+    --popover-foreground: #1a2236;
+
+    /* Primary = Lapis Lazuli */
+    --primary: #436391;
+    --primary-foreground: #ffffff;
+
+    /* Secondary = Cherry Blossom */
+    --secondary: #f7cad0;
+    --secondary-foreground: #436391;
+
+    --muted: #f8fafc;
+    --muted-foreground: #64748b;
+
+    /* Accent = Cherry Blossom Pink */
+    --accent: #F2AEBC;
+    --accent-foreground: #2d3748;
+
+    --destructive: #e53e3e;
+    --destructive-foreground: #ffffff;
+
+    --border: #e9edf3;
+    --input: #f5f0f1;
+    --ring: #436391;
+
+    /* Charts — brand palette */
+    --chart-1: #436391;
+    --chart-2: #F2AEBC;
+    --chart-3: #6B8ABF;
+    --chart-4: #10b981;
+    --chart-5: #f59e0b;
+
+    --radius: 0.75rem;
+
+    /* ── Sidebar: original white-pink base ── */
+    --sidebar: #fceef1;
+    --sidebar-foreground: #2d3748;
+    --sidebar-primary: #436391;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: rgba(67,99,145,0.18);
+    --sidebar-accent-foreground: #436391;
+    --sidebar-border: rgba(242,174,188,0.35);
+    --sidebar-ring: #436391;
+
+    /* Brand tokens */
+    --brand-pink: #F2AEBC;
+    --brand-pink-deep: #e8889a;
+    --brand-pink-light: #F2DCDB;
+    --brand-blue: #436391;
+    --brand-blue-light: #6B8ABF;
+    --brand-blue-deep: #2d4a6e;
+    --brand-surface: #F2DCDB;
+}
+
+/* Dark mode vars are intentionally removed — light only */
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+        color-scheme: light;
+    }
+}
+
+/* ══════════════════════════════════════════════════
+   ROOT PAGE CANVAS
+   Sidebar zone (left ~20%): white → pink blossom
+   Content zone (right 80%): Misty Rose page background
+   ══════════════════════════════════════════════════ */
+[data-slot="sidebar-wrapper"] {
+    background: linear-gradient(
+        to right,
+        #ffffff 0%,
+        #fef2f5 10%,
+        #fde0ea 18%,
+        #fcd8e6 24%,
+        #f7d1db 35%,
+        #f3c5d2 50%,
+        #f0baca 65%,
+        #F2AEBC 82%,
+        #F2AEBC 100%
+    ) !important;
+    will-change: background;
+}
+
+/* Sidebar panel: transparent on desktop so wrapper gradient shows through */
+[data-sidebar="sidebar"]:not([data-mobile="true"]) {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    will-change: width, transform;
+}
+
+/* Mobile sheet sidebar: lighter gradient, more white dominant */
+[data-sidebar="sidebar"][data-mobile="true"] {
+    background: linear-gradient(
+        to right,
+        #ffffff 0%,
+        #fff5f7 20%,
+        #fef2f5 45%,
+        #fdf0f3 70%,
+        #fceef1 100%
+    ) !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* No border separator — gradient transition is the separator */
+[data-slot="sidebar"] > div:last-child {
+    border-right: none;
+}
+
+/* Sidebar hover — Lapis Lazuli */
+[data-sidebar="menu-button"]:not([data-active="true"]):hover {
+    background: rgba(67,99,145,0.15) !important;
+}
+
+/* Logo — no hover effect, stays clean */
+[data-sidebar="menu-button"][data-size="lg"]:not([data-active="true"]):hover {
+    background: transparent !important;
+}
+
+/* =============================================
+   ESmartAssessment – Brand Utility Classes
+   ============================================= */
+@layer utilities {
+    .brand-gradient {
+        background: linear-gradient(135deg, #436391 0%, #F2AEBC 100%);
+    }
+    .brand-gradient-text {
+        background: linear-gradient(135deg, #436391 0%, #e8889a 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .card-hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card-hover-lift:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(67,99,145,0.1), 0 2px 8px rgba(242,174,188,0.12);
+    }
+
+    .bg-brand-surface {
+        background-color: #F2DCDB;
+    }
+}
+
+/* ══════════════════════════════════════════════════
+   SIDEBAR CUSTOM SCROLLBAR — Cherry Blossom Pink
+   Auto-hide: transparan saat idle, muncul saat hover
+   ══════════════════════════════════════════════════ */
+[data-slot="sidebar-content"] {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+}
+
+[data-slot="sidebar-content"]:hover {
+    scrollbar-color: var(--brand-pink) transparent;
+}
+
+[data-slot="sidebar-content"]::-webkit-scrollbar {
+    width: 5px;
+}
+
+[data-slot="sidebar-content"]::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+[data-slot="sidebar-content"]::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 999px;
+    transition: background 0.3s ease;
+}
+
+[data-slot="sidebar-content"]:hover::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--brand-pink) 0%, var(--brand-pink-deep) 100%);
+}
+
+[data-slot="sidebar-content"]:hover::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--brand-pink-deep) 0%, #d4708a 100%);
+}
