@@ -119,9 +119,9 @@ class DashboardController extends Controller
                         ->take(5)
                         ->get()
                         ->map(fn ($p) => [
-                            'id' => 't-' . $p->id,
+                            'id' => 't-'.$p->id,
                             'type' => 'assessment',
-                            'description' => 'Menyelesaikan ' . ($p->tugas?->judul ?? 'Tugas'),
+                            'description' => 'Menyelesaikan '.($p->tugas?->judul ?? 'Tugas'),
                             'time' => $p->created_at->diffForHumans(),
                             'sort_time' => $p->created_at->timestamp,
                         ])
@@ -132,9 +132,9 @@ class DashboardController extends Controller
                         ->take(5)
                         ->get()
                         ->map(fn ($p) => [
-                            'id' => 'p-' . $p->id,
+                            'id' => 'p-'.$p->id,
                             'type' => 'portfolio',
-                            'description' => 'Mengirim portfolio: ' . $p->judul,
+                            'description' => 'Mengirim portfolio: '.$p->judul,
                             'time' => $p->created_at->diffForHumans(),
                             'sort_time' => $p->created_at->timestamp,
                         ])
@@ -146,9 +146,9 @@ class DashboardController extends Controller
                         ->take(5)
                         ->get()
                         ->map(fn ($c) => [
-                            'id' => 'c-' . $c->id,
+                            'id' => 'c-'.$c->id,
                             'type' => 'challenge',
-                            'description' => 'Mengikuti challenge: ' . ($c->challenge?->judul ?? 'Challenge'),
+                            'description' => 'Mengikuti challenge: '.($c->challenge?->judul ?? 'Challenge'),
                             'time' => $c->created_at->diffForHumans(),
                             'sort_time' => $c->created_at->timestamp,
                         ])

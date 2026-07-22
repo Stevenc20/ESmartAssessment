@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class SystemAnalytic extends Model
 {
     protected $table = 'system_analytics';
+
     protected $fillable = [
         'date',
         'total_users',

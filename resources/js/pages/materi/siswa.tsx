@@ -1,8 +1,20 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
-    BookOpen, CheckCircle2, ChevronDown, ChevronUp, Circle, Clock,
-    Download, ExternalLink, FileText, GraduationCap, Library,
-    PlayCircle, Sparkles, Upload, X,
+    BookOpen,
+    CheckCircle2,
+    ChevronDown,
+    ChevronUp,
+    Circle,
+    Clock,
+    Download,
+    ExternalLink,
+    FileText,
+    GraduationCap,
+    Library,
+    PlayCircle,
+    Sparkles,
+    Upload,
+    X,
 } from 'lucide-react';
 import { useState, useMemo, useRef } from 'react';
 
@@ -96,8 +108,18 @@ const progressConfig = {
 };
 
 const bulanNames = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
 ];
 
 const filterOptions: { key: FilterType; label: string }[] = [
@@ -117,7 +139,9 @@ const tugasStatusConfig = {
 
 /* ── Tugas Card Component ── */
 function TugasCard({ tugas }: { tugas: TugasItem }) {
-    const { data, setData, post, processing, errors } = useForm({ file_tugas: null as File | null });
+    const { data, setData, post, processing, errors } = useForm({
+        file_tugas: null as File | null,
+    });
     const fileRef = useRef<HTMLInputElement>(null);
     const [fileName, setFileName] = useState<string | null>(null);
     const cfg = tugasStatusConfig[tugas.status];
@@ -130,8 +154,8 @@ function TugasCard({ tugas }: { tugas: TugasItem }) {
 
     function submitTugas() {
         if (!data.file_tugas) {
-return;
-}
+            return;
+        }
 
         post(`/materi-saya/tugas/${tugas.id}/submit`, {
             preserveScroll: true,
@@ -140,20 +164,24 @@ return;
                 setData('file_tugas', null);
 
                 if (fileRef.current) {
-fileRef.current.value = '';
-}
+                    fileRef.current.value = '';
+                }
             },
         });
     }
 
-    const canSubmit = tugas.status === 'tersedia' || (tugas.status === 'dikirim' && tugas.revisi_ke < tugas.max_revisi);
+    const canSubmit =
+        tugas.status === 'tersedia' ||
+        (tugas.status === 'dikirim' && tugas.revisi_ke < tugas.max_revisi);
 
     return (
         <div className="rounded-xl border border-slate-200 bg-white p-4">
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-slate-900">{tugas.judul}</p>
+                        <p className="text-sm font-bold text-slate-900">
+                            {tugas.judul}
+                        </p>
                         <span
                             className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase"
                             style={{ background: cfg.bg, color: cfg.color }}
@@ -163,7 +191,9 @@ fileRef.current.value = '';
                     </div>
 
                     {tugas.deskripsi && (
-                        <p className="mt-1 text-xs leading-relaxed text-slate-500">{tugas.deskripsi}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                            {tugas.deskripsi}
+                        </p>
                     )}
 
                     <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-slate-400">
@@ -175,14 +205,20 @@ fileRef.current.value = '';
                         )}
                         <span>Bobot: {tugas.bobot}</span>
                         <span>Maks. Revisi: {tugas.max_revisi}</span>
-                        {tugas.revisi_ke > 0 && <span>Revisi ke-{tugas.revisi_ke}</span>}
+                        {tugas.revisi_ke > 0 && (
+                            <span>Revisi ke-{tugas.revisi_ke}</span>
+                        )}
                     </div>
                 </div>
 
                 {tugas.nilai != null && (
                     <div className="flex shrink-0 flex-col items-center">
-                        <span className="text-lg font-bold text-emerald-600">{tugas.nilai}</span>
-                        <span className="text-[10px] text-slate-400">Nilai</span>
+                        <span className="text-lg font-bold text-emerald-600">
+                            {tugas.nilai}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                            Nilai
+                        </span>
                     </div>
                 )}
             </div>
@@ -232,17 +268,20 @@ fileRef.current.value = '';
                             {fileName ? 'Ganti File' : 'Pilih File'}
                         </button>
                         {fileName && (
-                            <span className="truncate text-xs text-slate-500">{fileName}</span>
+                            <span className="truncate text-xs text-slate-500">
+                                {fileName}
+                            </span>
                         )}
                         {fileName && (
                             <button
                                 onClick={() => {
- setFileName(null); setData('file_tugas', null);
+                                    setFileName(null);
+                                    setData('file_tugas', null);
 
- if (fileRef.current) {
-fileRef.current.value = '';
-} 
-}}
+                                    if (fileRef.current) {
+                                        fileRef.current.value = '';
+                                    }
+                                }}
                                 className="shrink-0 text-slate-400 hover:text-slate-600"
                             >
                                 <X className="h-3.5 w-3.5" />
@@ -259,7 +298,9 @@ fileRef.current.value = '';
                         )}
                     </div>
                     {errors.file_tugas && (
-                        <p className="mt-1.5 text-xs text-red-500">{errors.file_tugas}</p>
+                        <p className="mt-1.5 text-xs text-red-500">
+                            {errors.file_tugas}
+                        </p>
                     )}
                 </div>
             )}
@@ -285,7 +326,12 @@ function MateriCard({
 }) {
     const cfg = progressConfig[materi.progress_status];
     const StatusIcon = cfg.icon;
-    const hasContent = materi.video_embed_url || materi.pdf_file || materi.drive_link || materi.deskripsi || materi.tugas.length > 0;
+    const hasContent =
+        materi.video_embed_url ||
+        materi.pdf_file ||
+        materi.drive_link ||
+        materi.deskripsi ||
+        materi.tugas.length > 0;
 
     return (
         <div
@@ -334,7 +380,10 @@ function MateriCard({
                         className="flex h-10 w-14 shrink-0 items-center justify-center rounded-lg"
                         style={{ background: `${BRAND.pink}25` }}
                     >
-                        <FileText className="h-4 w-4" style={{ color: BRAND.pinkDeep }} />
+                        <FileText
+                            className="h-4 w-4"
+                            style={{ color: BRAND.pinkDeep }}
+                        />
                     </div>
                 )}
 
@@ -343,14 +392,20 @@ function MateriCard({
                     <p className="truncate text-sm font-semibold text-slate-900">
                         {materi.judul}
                     </p>
-                    <p className="mt-0.5 text-xs text-slate-400">oleh {materi.created_by}</p>
+                    <p className="mt-0.5 text-xs text-slate-400">
+                        oleh {materi.created_by}
+                    </p>
                 </div>
 
                 {/* Tugas indicator */}
                 {materi.tugas.length > 0 && (
-                    <span className="hidden shrink-0 rounded-lg bg-orange-50 px-2 py-1 text-[10px] font-bold text-orange-700 sm:inline-flex items-center gap-1">
+                    <span className="hidden shrink-0 items-center gap-1 rounded-lg bg-orange-50 px-2 py-1 text-[10px] font-bold text-orange-700 sm:inline-flex">
                         <Clock className="h-3 w-3" />
-                        {materi.tugas.filter(t => t.status === 'tersedia').length} tugas
+                        {
+                            materi.tugas.filter((t) => t.status === 'tersedia')
+                                .length
+                        }{' '}
+                        tugas
                     </span>
                 )}
 
@@ -433,7 +488,10 @@ function MateriCard({
                                 >
                                     <div
                                         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-                                        style={{ background: '#fef3c7', color: '#b45309' }}
+                                        style={{
+                                            background: '#fef3c7',
+                                            color: '#b45309',
+                                        }}
                                     >
                                         <Download className="h-4.5 w-4.5" />
                                     </div>
@@ -457,7 +515,10 @@ function MateriCard({
                                 >
                                     <div
                                         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-                                        style={{ background: `${BRAND.blue}15`, color: BRAND.blue }}
+                                        style={{
+                                            background: `${BRAND.blue}15`,
+                                            color: BRAND.blue,
+                                        }}
                                     >
                                         <ExternalLink className="h-4.5 w-4.5" />
                                     </div>
@@ -484,7 +545,9 @@ function MateriCard({
                                 >
                                     <Clock className="h-3.5 w-3.5" />
                                 </div>
-                                <h4 className="text-sm font-bold text-slate-900">Penugasan</h4>
+                                <h4 className="text-sm font-bold text-slate-900">
+                                    Penugasan
+                                </h4>
                             </div>
                             <div className="space-y-3">
                                 {materi.tugas.map((tugas) => (
@@ -515,7 +578,8 @@ export default function MateriSiswa({
     );
     const [filter, setFilter] = useState<FilterType>('all');
 
-    const persen = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+    const persen =
+        stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 
     function updateProgress(materiId: number, status: string) {
         setLoadingId(materiId);
@@ -532,12 +596,12 @@ export default function MateriSiswa({
     /* Filtered pertemuan */
     const filteredPertemuan = useMemo(() => {
         if (!currentRoadmap) {
-return [];
-}
+            return [];
+        }
 
         if (filter === 'all') {
-return currentRoadmap.pertemuan;
-}
+            return currentRoadmap.pertemuan;
+        }
 
         return currentRoadmap.pertemuan
             .map((p) => ({
@@ -556,7 +620,6 @@ return currentRoadmap.pertemuan;
 
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6 lg:p-8">
                 <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-
                     {/* ── Hero Header ── */}
                     <div
                         className="relative overflow-hidden rounded-2xl p-6 md:p-8"
@@ -574,11 +637,11 @@ return currentRoadmap.pertemuan;
                             }}
                         />
                         <div
-                            className="absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-10"
+                            className="absolute -top-16 -right-16 h-48 w-48 rounded-full opacity-10"
                             style={{ background: BRAND.pink }}
                         />
                         <div
-                            className="absolute -bottom-10 -right-10 h-32 w-32 rounded-full opacity-10"
+                            className="absolute -right-10 -bottom-10 h-32 w-32 rounded-full opacity-10"
                             style={{ background: BRAND.pink }}
                         />
 
@@ -586,15 +649,20 @@ return currentRoadmap.pertemuan;
                             <div className="flex items-center gap-4">
                                 <div
                                     className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
-                                    style={{ background: 'rgba(255,255,255,0.15)' }}
+                                    style={{
+                                        background: 'rgba(255,255,255,0.15)',
+                                    }}
                                 >
                                     <Library className="h-6 w-6 text-white" />
                                 </div>
                                 <div>
                                     <div className="mb-1 flex items-center gap-1.5">
-                                        <Sparkles className="h-3.5 w-3.5" style={{ color: BRAND.pink }} />
+                                        <Sparkles
+                                            className="h-3.5 w-3.5"
+                                            style={{ color: BRAND.pink }}
+                                        />
                                         <span
-                                            className="text-[10px] font-bold uppercase tracking-wider"
+                                            className="text-[10px] font-bold tracking-wider uppercase"
                                             style={{ color: BRAND.pink }}
                                         >
                                             Learning Materials
@@ -604,7 +672,8 @@ return currentRoadmap.pertemuan;
                                         Materi Saya
                                     </h1>
                                     <p className="mt-0.5 text-sm text-white/60">
-                                        Belajar sesuai dengan kecepatanmu sendiri
+                                        Belajar sesuai dengan kecepatanmu
+                                        sendiri
                                     </p>
                                 </div>
                             </div>
@@ -612,15 +681,22 @@ return currentRoadmap.pertemuan;
                             {/* Progress Circle */}
                             <div className="flex items-center gap-4">
                                 <div className="relative flex h-16 w-16 shrink-0 items-center justify-center">
-                                    <svg className="h-16 w-16 -rotate-90" viewBox="0 0 64 64">
+                                    <svg
+                                        className="h-16 w-16 -rotate-90"
+                                        viewBox="0 0 64 64"
+                                    >
                                         <circle
-                                            cx="32" cy="32" r="28"
+                                            cx="32"
+                                            cy="32"
+                                            r="28"
                                             fill="none"
                                             stroke="rgba(255,255,255,0.15)"
                                             strokeWidth="4"
                                         />
                                         <circle
-                                            cx="32" cy="32" r="28"
+                                            cx="32"
+                                            cy="32"
+                                            r="28"
                                             fill="none"
                                             stroke={BRAND.pink}
                                             strokeWidth="4"
@@ -637,7 +713,9 @@ return currentRoadmap.pertemuan;
                                     <p className="text-sm font-semibold text-white">
                                         {stats.completed}/{stats.total} selesai
                                     </p>
-                                    <p className="text-xs text-white/50">Progress Belajar</p>
+                                    <p className="text-xs text-white/50">
+                                        Progress Belajar
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -670,7 +748,7 @@ return currentRoadmap.pertemuan;
                                 className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-md md:p-5"
                             >
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                                    <span className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
                                         {s.label}
                                     </span>
                                     <div
@@ -716,8 +794,12 @@ return currentRoadmap.pertemuan;
                                                 }}
                                                 className="rounded-lg px-3.5 py-2 text-sm font-semibold transition-all"
                                                 style={{
-                                                    background: isActive ? BRAND.blue : 'white',
-                                                    color: isActive ? 'white' : '#64748b',
+                                                    background: isActive
+                                                        ? BRAND.blue
+                                                        : 'white',
+                                                    color: isActive
+                                                        ? 'white'
+                                                        : '#64748b',
                                                     border: `1px solid ${isActive ? BRAND.blue : '#e2e8f0'}`,
                                                     boxShadow: isActive
                                                         ? `0 2px 8px ${BRAND.blue}30`
@@ -731,7 +813,8 @@ return currentRoadmap.pertemuan;
                                                         opacity: 0.7,
                                                     }}
                                                 >
-                                                    · {bulanNames[r.bulan - 1]} {r.tahun}
+                                                    · {bulanNames[r.bulan - 1]}{' '}
+                                                    {r.tahun}
                                                 </span>
                                             </button>
                                         );
@@ -747,7 +830,9 @@ return currentRoadmap.pertemuan;
                                             className="rounded-md px-2.5 py-1.5 text-xs font-semibold transition-all"
                                             style={{
                                                 background:
-                                                    filter === f.key ? 'white' : 'transparent',
+                                                    filter === f.key
+                                                        ? 'white'
+                                                        : 'transparent',
                                                 color:
                                                     filter === f.key
                                                         ? BRAND.blue
@@ -769,12 +854,16 @@ return currentRoadmap.pertemuan;
                                 <div className="space-y-6">
                                     {filteredPertemuan.map((pertemuan) => {
                                         const pDone = pertemuan.materi.filter(
-                                            (m) => m.progress_status === 'completed',
+                                            (m) =>
+                                                m.progress_status ===
+                                                'completed',
                                         ).length;
                                         const pTotal = pertemuan.materi.length;
                                         const pPersen =
                                             pTotal > 0
-                                                ? Math.round((pDone / pTotal) * 100)
+                                                ? Math.round(
+                                                      (pDone / pTotal) * 100,
+                                                  )
                                                 : 0;
 
                                         return (
@@ -791,7 +880,8 @@ return currentRoadmap.pertemuan;
                                                     </div>
                                                     <div className="min-w-0 flex-1">
                                                         <h3 className="text-sm font-bold text-slate-900">
-                                                            Pertemuan {pertemuan.urutan}:{' '}
+                                                            Pertemuan{' '}
+                                                            {pertemuan.urutan}:{' '}
                                                             {pertemuan.judul}
                                                         </h3>
                                                     </div>
@@ -813,27 +903,47 @@ return currentRoadmap.pertemuan;
 
                                                 {/* Materi Cards */}
                                                 <div className="space-y-2.5 pl-0 md:pl-10">
-                                                    {pertemuan.materi.map((materi) => {
-                                                        materiCounter++;
+                                                    {pertemuan.materi.map(
+                                                        (materi) => {
+                                                            materiCounter++;
 
-                                                        return (
-                                                            <MateriCard
-                                                                key={materi.id}
-                                                                materi={materi}
-                                                                index={materiCounter}
-                                                                isOpen={expandedMateri === materi.id}
-                                                                onToggle={() =>
-                                                                    setExpandedMateri((prev) =>
-                                                                        prev === materi.id
-                                                                            ? null
-                                                                            : materi.id,
-                                                                    )
-                                                                }
-                                                                isLoading={loadingId === materi.id}
-                                                                onUpdateProgress={updateProgress}
-                                                            />
-                                                        );
-                                                    })}
+                                                            return (
+                                                                <MateriCard
+                                                                    key={
+                                                                        materi.id
+                                                                    }
+                                                                    materi={
+                                                                        materi
+                                                                    }
+                                                                    index={
+                                                                        materiCounter
+                                                                    }
+                                                                    isOpen={
+                                                                        expandedMateri ===
+                                                                        materi.id
+                                                                    }
+                                                                    onToggle={() =>
+                                                                        setExpandedMateri(
+                                                                            (
+                                                                                prev,
+                                                                            ) =>
+                                                                                prev ===
+                                                                                materi.id
+                                                                                    ? null
+                                                                                    : materi.id,
+                                                                        )
+                                                                    }
+                                                                    isLoading={
+                                                                        loadingId ===
+                                                                        materi.id
+                                                                    }
+                                                                    onUpdateProgress={
+                                                                        updateProgress
+                                                                    }
+                                                                />
+                                                            );
+                                                        },
+                                                    )}
                                                 </div>
                                             </div>
                                         );
@@ -843,7 +953,9 @@ return currentRoadmap.pertemuan;
                                 <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-slate-200 bg-white px-5 py-16 text-center">
                                     <div
                                         className="flex h-12 w-12 items-center justify-center rounded-xl"
-                                        style={{ background: `${BRAND.pink}20` }}
+                                        style={{
+                                            background: `${BRAND.pink}20`,
+                                        }}
                                     >
                                         <BookOpen
                                             className="h-6 w-6"
@@ -882,7 +994,8 @@ return currentRoadmap.pertemuan;
                                     Belum Ada Materi
                                 </p>
                                 <p className="mt-1 text-xs text-slate-400">
-                                    Materi akan muncul di sini setelah guru menambahkannya.
+                                    Materi akan muncul di sini setelah guru
+                                    menambahkannya.
                                 </p>
                             </div>
                         </div>

@@ -21,6 +21,7 @@ class AbsenController extends Controller
 
         if ($active) {
             $qrUrl = route('absen.scan', $active->token);
+
             return response()->json([
                 'session' => $active,
                 'qr_url' => $qrUrl,
@@ -35,8 +36,8 @@ class AbsenController extends Controller
         ]);
 
         GlobalAnnouncement::create([
-            'judul' => 'Absen Dibuka - ' . $pertemuan->judul,
-            'isi' => 'Absen untuk "' . $pertemuan->judul . '" telah dibuka. Silakan scan QR code untuk melakukan absensi.',
+            'judul' => 'Absen Dibuka - '.$pertemuan->judul,
+            'isi' => 'Absen untuk "'.$pertemuan->judul.'" telah dibuka. Silakan scan QR code untuk melakukan absensi.',
             'type' => 'info',
             'starts_at' => now(),
             'ends_at' => $session->expired_at,
@@ -61,7 +62,7 @@ class AbsenController extends Controller
 
         $session->update(['status' => 'closed']);
 
-        GlobalAnnouncement::where('judul', 'Absen Dibuka - ' . $pertemuan->judul)
+        GlobalAnnouncement::where('judul', 'Absen Dibuka - '.$pertemuan->judul)
             ->where('is_active', true)
             ->update(['is_active' => false, 'ends_at' => now()]);
 
@@ -75,7 +76,7 @@ class AbsenController extends Controller
             ->where('expired_at', '>', now())
             ->first();
 
-        if (!$session) {
+        if (! $session) {
             return response()->json(['active' => false]);
         }
 
@@ -110,15 +111,16 @@ class AbsenController extends Controller
             ->where('expired_at', '>', now())
             ->first();
 
-        if (!$session) {
+        if (! $session) {
             return Inertia::render('absen/scan', [
                 'status' => 'invalid',
                 'message' => 'QR code tidak valid atau sudah kedaluwarsa.',
             ]);
         }
 
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             session()->put('url.intended', route('absen.scan', $token));
+
             return redirect()->route('login');
         }
 
@@ -194,7 +196,7 @@ class AbsenController extends Controller
             ->where('expired_at', '>', now())
             ->with('pertemuan')
             ->get()
-            ->filter(fn ($s) => !Absensi::where('qr_session_id', $s->id)
+            ->filter(fn ($s) => ! Absensi::where('qr_session_id', $s->id)
                 ->where('siswa_id', $siswaId)
                 ->exists())
             ->values()

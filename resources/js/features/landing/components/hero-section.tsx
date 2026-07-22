@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { useState, useEffect, useRef } from 'react';
 import { BookOpen, Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { login } from '@/routes';
 
 interface HeroSectionProps {
@@ -14,10 +14,16 @@ function CountUp({ target, suffix = '' }: { target: number; suffix?: string }) {
 
     useEffect(() => {
         const el = elRef.current;
-        if (!el) return;
+
+        if (!el) {
+return;
+}
 
         const parent = el.closest('[data-reveal]') as HTMLElement | null;
-        if (!parent) return;
+
+        if (!parent) {
+return;
+}
 
         const observer = new MutationObserver(() => {
             if (parent.classList.contains('lp-revealed')) {
@@ -32,7 +38,10 @@ function CountUp({ target, suffix = '' }: { target: number; suffix?: string }) {
                         const progress = Math.min(elapsed / duration, 1);
                         const eased = 1 - Math.pow(1 - progress, 3);
                         setCount(Math.round(eased * target));
-                        if (progress < 1) requestAnimationFrame(animate);
+
+                        if (progress < 1) {
+requestAnimationFrame(animate);
+}
                     };
 
                     requestAnimationFrame(animate);
@@ -43,11 +52,20 @@ function CountUp({ target, suffix = '' }: { target: number; suffix?: string }) {
             }
         });
 
-        observer.observe(parent, { attributes: true, attributeFilter: ['class'] });
+        observer.observe(parent, {
+            attributes: true,
+            attributeFilter: ['class'],
+        });
+
         return () => observer.disconnect();
     }, [target]);
 
-    return <div ref={elRef}>{count}{suffix}</div>;
+    return (
+        <div ref={elRef}>
+            {count}
+            {suffix}
+        </div>
+    );
 }
 
 export default function HeroSection({ onScrollDown }: HeroSectionProps) {
@@ -83,9 +101,10 @@ export default function HeroSection({ onScrollDown }: HeroSectionProps) {
 
                 {/* Tagline */}
                 <p className="lp-hero-desc">
-                    Platform pembelajaran dan penilaian terintegrasi — membantu guru memonitor
-                    perkembangan siswa secara <strong>objektif</strong>,{' '}
-                    <strong>transparan</strong>, dan berbasis <strong>data</strong>.
+                    Platform pembelajaran dan penilaian terintegrasi — membantu
+                    guru memonitor perkembangan siswa secara{' '}
+                    <strong>objektif</strong>, <strong>transparan</strong>, dan
+                    berbasis <strong>data</strong>.
                 </p>
 
                 {/* CTA buttons */}
@@ -105,7 +124,11 @@ export default function HeroSection({ onScrollDown }: HeroSectionProps) {
                 </div>
 
                 {/* Stats row */}
-                <div className="lp-hero-stats" data-reveal data-reveal-delay="200">
+                <div
+                    className="lp-hero-stats"
+                    data-reveal
+                    data-reveal-delay="200"
+                >
                     <div className="lp-hero-stat">
                         <div className="lp-hero-stat-number lp-hero-stat-blue">
                             <CountUp target={7} suffix="+" />

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Portfolio extends Model
 {
     protected $table = 'portfolio';
+
     protected $fillable = ['siswa_id', 'kategori', 'judul', 'deskripsi', 'file_karya'];
 
     public function siswa()

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class GlobalAnnouncement extends Model
 {
     protected $table = 'global_announcements';
+
     protected $fillable = [
         'judul',
         'isi',

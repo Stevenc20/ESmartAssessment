@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PenilaianTugas extends Model
 {
     protected $table = 'penilaian_tugas';
+
     protected $fillable = ['pengumpulan_id', 'guru_id', 'nilai', 'feedback'];
 
     public function pengumpulan()

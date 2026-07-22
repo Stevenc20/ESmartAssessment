@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ProgressMateri extends Model
 {
     protected $table = 'progress_materi';
+
     protected $fillable = ['siswa_id', 'materi_id', 'status', 'completed_at'];
 
     public function siswa()

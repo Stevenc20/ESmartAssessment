@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Badge;
+use App\Models\Materi;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -20,11 +21,12 @@ class ContentManagementController extends Controller
             'created_at' => $b->created_at->diffForHumans(),
         ]);
 
-        $materiKategori = \App\Models\Materi::select('judul')
+        $materiKategori = Materi::select('judul')
             ->distinct()
             ->get()
             ->groupBy(function ($m) {
                 $parts = explode(' ', $m->judul);
+
                 return $parts[0] ?? 'Lainnya';
             })
             ->keys();
@@ -64,6 +66,7 @@ class ContentManagementController extends Controller
     public function destroyBadge(Badge $badge)
     {
         $badge->delete();
+
         return back()->with('success', 'Badge berhasil dihapus');
     }
 }

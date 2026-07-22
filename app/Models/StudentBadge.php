@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class StudentBadge extends Model
 {
     protected $table = 'student_badges';
+
     protected $fillable = ['siswa_id', 'badge_id', 'earned_at'];
 
     public function siswa()

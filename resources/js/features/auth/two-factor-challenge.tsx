@@ -33,8 +33,7 @@ export default function TwoFactorChallenge() {
 
         return {
             title: 'Two-factor verification',
-            description:
-                'Enter the 6-digit code from your authenticator app.',
+            description: 'Enter the 6-digit code from your authenticator app.',
             toggleText: 'use a recovery code instead',
         };
     }, [showRecoveryInput]);

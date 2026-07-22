@@ -34,6 +34,6 @@ class FeatureController extends Controller
             'value' => $request->enabled ? 'true' : 'false',
         ]);
 
-        return back()->with('success', "Fitur {$feature->label} berhasil " . ($request->enabled ? 'diaktifkan' : 'dinonaktifkan'));
+        return back()->with('success', "Fitur {$feature->label} berhasil ".($request->enabled ? 'diaktifkan' : 'dinonaktifkan'));
     }
 }

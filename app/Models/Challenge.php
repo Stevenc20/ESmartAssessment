@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Challenge extends Model
 {
     protected $table = 'challenges';
+
     protected $fillable = ['judul', 'tema', 'deskripsi', 'deadline', 'point_reward'];
 
     public function submissions()

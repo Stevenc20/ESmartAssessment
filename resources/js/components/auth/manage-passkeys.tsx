@@ -1,9 +1,9 @@
 import { router } from '@inertiajs/react';
 import { KeyRound } from 'lucide-react';
 import { destroy } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyRegistrationController';
-import Heading from '@/components/settings/heading';
 import PasskeyItem from '@/components/auth/passkey-item';
 import PasskeyRegistration from '@/components/auth/passkey-register';
+import Heading from '@/components/settings/heading';
 import type { Passkey } from '@/types/auth';
 
 export type Props = {

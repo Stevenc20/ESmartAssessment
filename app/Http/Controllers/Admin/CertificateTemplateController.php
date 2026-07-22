@@ -69,6 +69,7 @@ class CertificateTemplateController extends Controller
     public function destroy(CertificateTemplate $certificateTemplate)
     {
         $certificateTemplate->delete();
+
         return back()->with('success', 'Template sertifikat berhasil dihapus');
     }
 
@@ -76,6 +77,7 @@ class CertificateTemplateController extends Controller
     {
         CertificateTemplate::where('is_default', true)->update(['is_default' => false]);
         $certificateTemplate->update(['is_default' => true]);
+
         return back()->with('success', 'Template default berhasil diubah');
     }
 }

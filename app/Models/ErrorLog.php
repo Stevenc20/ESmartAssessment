@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ErrorLog extends Model
 {
     protected $table = 'error_logs';
+
     protected $fillable = [
         'level',
         'message',

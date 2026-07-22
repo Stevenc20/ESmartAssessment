@@ -4,28 +4,36 @@ const roles = [
     {
         icon: Shield,
         title: 'Super Admin',
-        description: 'Akses penuh ke seluruh sistem, konfigurasi platform, dan manajemen pengguna.',
+        description:
+            'Akses penuh ke seluruh sistem, konfigurasi platform, dan manajemen pengguna.',
         accent: 'blue',
         perks: ['Konfigurasi sistem', 'Manajemen user', 'Laporan global'],
     },
     {
         icon: Users,
         title: 'Admin',
-        description: 'Mengelola pengguna, konten, dan pengaturan institusi dengan mudah.',
+        description:
+            'Mengelola pengguna, konten, dan pengaturan institusi dengan mudah.',
         accent: 'pink',
-        perks: ['Manajemen konten', 'Pengaturan institusi', 'Monitoring aktifitas'],
+        perks: [
+            'Manajemen konten',
+            'Pengaturan institusi',
+            'Monitoring aktifitas',
+        ],
     },
     {
         icon: GraduationCap,
         title: 'Guru / Pembina',
-        description: 'Membuat materi, memberikan penilaian, dan memonitor perkembangan siswa.',
+        description:
+            'Membuat materi, memberikan penilaian, dan memonitor perkembangan siswa.',
         accent: 'blue',
         perks: ['Buat materi & soal', 'Nilai & feedback', 'Pantau progress'],
     },
     {
         icon: User,
         title: 'Siswa',
-        description: 'Belajar, mengerjakan tantangan, membangun portfolio, dan lacak progress sendiri.',
+        description:
+            'Belajar, mengerjakan tantangan, membangun portfolio, dan lacak progress sendiri.',
         accent: 'pink',
         perks: ['Learning journey', 'Challenge & badge', 'Portfolio digital'],
     },
@@ -38,14 +46,16 @@ export default function TargetUsersSection() {
             <div className="lp-users-bg" />
 
             <div className="lp-section-header" data-reveal>
-                <div className="lp-section-badge lp-section-badge--pink">Untuk siapa?</div>
+                <div className="lp-section-badge lp-section-badge--pink">
+                    Untuk siapa?
+                </div>
                 <h2 className="lp-section-h2">
                     Dirancang untuk{' '}
                     <span className="lp-section-h2-accent">Semua Peran</span>
                 </h2>
                 <p className="lp-section-desc">
-                    Satu platform, empat peran — setiap pengguna mendapat pengalaman
-                    yang disesuaikan dengan kebutuhan mereka.
+                    Satu platform, empat peran — setiap pengguna mendapat
+                    pengalaman yang disesuaikan dengan kebutuhan mereka.
                 </p>
             </div>
 
@@ -58,7 +68,9 @@ export default function TargetUsersSection() {
                         data-reveal
                     >
                         {/* Icon */}
-                        <div className={`lp-user-icon lp-user-icon--${role.accent}`}>
+                        <div
+                            className={`lp-user-icon lp-user-icon--${role.accent}`}
+                        >
                             <role.icon className="h-7 w-7" />
                         </div>
 
@@ -69,14 +81,18 @@ export default function TargetUsersSection() {
                         <ul className="lp-user-perks">
                             {role.perks.map((perk) => (
                                 <li key={perk} className="lp-user-perk">
-                                    <CheckCircle className={`h-3.5 w-3.5 lp-user-perk-icon--${role.accent}`} />
+                                    <CheckCircle
+                                        className={`h-3.5 w-3.5 lp-user-perk-icon--${role.accent}`}
+                                    />
                                     <span>{perk}</span>
                                 </li>
                             ))}
                         </ul>
 
                         {/* Corner accent */}
-                        <div className={`lp-user-corner lp-user-corner--${role.accent}`} />
+                        <div
+                            className={`lp-user-corner lp-user-corner--${role.accent}`}
+                        />
                     </div>
                 ))}
             </div>

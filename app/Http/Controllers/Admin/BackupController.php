@@ -3,9 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -44,7 +42,7 @@ class BackupController extends Controller
 
             return back()->with('success', 'Backup database berhasil dibuat.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal membuat backup: ' . $e->getMessage());
+            return back()->with('error', 'Gagal membuat backup: '.$e->getMessage());
         }
     }
 
@@ -52,11 +50,11 @@ class BackupController extends Controller
     {
         $storage = Storage::disk($this->disk);
 
-        if (! $storage->exists($this->path . '/' . $filename)) {
+        if (! $storage->exists($this->path.'/'.$filename)) {
             return back()->with('error', 'File backup tidak ditemukan.');
         }
 
-        return $storage->download($this->path . '/' . $filename);
+        return $storage->download($this->path.'/'.$filename);
     }
 
     protected function formatSize(int $bytes): string
@@ -69,6 +67,6 @@ class BackupController extends Controller
             $i++;
         }
 
-        return round($bytes, 2) . ' ' . $units[$i];
+        return round($bytes, 2).' '.$units[$i];
     }
 }

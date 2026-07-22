@@ -1,13 +1,13 @@
 import { Form, Head } from '@inertiajs/react';
 import { useRef } from 'react';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
-import Heading from '@/components/settings/heading';
-import InputError from '@/components/settings/input-error';
 import type { Props as ManagePasskeysProps } from '@/components/auth/manage-passkeys';
 import ManagePasskeys from '@/components/auth/manage-passkeys';
 import type { Props as ManageTwoFactorProps } from '@/components/auth/manage-two-factor';
 import ManageTwoFactor from '@/components/auth/manage-two-factor';
 import PasswordInput from '@/components/auth/password-input';
+import Heading from '@/components/settings/heading';
+import InputError from '@/components/settings/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/security';

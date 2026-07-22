@@ -1,12 +1,27 @@
 import { Head, useForm } from '@inertiajs/react';
-import { UserCheck, User, Mail, GraduationCap, BookOpen, Sparkles, Phone, Camera } from 'lucide-react';
+import {
+    UserCheck,
+    User,
+    Mail,
+    GraduationCap,
+    BookOpen,
+    Sparkles,
+    Phone,
+    Camera,
+} from 'lucide-react';
+import { useRef, useState } from 'react';
 import InputError from '@/components/settings/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
-import { useRef, useState } from 'react';
 
 const JURUSAN_LIST = [
     { value: 'PPLG', label: 'PPLG' },
@@ -41,6 +56,7 @@ export default function CompleteRegistration({ googleUser }: Props) {
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0] || null;
         setData('foto', file);
+
         if (file) {
             setPreview(URL.createObjectURL(file));
         } else {
@@ -79,7 +95,9 @@ export default function CompleteRegistration({ googleUser }: Props) {
                 </div>
                 <div className="auth-profile-info">
                     <span className="auth-profile-name">{googleUser.name}</span>
-                    <span className="auth-profile-email">{googleUser.email}</span>
+                    <span className="auth-profile-email">
+                        {googleUser.email}
+                    </span>
                 </div>
             </div>
 
@@ -92,7 +110,9 @@ export default function CompleteRegistration({ googleUser }: Props) {
                     <span className="auth-step-label">Akun Google</span>
                 </div>
                 <div className="auth-step-connector" />
-                <div className={`auth-step ${isFormComplete ? 'completed' : 'active'}`}>
+                <div
+                    className={`auth-step ${isFormComplete ? 'completed' : 'active'}`}
+                >
                     <div className="auth-step-dot">
                         <BookOpen className="auth-step-icon" />
                     </div>
@@ -120,7 +140,7 @@ export default function CompleteRegistration({ googleUser }: Props) {
                             type="text"
                             name="name"
                             value={data.name}
-                            onChange={e => setData('name', e.target.value)}
+                            onChange={(e) => setData('name', e.target.value)}
                             tabIndex={0}
                             placeholder="Nama lengkap Anda"
                         />
@@ -132,8 +152,12 @@ export default function CompleteRegistration({ googleUser }: Props) {
                         <div className="auth-readonly-field">
                             <Mail className="auth-readonly-icon" />
                             <div className="auth-readonly-content">
-                                <span className="auth-readonly-label">Email</span>
-                                <span className="auth-readonly-value">{googleUser.email}</span>
+                                <span className="auth-readonly-label">
+                                    Email
+                                </span>
+                                <span className="auth-readonly-value">
+                                    {googleUser.email}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -149,7 +173,7 @@ export default function CompleteRegistration({ googleUser }: Props) {
                             type="tel"
                             name="no_hp"
                             value={data.no_hp}
-                            onChange={e => setData('no_hp', e.target.value)}
+                            onChange={(e) => setData('no_hp', e.target.value)}
                             tabIndex={1}
                             placeholder="Nomor handphone"
                         />
@@ -167,7 +191,11 @@ export default function CompleteRegistration({ googleUser }: Props) {
                             onClick={() => fileInputRef.current?.click()}
                         >
                             {preview ? (
-                                <img src={preview} alt="Preview" className="auth-upload-preview" />
+                                <img
+                                    src={preview}
+                                    alt="Preview"
+                                    className="auth-upload-preview"
+                                />
                             ) : (
                                 <div className="auth-upload-placeholder">
                                     <Camera className="auth-upload-icon" />
@@ -194,7 +222,7 @@ export default function CompleteRegistration({ googleUser }: Props) {
                             </Label>
                             <Select
                                 value={data.kelas}
-                                onValueChange={v => setData('kelas', v)}
+                                onValueChange={(v) => setData('kelas', v)}
                             >
                                 <SelectTrigger id="kelas" tabIndex={1}>
                                     <SelectValue placeholder="Pilih kelas" />
@@ -208,20 +236,26 @@ export default function CompleteRegistration({ googleUser }: Props) {
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="jurusan" className="auth-field-label">
+                            <Label
+                                htmlFor="jurusan"
+                                className="auth-field-label"
+                            >
                                 <BookOpen className="auth-label-icon" />
                                 Jurusan
                             </Label>
                             <Select
                                 value={data.jurusan}
-                                onValueChange={v => setData('jurusan', v)}
+                                onValueChange={(v) => setData('jurusan', v)}
                             >
                                 <SelectTrigger id="jurusan" tabIndex={2}>
                                     <SelectValue placeholder="Pilih jurusan" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {JURUSAN_LIST.map(j => (
-                                        <SelectItem key={j.value} value={j.value}>
+                                    {JURUSAN_LIST.map((j) => (
+                                        <SelectItem
+                                            key={j.value}
+                                            value={j.value}
+                                        >
                                             {j.label}
                                         </SelectItem>
                                     ))}

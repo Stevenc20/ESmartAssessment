@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class QrSession extends Model
 {
     protected $table = 'qr_sessions';
+
     protected $fillable = ['pertemuan_id', 'token', 'expired_at', 'status'];
 
     protected $casts = [

@@ -19,7 +19,7 @@ class LaporanController extends Controller
         $pertemuan = Pertemuan::where('status', 'published')
             ->where(function ($q) use ($bulan, $tahun) {
                 $q->whereNull('tanggal')
-                  ->orWhere(fn ($q2) => $q2->whereYear('tanggal', $tahun)->whereMonth('tanggal', $bulan));
+                    ->orWhere(fn ($q2) => $q2->whereYear('tanggal', $tahun)->whereMonth('tanggal', $bulan));
             })
             ->orderBy('tanggal')
             ->get();

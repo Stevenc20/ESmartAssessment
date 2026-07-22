@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Announcement extends Model
 {
     protected $table = 'announcements';
+
     protected $fillable = ['judul', 'isi', 'target_role', 'created_by'];
 
     public function creator()

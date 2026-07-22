@@ -4,7 +4,6 @@ import { usePasskeyVerify } from '@laravel/passkeys/react';
 import { KeyRound } from 'lucide-react';
 import InputError from '@/components/settings/input-error';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 
 type Props = {

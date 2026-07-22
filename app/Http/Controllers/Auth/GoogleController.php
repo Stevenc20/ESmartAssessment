@@ -8,9 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -30,11 +28,11 @@ class GoogleController extends Controller
             ->first();
 
         if ($existing) {
-            if (!$existing->google_id) {
+            if (! $existing->google_id) {
                 $existing->update(['google_id' => $googleUser->getId()]);
             }
 
-            if (!$existing->email_verified_at) {
+            if (! $existing->email_verified_at) {
                 $existing->update(['email_verified_at' => now()]);
             }
 
@@ -44,7 +42,7 @@ class GoogleController extends Controller
         }
 
         $settings = Cache::get('app_settings', ['registration_open' => true]);
-        if (!($settings['registration_open'] ?? true)) {
+        if (! ($settings['registration_open'] ?? true)) {
             return redirect()->route('login')->with('status', 'Maaf, pendaftaran akun baru sedang tidak dibuka.');
         }
 
@@ -60,7 +58,7 @@ class GoogleController extends Controller
 
     public function showCompleteForm()
     {
-        if (!Session::has('google_user')) {
+        if (! Session::has('google_user')) {
             return redirect()->route('login');
         }
 
@@ -73,7 +71,7 @@ class GoogleController extends Controller
 
     public function completeRegistration(Request $request)
     {
-        if (!Session::has('google_user')) {
+        if (! Session::has('google_user')) {
             return redirect()->route('login');
         }
 

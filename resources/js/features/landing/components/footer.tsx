@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Heart } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 
 const footerLinks = {
     Produk: [
@@ -33,11 +33,14 @@ export default function Footer() {
                 <div className="lp-footer-brand">
                     <Link href="/" className="lp-footer-logo">
                         <div className="lp-footer-logo-icon">ES</div>
-                        <span className="lp-footer-logo-text">ESmartAssessment</span>
+                        <span className="lp-footer-logo-text">
+                            ESmartAssessment
+                        </span>
                     </Link>
                     <p className="lp-footer-tagline">
-                        Learn. Create. Grow. — Platform pembelajaran dan penilaian terintegrasi
-                        untuk ekosistem pendidikan modern.
+                        Learn. Create. Grow. — Platform pembelajaran dan
+                        penilaian terintegrasi untuk ekosistem pendidikan
+                        modern.
                     </p>
                     <div className="lp-footer-socials">
                         <div className="lp-footer-social-icon">
@@ -53,7 +56,10 @@ export default function Footer() {
                         <ul className="lp-footer-col-links">
                             {links.map((link) => (
                                 <li key={link.name}>
-                                    <a href={link.href} className="lp-footer-link">
+                                    <a
+                                        href={link.href}
+                                        className="lp-footer-link"
+                                    >
                                         {link.name}
                                     </a>
                                 </li>
@@ -66,11 +72,10 @@ export default function Footer() {
             {/* Bottom bar */}
             <div className="lp-footer-bottom">
                 <p className="lp-footer-copy">
-                    &copy; {new Date().getFullYear()} ESmartAssessment. All rights reserved.
+                    &copy; {new Date().getFullYear()} ESmartAssessment. All
+                    rights reserved.
                 </p>
-                <p className="lp-footer-made">
-                    Created by Steven Christian
-                </p>
+                <p className="lp-footer-made">Created by Steven Christian</p>
             </div>
         </footer>
     );

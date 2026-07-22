@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Pertemuan extends Model
 {
     protected $table = 'pertemuan';
+
     protected $fillable = ['roadmap_id', 'judul', 'urutan', 'tanggal', 'status'];
 
     protected $casts = [

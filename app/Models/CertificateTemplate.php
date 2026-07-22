@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CertificateTemplate extends Model
 {
     protected $table = 'certificate_templates';
+
     protected $fillable = [
         'nama_template',
         'logo_path',

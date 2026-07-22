@@ -1,7 +1,7 @@
 import { Head, usePage } from '@inertiajs/react';
-import SuperadminDashboard from '@/features/dashboard/superadmin-dashboard';
 import RegularDashboard from '@/features/dashboard/regular-dashboard';
 import StudentDashboard from '@/features/dashboard/student-dashboard';
+import SuperadminDashboard from '@/features/dashboard/superadmin-dashboard';
 import type { Auth } from '@/types';
 
 type PageProps = {

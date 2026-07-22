@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Materi extends Model
 {
     protected $table = 'materi';
+
     protected $fillable = ['pertemuan_id', 'judul', 'thumbnail', 'deskripsi', 'video_url', 'pdf_file', 'drive_link', 'created_by'];
 
     public function pertemuan()

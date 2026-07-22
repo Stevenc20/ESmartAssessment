@@ -1,5 +1,5 @@
-import { memo } from 'react';
 import { Link } from '@inertiajs/react';
+import { memo } from 'react';
 import {
     SidebarGroup,
     SidebarGroupLabel,
@@ -45,13 +45,22 @@ export const NavMain = memo(function NavMain({
                                 asChild
                                 isActive={active}
                                 tooltip={{ children: item.title }}
-                                className="relative h-10 w-full rounded-xl px-3 transition-all duration-150 data-[active=true]:bg-transparent hover:bg-transparent"
-                                style={active ? {
-                                    background: 'linear-gradient(135deg, #436391 0%, #5a7aaa 100%)',
-                                    boxShadow: '0 2px 10px rgba(67,99,145,0.22)',
-                                } : undefined}
+                                className="relative h-10 w-full rounded-xl px-3 transition-all duration-150 hover:bg-transparent data-[active=true]:bg-transparent"
+                                style={
+                                    active
+                                        ? {
+                                              background:
+                                                  'linear-gradient(135deg, #436391 0%, #5a7aaa 100%)',
+                                              boxShadow:
+                                                  '0 2px 10px rgba(67,99,145,0.22)',
+                                          }
+                                        : undefined
+                                }
                             >
-                                <Link href={item.href} className="flex w-full items-center gap-3">
+                                <Link
+                                    href={item.href}
+                                    className="flex w-full items-center gap-3"
+                                >
                                     {active && (
                                         <span
                                             aria-hidden="true"
@@ -73,7 +82,9 @@ export const NavMain = memo(function NavMain({
                                                 width: '16px',
                                                 height: '16px',
                                                 flexShrink: 0,
-                                                color: active ? 'rgba(255,255,255,0.9)' : '#6b7a99',
+                                                color: active
+                                                    ? 'rgba(255,255,255,0.9)'
+                                                    : '#6b7a99',
                                             }}
                                         />
                                     )}
@@ -81,7 +92,9 @@ export const NavMain = memo(function NavMain({
                                         style={{
                                             fontSize: '14px',
                                             fontWeight: active ? 600 : 500,
-                                            color: active ? '#ffffff' : '#2d3748',
+                                            color: active
+                                                ? '#ffffff'
+                                                : '#2d3748',
                                             letterSpacing: '0.01em',
                                         }}
                                     >

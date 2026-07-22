@@ -1,7 +1,7 @@
 import { Form, Head } from '@inertiajs/react';
 import { RefreshCcw } from 'lucide-react';
-import InputError from '@/components/settings/input-error';
 import PasswordInput from '@/components/auth/password-input';
+import InputError from '@/components/settings/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

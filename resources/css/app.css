@@ -90,7 +90,7 @@
     --muted-foreground: #64748b;
 
     /* Accent = Cherry Blossom Pink */
-    --accent: #F2AEBC;
+    --accent: #f2aebc;
     --accent-foreground: #2d3748;
 
     --destructive: #e53e3e;
@@ -102,8 +102,8 @@
 
     /* Charts — brand palette */
     --chart-1: #436391;
-    --chart-2: #F2AEBC;
-    --chart-3: #6B8ABF;
+    --chart-2: #f2aebc;
+    --chart-3: #6b8abf;
     --chart-4: #10b981;
     --chart-5: #f59e0b;
 
@@ -114,19 +114,19 @@
     --sidebar-foreground: #2d3748;
     --sidebar-primary: #436391;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: rgba(67,99,145,0.18);
+    --sidebar-accent: rgba(67, 99, 145, 0.18);
     --sidebar-accent-foreground: #436391;
-    --sidebar-border: rgba(242,174,188,0.35);
+    --sidebar-border: rgba(242, 174, 188, 0.35);
     --sidebar-ring: #436391;
 
     /* Brand tokens */
-    --brand-pink: #F2AEBC;
+    --brand-pink: #f2aebc;
     --brand-pink-deep: #e8889a;
-    --brand-pink-light: #F2DCDB;
+    --brand-pink-light: #f2dcdb;
     --brand-blue: #436391;
-    --brand-blue-light: #6B8ABF;
+    --brand-blue-light: #6b8abf;
     --brand-blue-deep: #2d4a6e;
-    --brand-surface: #F2DCDB;
+    --brand-surface: #f2dcdb;
 }
 
 /* Dark mode vars are intentionally removed — light only */
@@ -146,7 +146,7 @@
    Sidebar zone (left ~20%): white → pink blossom
    Content zone (right 80%): Misty Rose page background
    ══════════════════════════════════════════════════ */
-[data-slot="sidebar-wrapper"] {
+[data-slot='sidebar-wrapper'] {
     background: linear-gradient(
         to right,
         #ffffff 0%,
@@ -156,14 +156,14 @@
         #f7d1db 35%,
         #f3c5d2 50%,
         #f0baca 65%,
-        #F2AEBC 82%,
-        #F2AEBC 100%
+        #f2aebc 82%,
+        #f2aebc 100%
     ) !important;
     will-change: background;
 }
 
 /* Sidebar panel: transparent on desktop so wrapper gradient shows through */
-[data-sidebar="sidebar"]:not([data-mobile="true"]) {
+[data-sidebar='sidebar']:not([data-mobile='true']) {
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
@@ -171,7 +171,7 @@
 }
 
 /* Mobile sheet sidebar: lighter gradient, more white dominant */
-[data-sidebar="sidebar"][data-mobile="true"] {
+[data-sidebar='sidebar'][data-mobile='true'] {
     background: linear-gradient(
         to right,
         #ffffff 0%,
@@ -185,17 +185,17 @@
 }
 
 /* No border separator — gradient transition is the separator */
-[data-slot="sidebar"] > div:last-child {
+[data-slot='sidebar'] > div:last-child {
     border-right: none;
 }
 
 /* Sidebar hover — Lapis Lazuli */
-[data-sidebar="menu-button"]:not([data-active="true"]):hover {
-    background: rgba(67,99,145,0.15) !important;
+[data-sidebar='menu-button']:not([data-active='true']):hover {
+    background: rgba(67, 99, 145, 0.15) !important;
 }
 
 /* Logo — no hover effect, stays clean */
-[data-sidebar="menu-button"][data-size="lg"]:not([data-active="true"]):hover {
+[data-sidebar='menu-button'][data-size='lg']:not([data-active='true']):hover {
     background: transparent !important;
 }
 
@@ -204,7 +204,7 @@
    ============================================= */
 @layer utilities {
     .brand-gradient {
-        background: linear-gradient(135deg, #436391 0%, #F2AEBC 100%);
+        background: linear-gradient(135deg, #436391 0%, #f2aebc 100%);
     }
     .brand-gradient-text {
         background: linear-gradient(135deg, #436391 0%, #e8889a 100%);
@@ -213,15 +213,19 @@
         background-clip: text;
     }
     .card-hover-lift {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
     }
     .card-hover-lift:hover {
         transform: translateY(-3px);
-        box-shadow: 0 12px 32px rgba(67,99,145,0.1), 0 2px 8px rgba(242,174,188,0.12);
+        box-shadow:
+            0 12px 32px rgba(67, 99, 145, 0.1),
+            0 2px 8px rgba(242, 174, 188, 0.12);
     }
 
     .bg-brand-surface {
-        background-color: #F2DCDB;
+        background-color: #f2dcdb;
     }
 }
 
@@ -229,34 +233,42 @@
    SIDEBAR CUSTOM SCROLLBAR — Cherry Blossom Pink
    Auto-hide: transparan saat idle, muncul saat hover
    ══════════════════════════════════════════════════ */
-[data-slot="sidebar-content"] {
+[data-slot='sidebar-content'] {
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
     transition: scrollbar-color 0.3s ease;
 }
 
-[data-slot="sidebar-content"]:hover {
+[data-slot='sidebar-content']:hover {
     scrollbar-color: var(--brand-pink) transparent;
 }
 
-[data-slot="sidebar-content"]::-webkit-scrollbar {
+[data-slot='sidebar-content']::-webkit-scrollbar {
     width: 5px;
 }
 
-[data-slot="sidebar-content"]::-webkit-scrollbar-track {
+[data-slot='sidebar-content']::-webkit-scrollbar-track {
     background: transparent;
 }
 
-[data-slot="sidebar-content"]::-webkit-scrollbar-thumb {
+[data-slot='sidebar-content']::-webkit-scrollbar-thumb {
     background: transparent;
     border-radius: 999px;
     transition: background 0.3s ease;
 }
 
-[data-slot="sidebar-content"]:hover::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, var(--brand-pink) 0%, var(--brand-pink-deep) 100%);
+[data-slot='sidebar-content']:hover::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+        180deg,
+        var(--brand-pink) 0%,
+        var(--brand-pink-deep) 100%
+    );
 }
 
-[data-slot="sidebar-content"]:hover::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, var(--brand-pink-deep) 0%, #d4708a 100%);
+[data-slot='sidebar-content']:hover::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+        180deg,
+        var(--brand-pink-deep) 0%,
+        #d4708a 100%
+    );
 }

@@ -1,6 +1,8 @@
-import { memo } from 'react';
 import { usePage } from '@inertiajs/react';
 import { ChevronsUpDown } from 'lucide-react';
+import { memo } from 'react';
+import { UserInfo } from '@/components/settings/user-info';
+import { UserMenuContent } from '@/components/settings/user-menu-content';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -12,8 +14,6 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from '@/components/ui/sidebar';
-import { UserInfo } from '@/components/settings/user-info';
-import { UserMenuContent } from '@/components/settings/user-menu-content';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export const NavUser = memo(function NavUser() {

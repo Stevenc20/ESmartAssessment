@@ -44,7 +44,7 @@ class PertemuanController extends Controller
         ]);
 
         $roadmap = Roadmap::create([
-            'judul' => $data['judul'] ?? $this->bulanNama($data['bulan']) . ' ' . $data['tahun'],
+            'judul' => $data['judul'] ?? $this->bulanNama($data['bulan']).' '.$data['tahun'],
             'bulan' => $data['bulan'],
             'tahun' => $data['tahun'],
             'created_by' => $request->user()->id,
@@ -106,6 +106,7 @@ class PertemuanController extends Controller
             5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
         ];
+
         return $nama[$bulan] ?? 'Unknown';
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class MateriRequest extends Model
 {
     protected $table = 'materi_requests';
+
     protected $fillable = ['siswa_id', 'judul', 'alasan', 'status'];
 
     public function siswa()

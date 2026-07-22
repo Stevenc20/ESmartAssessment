@@ -1,8 +1,8 @@
 import { usePage } from '@inertiajs/react';
-import { AppSidebarSuperadmin } from '@/components/layout/app-sidebar-superadmin';
 import { AppSidebarAdmin } from '@/components/layout/app-sidebar-admin';
 import { AppSidebarGuru } from '@/components/layout/app-sidebar-guru';
 import { AppSidebarSiswa } from '@/components/layout/app-sidebar-siswa';
+import { AppSidebarSuperadmin } from '@/components/layout/app-sidebar-superadmin';
 import type { Auth } from '@/types';
 
 export function AppSidebar() {

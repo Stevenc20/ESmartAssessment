@@ -19,7 +19,9 @@ export default function VerifyEmail({ status }: { status?: string }) {
 
             {status === 'verification-link-sent' && (
                 <div className="auth-status-success">
-                    <CheckCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
+                    <CheckCircle
+                        style={{ width: 16, height: 16, flexShrink: 0 }}
+                    />
                     A new verification link has been sent to your email address.
                 </div>
             )}
@@ -27,7 +29,11 @@ export default function VerifyEmail({ status }: { status?: string }) {
             <Form {...send.form()} className="space-y-6 text-center">
                 {({ processing }) => (
                     <>
-                        <Button disabled={processing} variant="secondary" className="w-full">
+                        <Button
+                            disabled={processing}
+                            variant="secondary"
+                            className="w-full"
+                        >
                             {processing && <Spinner />}
                             Resend verification email
                         </Button>

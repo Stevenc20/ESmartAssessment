@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Badge extends Model
 {
     protected $table = 'badges';
+
     protected $fillable = ['badge_name', 'icon', 'description'];
 
     public function siswa(): BelongsToMany

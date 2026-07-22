@@ -21,7 +21,9 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
             {status && (
                 <div className="auth-status-success">
-                    <CheckCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
+                    <CheckCircle
+                        style={{ width: 16, height: 16, flexShrink: 0 }}
+                    />
                     {status}
                 </div>
             )}
@@ -71,5 +73,5 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
 ForgotPassword.layout = {
     title: 'Forgot your password?',
-    description: 'Enter your email and we\'ll send you a reset link',
+    description: "Enter your email and we'll send you a reset link",
 };

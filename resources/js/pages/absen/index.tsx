@@ -1,5 +1,14 @@
 import { Head, router } from '@inertiajs/react';
-import { Calendar, CheckCircle, Clock, AlertTriangle, QrCode, Camera, CameraOff, Smartphone } from 'lucide-react';
+import {
+    Calendar,
+    CheckCircle,
+    Clock,
+    AlertTriangle,
+    QrCode,
+    Camera,
+    CameraOff,
+    Smartphone,
+} from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 type RiwayatItem = {
@@ -27,7 +36,8 @@ type Props = {
 export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
     const [scannerActive, setScannerActive] = useState(false);
     const [cameraError, setCameraError] = useState<string | null>(null);
-    const [polledSessions, setPolledSessions] = useState<ActiveSession[]>(active_sessions);
+    const [polledSessions, setPolledSessions] =
+        useState<ActiveSession[]>(active_sessions);
     const [autoScanning, setAutoScanning] = useState(false);
     const scannerRef = useRef<HTMLDivElement>(null);
     const html5QrCodeRef = useRef<any>(null);
@@ -39,17 +49,22 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
         if (html5QrCodeRef.current) {
             try {
                 await html5QrCodeRef.current.stop();
-            } catch {}
+            } catch { /* scanner may already be stopped */ }
+
             try {
                 await html5QrCodeRef.current.clear();
-            } catch {}
+            } catch { /* scanner may already be cleared */ }
+
             html5QrCodeRef.current = null;
         }
+
         scannerStartedRef.current = false;
     }, []);
 
     const startScanner = useCallback(async () => {
-        if (scannerStartedRef.current) return;
+        if (scannerStartedRef.current) {
+return;
+}
 
         setCameraError(null);
         setScannerActive(true);
@@ -65,7 +80,9 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
             }
 
             const backCamera = cameras.find(
-                c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('environment'),
+                (c) =>
+                    c.label.toLowerCase().includes('back') ||
+                    c.label.toLowerCase().includes('environment'),
             );
             const selectedCamera = backCamera ?? cameras[0];
 
@@ -95,7 +112,9 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
         }
     }, []);
 
-    startScannerRef.current = startScanner;
+    useEffect(() => {
+        startScannerRef.current = startScanner;
+    }, [startScanner]);
 
     const toggleScanner = useCallback(() => {
         if (scannerActive) {
@@ -114,6 +133,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
             const timer = setTimeout(() => {
                 startScannerRef.current();
             }, 600);
+
             return () => clearTimeout(timer);
         }
     }, [active_sessions.length]);
@@ -124,12 +144,17 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                 const res = await fetch('/absen/sesi-aktif');
                 const data: ActiveSession[] = await res.json();
                 setPolledSessions(data);
-                if (data.length > 0 && !scannerStartedRef.current && !autoStartDoneRef.current) {
+
+                if (
+                    data.length > 0 &&
+                    !scannerStartedRef.current &&
+                    !autoStartDoneRef.current
+                ) {
                     autoStartDoneRef.current = true;
                     setAutoScanning(true);
                     startScannerRef.current();
                 }
-            } catch {}
+            } catch { /* network error, will retry next interval */ }
         }, 10000);
 
         return () => clearInterval(poll);
@@ -156,8 +181,12 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                                 <Calendar className="h-5 w-5" />
                             </div>
                             <div>
-                                <h1 className="text-xl font-bold text-slate-900">Absensi Saya</h1>
-                                <p className="text-sm text-slate-500">Scan QR code guru untuk absen</p>
+                                <h1 className="text-xl font-bold text-slate-900">
+                                    Absensi Saya
+                                </h1>
+                                <p className="text-sm text-slate-500">
+                                    Scan QR code guru untuk absen
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -170,32 +199,39 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                                 scannerActive
                                     ? 'bg-red-500 hover:bg-red-600'
                                     : polledSessions.length > 0
-                                    ? 'animate-pulse bg-emerald-600 hover:bg-emerald-700'
-                                    : 'bg-indigo-600 hover:bg-indigo-700'
+                                      ? 'animate-pulse bg-emerald-600 hover:bg-emerald-700'
+                                      : 'bg-indigo-600 hover:bg-indigo-700'
                             }`}
                         >
                             {scannerActive ? (
-                                <><CameraOff className="h-5 w-5" /> Tutup Kamera</>
+                                <>
+                                    <CameraOff className="h-5 w-5" /> Tutup
+                                    Kamera
+                                </>
                             ) : (
-                                <><Camera className="h-5 w-5" /> Scan QR</>
+                                <>
+                                    <Camera className="h-5 w-5" /> Scan QR
+                                </>
                             )}
                         </button>
                         {autoScanning && (
-                            <span className="text-xs text-indigo-600 font-semibold animate-pulse">
+                            <span className="animate-pulse text-xs font-semibold text-indigo-600">
                                 Mendeteksi kamera...
                             </span>
                         )}
-                        {polledSessions.length > 0 && !scannerActive && !autoScanning && (
-                            <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold">
-                                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                                {polledSessions.length} sesi absen aktif
-                            </span>
-                        )}
+                        {polledSessions.length > 0 &&
+                            !scannerActive &&
+                            !autoScanning && (
+                                <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                                    <span className="flex h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+                                    {polledSessions.length} sesi absen aktif
+                                </span>
+                            )}
                     </div>
 
                     {/* QR Scanner Viewfinder */}
                     {scannerActive && (
-                        <div className="rounded-xl border-2 border-dashed border-indigo-300 bg-black overflow-hidden">
+                        <div className="overflow-hidden rounded-xl border-2 border-dashed border-indigo-300 bg-black">
                             <div
                                 id="qr-scanner-viewfinder"
                                 ref={scannerRef}
@@ -205,7 +241,8 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                             <div className="flex items-center justify-center gap-2 bg-black/80 px-4 py-2.5 text-center">
                                 <Smartphone className="h-4 w-4 text-indigo-300" />
                                 <p className="text-xs text-indigo-200">
-                                    Arahkan kamera ke QR code yang ditampilkan guru
+                                    Arahkan kamera ke QR code yang ditampilkan
+                                    guru
                                 </p>
                             </div>
                         </div>
@@ -215,12 +252,17 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                     {cameraError && (
                         <div className="rounded-xl border border-red-200 bg-red-50 p-4">
                             <div className="flex items-start gap-3">
-                                <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
                                 <div>
-                                    <p className="text-sm font-bold text-red-700">Kamera tidak tersedia</p>
-                                    <p className="text-xs text-red-600 mt-1">{cameraError}</p>
-                                    <p className="text-xs text-red-500 mt-1">
-                                        Gunakan daftar sesi aktif di bawah untuk absen tanpa kamera.
+                                    <p className="text-sm font-bold text-red-700">
+                                        Kamera tidak tersedia
+                                    </p>
+                                    <p className="mt-1 text-xs text-red-600">
+                                        {cameraError}
+                                    </p>
+                                    <p className="mt-1 text-xs text-red-500">
+                                        Gunakan daftar sesi aktif di bawah untuk
+                                        absen tanpa kamera.
                                     </p>
                                 </div>
                             </div>
@@ -235,8 +277,13 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                                     <Camera className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-bold text-indigo-800">Absen sedang dibuka!</p>
-                                    <p className="text-xs text-indigo-600 mt-0.5">Mencoba mengakses kamera untuk scan otomatis...</p>
+                                    <p className="text-sm font-bold text-indigo-800">
+                                        Absen sedang dibuka!
+                                    </p>
+                                    <p className="mt-0.5 text-xs text-indigo-600">
+                                        Mencoba mengakses kamera untuk scan
+                                        otomatis...
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -250,14 +297,30 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                                     <QrCode className="h-5 w-5" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-bold text-emerald-800">Absen sedang dibuka!</p>
+                                    <p className="text-sm font-bold text-emerald-800">
+                                        Absen sedang dibuka!
+                                    </p>
                                     <div className="mt-2 space-y-2">
-                                        {polledSessions.map(s => (
-                                            <div key={s.pertemuan_id} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 shadow-sm">
+                                        {polledSessions.map((s) => (
+                                            <div
+                                                key={s.pertemuan_id}
+                                                className="flex items-center justify-between rounded-lg bg-white px-3 py-2 shadow-sm"
+                                            >
                                                 <div>
-                                                    <p className="text-sm font-semibold text-slate-800">{s.pertemuan}</p>
+                                                    <p className="text-sm font-semibold text-slate-800">
+                                                        {s.pertemuan}
+                                                    </p>
                                                     <p className="text-xs text-slate-500">
-                                                        Berakhir: {new Date(s.expired_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                                        Berakhir:{' '}
+                                                        {new Date(
+                                                            s.expired_at,
+                                                        ).toLocaleTimeString(
+                                                            'id-ID',
+                                                            {
+                                                                hour: '2-digit',
+                                                                minute: '2-digit',
+                                                            },
+                                                        )}
                                                     </p>
                                                 </div>
                                                 <button
@@ -278,57 +341,117 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                     {/* Stats */}
                     <div className="grid grid-cols-3 gap-3">
                         {[
-                            { label: 'Total Absen', value: stats.total, color: '#436391', icon: Calendar },
-                            { label: 'Hadir', value: stats.hadir, color: '#059669', icon: CheckCircle },
-                            { label: 'Terlambat', value: stats.terlambat, color: '#d97706', icon: Clock },
+                            {
+                                label: 'Total Absen',
+                                value: stats.total,
+                                color: '#436391',
+                                icon: Calendar,
+                            },
+                            {
+                                label: 'Hadir',
+                                value: stats.hadir,
+                                color: '#059669',
+                                icon: CheckCircle,
+                            },
+                            {
+                                label: 'Terlambat',
+                                value: stats.terlambat,
+                                color: '#d97706',
+                                icon: Clock,
+                            },
                         ].map((s) => (
-                            <div key={s.label} className="rounded-xl border border-slate-200 bg-white p-4">
+                            <div
+                                key={s.label}
+                                className="rounded-xl border border-slate-200 bg-white p-4"
+                            >
                                 <div className="flex items-center justify-between">
-                                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{s.label}</p>
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: s.color + '18', color: s.color }}>
+                                    <p className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                        {s.label}
+                                    </p>
+                                    <div
+                                        className="flex h-8 w-8 items-center justify-center rounded-lg"
+                                        style={{
+                                            backgroundColor: s.color + '18',
+                                            color: s.color,
+                                        }}
+                                    >
                                         <s.icon className="h-4 w-4" />
                                     </div>
                                 </div>
-                                <p className="mt-1 text-2xl font-bold text-slate-900">{s.value}</p>
+                                <p className="mt-1 text-2xl font-bold text-slate-900">
+                                    {s.value}
+                                </p>
                             </div>
                         ))}
                     </div>
 
                     {/* Riwayat Table */}
-                    <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                         <div className="border-b border-slate-100 px-5 py-4">
-                            <h2 className="text-sm font-bold text-slate-900">Riwayat Absensi</h2>
+                            <h2 className="text-sm font-bold text-slate-900">
+                                Riwayat Absensi
+                            </h2>
                         </div>
                         {riwayat.length > 0 ? (
                             <table className="w-full text-left text-xs">
                                 <thead>
                                     <tr className="bg-slate-50 text-slate-500">
-                                        <th className="px-4 py-2.5 font-semibold">Pertemuan</th>
-                                        <th className="px-4 py-2.5 font-semibold">Tanggal</th>
-                                        <th className="px-4 py-2.5 font-semibold">Scan</th>
-                                        <th className="px-4 py-2.5 font-semibold">Status</th>
+                                        <th className="px-4 py-2.5 font-semibold">
+                                            Pertemuan
+                                        </th>
+                                        <th className="px-4 py-2.5 font-semibold">
+                                            Tanggal
+                                        </th>
+                                        <th className="px-4 py-2.5 font-semibold">
+                                            Scan
+                                        </th>
+                                        <th className="px-4 py-2.5 font-semibold">
+                                            Status
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
-                                    {riwayat.map(r => (
-                                        <tr key={r.id} className="hover:bg-slate-50 transition-colors">
+                                    {riwayat.map((r) => (
+                                        <tr
+                                            key={r.id}
+                                            className="transition-colors hover:bg-slate-50"
+                                        >
                                             <td className="px-4 py-3">
-                                                <p className="font-medium text-slate-800">{r.pertemuan}</p>
-                                                <p className="text-[10px] text-slate-400">{r.roadmap}</p>
+                                                <p className="font-medium text-slate-800">
+                                                    {r.pertemuan}
+                                                </p>
+                                                <p className="text-[10px] text-slate-400">
+                                                    {r.roadmap}
+                                                </p>
                                             </td>
-                                            <td className="px-4 py-3 text-slate-600">{r.tanggal}</td>
-                                            <td className="px-4 py-3 text-slate-400">{r.scan_time ?? '-'}</td>
+                                            <td className="px-4 py-3 text-slate-600">
+                                                {r.tanggal}
+                                            </td>
+                                            <td className="px-4 py-3 text-slate-400">
+                                                {r.scan_time ?? '-'}
+                                            </td>
                                             <td className="px-4 py-3">
-                                                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                                    r.status === 'hadir'
-                                                        ? 'bg-emerald-50 text-emerald-600'
-                                                        : r.status === 'terlambat'
-                                                        ? 'bg-amber-50 text-amber-600'
-                                                        : 'bg-red-50 text-red-600'
-                                                }`}>
-                                                    {r.status === 'hadir' && <CheckCircle className="h-3 w-3" />}
-                                                    {r.status === 'terlambat' && <Clock className="h-3 w-3" />}
-                                                    {r.status === 'tidak_hadir' && <AlertTriangle className="h-3 w-3" />}
+                                                <span
+                                                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                                        r.status === 'hadir'
+                                                            ? 'bg-emerald-50 text-emerald-600'
+                                                            : r.status ===
+                                                                'terlambat'
+                                                              ? 'bg-amber-50 text-amber-600'
+                                                              : 'bg-red-50 text-red-600'
+                                                    }`}
+                                                >
+                                                    {r.status === 'hadir' && (
+                                                        <CheckCircle className="h-3 w-3" />
+                                                    )}
+                                                    {r.status ===
+                                                        'terlambat' && (
+                                                        <Clock className="h-3 w-3" />
+                                                    )}
+                                                    {r.status ===
+                                                        'tidak_hadir' && (
+                                                        <AlertTriangle className="h-3 w-3" />
+                                                    )}
                                                     {r.status}
                                                 </span>
                                             </td>
@@ -339,8 +462,13 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                         ) : (
                             <div className="flex flex-col items-center gap-2 px-5 py-12 text-center">
                                 <Calendar className="h-10 w-10 text-slate-300" />
-                                <p className="text-sm font-semibold text-slate-500">Belum ada riwayat absensi</p>
-                                <p className="text-xs text-slate-400">Scan QR code yang ditampilkan guru untuk melakukan absensi.</p>
+                                <p className="text-sm font-semibold text-slate-500">
+                                    Belum ada riwayat absensi
+                                </p>
+                                <p className="text-xs text-slate-400">
+                                    Scan QR code yang ditampilkan guru untuk
+                                    melakukan absensi.
+                                </p>
                             </div>
                         )}
                     </div>

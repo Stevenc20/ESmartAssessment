@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class KelasController extends Controller

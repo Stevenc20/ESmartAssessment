@@ -68,12 +68,14 @@ class GlobalAnnouncementController extends Controller
     public function destroy(GlobalAnnouncement $globalAnnouncement)
     {
         $globalAnnouncement->delete();
+
         return back()->with('success', 'Pengumuman global berhasil dihapus');
     }
 
     public function toggle(GlobalAnnouncement $globalAnnouncement)
     {
-        $globalAnnouncement->update(['is_active' => !$globalAnnouncement->is_active]);
+        $globalAnnouncement->update(['is_active' => ! $globalAnnouncement->is_active]);
+
         return back()->with('success', 'Status pengumuman berhasil diubah');
     }
 }

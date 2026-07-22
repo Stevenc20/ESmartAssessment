@@ -28,8 +28,9 @@ export default function CtaSection() {
                 </h2>
 
                 <p className="lp-cta-desc">
-                    Bergabunglah dengan ribuan guru dan siswa yang sudah merasakan
-                    pengalaman belajar yang lebih baik, lebih menyenangkan, dan lebih terukur.
+                    Bergabunglah dengan ribuan guru dan siswa yang sudah
+                    merasakan pengalaman belajar yang lebih baik, lebih
+                    menyenangkan, dan lebih terukur.
                 </p>
 
                 <div className="lp-cta-actions">
@@ -48,11 +49,17 @@ export default function CtaSection() {
 
                 {/* Trust badges */}
                 <div className="lp-cta-trust">
-                    <span className="lp-cta-trust-item">✓ Gratis untuk memulai</span>
+                    <span className="lp-cta-trust-item">
+                        ✓ Gratis untuk memulai
+                    </span>
                     <span className="lp-cta-trust-sep">·</span>
-                    <span className="lp-cta-trust-item">✓ Tanpa kartu kredit</span>
+                    <span className="lp-cta-trust-item">
+                        ✓ Tanpa kartu kredit
+                    </span>
                     <span className="lp-cta-trust-sep">·</span>
-                    <span className="lp-cta-trust-item">✓ Setup dalam 5 menit</span>
+                    <span className="lp-cta-trust-item">
+                        ✓ Setup dalam 5 menit
+                    </span>
                 </div>
             </div>
         </section>

@@ -1,15 +1,15 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
+import { Switch } from '@/components/ui/switch';
 
 export default function SettingsIndex() {
     const { props } = usePage();
-    const settings = (props as any).settings as Record<string, any> || {};
+    const settings = ((props as any).settings as Record<string, any>) || {};
     const errors = (props as any).errors || {};
 
     const { data, setData, put, processing } = useForm({
@@ -39,26 +39,59 @@ export default function SettingsIndex() {
                     <CardContent className="pt-6">
                         <form onSubmit={submit} className="space-y-6">
                             <div>
-                                <h3 className="text-sm font-semibold text-muted-foreground mb-3">APLIKASI</h3>
+                                <h3 className="mb-3 text-sm font-semibold text-muted-foreground">
+                                    APLIKASI
+                                </h3>
                                 <div>
                                     <Label>Nama Aplikasi</Label>
-                                    <Input value={data.app_name} onChange={e => setData('app_name', e.target.value)} />
-                                    {errors.app_name && <p className="text-sm text-red-500 mt-1">{errors.app_name}</p>}
+                                    <Input
+                                        value={data.app_name}
+                                        onChange={(e) =>
+                                            setData('app_name', e.target.value)
+                                        }
+                                    />
+                                    {errors.app_name && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.app_name}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
                             <Separator />
 
                             <div>
-                                <h3 className="text-sm font-semibold text-muted-foreground mb-3">FITUR</h3>
+                                <h3 className="mb-3 text-sm font-semibold text-muted-foreground">
+                                    FITUR
+                                </h3>
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <div><Label>Registrasi Terbuka</Label><p className="text-xs text-muted-foreground">Izinkan user baru mendaftar</p></div>
-                                        <Switch checked={data.registration_open} onCheckedChange={v => setData('registration_open', v)} />
+                                        <div>
+                                            <Label>Registrasi Terbuka</Label>
+                                            <p className="text-xs text-muted-foreground">
+                                                Izinkan user baru mendaftar
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={data.registration_open}
+                                            onCheckedChange={(v) =>
+                                                setData('registration_open', v)
+                                            }
+                                        />
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <div><Label>Mode Maintenance</Label><p className="text-xs text-muted-foreground">Nonaktifkan akses sementara</p></div>
-                                        <Switch checked={data.maintenance_mode} onCheckedChange={v => setData('maintenance_mode', v)} />
+                                        <div>
+                                            <Label>Mode Maintenance</Label>
+                                            <p className="text-xs text-muted-foreground">
+                                                Nonaktifkan akses sementara
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={data.maintenance_mode}
+                                            onCheckedChange={(v) =>
+                                                setData('maintenance_mode', v)
+                                            }
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -66,23 +99,57 @@ export default function SettingsIndex() {
                             <Separator />
 
                             <div>
-                                <h3 className="text-sm font-semibold text-muted-foreground mb-3">KEAMANAN</h3>
+                                <h3 className="mb-3 text-sm font-semibold text-muted-foreground">
+                                    KEAMANAN
+                                </h3>
                                 <div className="space-y-4">
                                     <div>
                                         <Label>Max Login Attempts</Label>
-                                        <Input type="number" value={data.max_login_attempts} onChange={e => setData('max_login_attempts', Number(e.target.value))} className="w-24" />
-                                        {errors.max_login_attempts && <p className="text-sm text-red-500 mt-1">{errors.max_login_attempts}</p>}
+                                        <Input
+                                            type="number"
+                                            value={data.max_login_attempts}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'max_login_attempts',
+                                                    Number(e.target.value),
+                                                )
+                                            }
+                                            className="w-24"
+                                        />
+                                        {errors.max_login_attempts && (
+                                            <p className="mt-1 text-sm text-red-500">
+                                                {errors.max_login_attempts}
+                                            </p>
+                                        )}
                                     </div>
                                     <div>
                                         <Label>Session Timeout (menit)</Label>
-                                        <Input type="number" value={data.session_timeout} onChange={e => setData('session_timeout', Number(e.target.value))} className="w-24" />
-                                        {errors.session_timeout && <p className="text-sm text-red-500 mt-1">{errors.session_timeout}</p>}
+                                        <Input
+                                            type="number"
+                                            value={data.session_timeout}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'session_timeout',
+                                                    Number(e.target.value),
+                                                )
+                                            }
+                                            className="w-24"
+                                        />
+                                        {errors.session_timeout && (
+                                            <p className="mt-1 text-sm text-red-500">
+                                                {errors.session_timeout}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
 
                             <div className="flex justify-end">
-                                <Button type="submit" disabled={processing}>{processing ? 'Menyimpan...' : 'Simpan Pengaturan'}</Button>
+                                <Button type="submit" disabled={processing}>
+                                    {processing
+                                        ? 'Menyimpan...'
+                                        : 'Simpan Pengaturan'}
+                                </Button>
                             </div>
                         </form>
                     </CardContent>
@@ -93,5 +160,8 @@ export default function SettingsIndex() {
 }
 
 SettingsIndex.layout = {
-    breadcrumbs: [{ title: 'Dashboard', href: '/admin/dashboard' }, { title: 'Pengaturan', href: '/admin/settings' }],
+    breadcrumbs: [
+        { title: 'Dashboard', href: '/admin/dashboard' },
+        { title: 'Pengaturan', href: '/admin/settings' },
+    ],
 };

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Materi;
 use App\Models\PengumpulanTugas;
-use App\Models\PenilaianTugas;
 use App\Models\Pertemuan;
 use App\Models\ProgressMateri;
 use App\Models\Roadmap;
@@ -18,9 +17,12 @@ class MateriController extends Controller
 {
     private function getYoutubeEmbedUrl(?string $url): ?string
     {
-        if (!$url) return null;
+        if (! $url) {
+            return null;
+        }
         preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/', $url, $match);
-        return $match ? 'https://www.youtube.com/embed/' . $match[1] : null;
+
+        return $match ? 'https://www.youtube.com/embed/'.$match[1] : null;
     }
 
     public function index()
@@ -61,7 +63,7 @@ class MateriController extends Controller
             ->get()
             ->map(fn ($p) => [
                 'id' => $p->id,
-                'judul' => $p->judul . ($p->roadmap ? ' (' . $p->roadmap->judul . ')' : ''),
+                'judul' => $p->judul.($p->roadmap ? ' ('.$p->roadmap->judul.')' : ''),
             ]);
 
         return Inertia::render('materi/create', [
@@ -104,7 +106,7 @@ class MateriController extends Controller
             ->get()
             ->map(fn ($p) => [
                 'id' => $p->id,
-                'judul' => $p->judul . ($p->roadmap ? ' (' . $p->roadmap->judul . ')' : ''),
+                'judul' => $p->judul.($p->roadmap ? ' ('.$p->roadmap->judul.')' : ''),
             ]);
 
         return Inertia::render('materi/edit', [

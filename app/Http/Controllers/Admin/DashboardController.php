@@ -9,6 +9,7 @@ use App\Models\Kelas;
 use App\Models\Materi;
 use App\Models\User;
 use App\Models\UserLog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -83,7 +84,7 @@ class DashboardController extends Controller
             ->orderBy('bulan')
             ->get()
             ->map(fn ($r) => [
-                'bulan' => \Carbon\Carbon::create()->month((int)$r->bulan)->locale('id')->isoFormat('MMM'),
+                'bulan' => Carbon::create()->month((int) $r->bulan)->locale('id')->isoFormat('MMM'),
                 'total' => $r->total,
             ]);
 

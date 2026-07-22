@@ -41,7 +41,7 @@ class HandleInertiaRequests extends Middleware
                 ->latest()
                 ->get()
                 ->map(fn ($a) => [
-                    'id' => 'announcement_' . $a->id,
+                    'id' => 'announcement_'.$a->id,
                     'judul' => $a->judul,
                     'isi' => $a->isi,
                     'type' => 'info',
@@ -63,7 +63,7 @@ class HandleInertiaRequests extends Middleware
                 ->latest()
                 ->get()
                 ->map(fn ($a) => [
-                    'id' => 'global_' . $a->id,
+                    'id' => 'global_'.$a->id,
                     'judul' => $a->judul,
                     'isi' => $a->isi,
                     'type' => $a->type,

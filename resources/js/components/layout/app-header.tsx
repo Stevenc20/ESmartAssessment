@@ -1,13 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
-import {
-    GraduationCap,
-    LayoutGrid,
-    Menu,
-    Search,
-} from 'lucide-react';
+import { GraduationCap, LayoutGrid, Menu, Search } from 'lucide-react';
 import AppLogo from '@/components/layout/app-logo';
 import AppLogoIcon from '@/components/layout/app-logo-icon';
 import { Breadcrumbs } from '@/components/layout/breadcrumbs';
+import { UserMenuContent } from '@/components/settings/user-menu-content';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,7 +24,6 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
-import { UserMenuContent } from '@/components/settings/user-menu-content';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';

@@ -1,9 +1,9 @@
 import { Form } from '@inertiajs/react';
 import { ShieldCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import Heading from '@/components/settings/heading';
 import TwoFactorRecoveryCodes from '@/components/auth/two-factor-recovery-codes';
 import TwoFactorSetupModal from '@/components/auth/two-factor-setup-modal';
+import Heading from '@/components/settings/heading';
 import { Button } from '@/components/ui/button';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import { disable, enable } from '@/routes/two-factor';

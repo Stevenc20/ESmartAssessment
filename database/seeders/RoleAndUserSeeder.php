@@ -38,8 +38,10 @@ class RoleAndUserSeeder extends Seeder
             $existing = User::where('email', $data['email'])->first();
             if ($existing) {
                 $existing->update($data);
+
                 return $existing;
             }
+
             return User::create($data);
         };
 
@@ -101,7 +103,7 @@ class RoleAndUserSeeder extends Seeder
 
         // ── 7. Update existing test@example.com ────────────────
         $testUser = User::where('email', 'test@example.com')->first();
-        if ($testUser && !$testUser->role_id) {
+        if ($testUser && ! $testUser->role_id) {
             $testUser->update([
                 'role_id' => $siswaRoleId,
                 'status' => 'active',

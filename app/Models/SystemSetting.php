@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class SystemSetting extends Model
 {
     protected $table = 'system_settings';
+
     protected $fillable = [
         'key',
         'value',
@@ -31,6 +32,7 @@ class SystemSetting extends Model
         if ($value === null) {
             return $default;
         }
+
         return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 }

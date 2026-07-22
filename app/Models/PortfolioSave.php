@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PortfolioSave extends Model
 {
     protected $table = 'portfolio_saves';
+
     protected $fillable = ['portfolio_id', 'user_id'];
 
     public function portfolio()
