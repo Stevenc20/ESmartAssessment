@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BarChart3, BookOpen, Brain, Calendar, GraduationCap, LayoutGrid, Megaphone, Trophy, Wallet } from 'lucide-react';
+import { BarChart3, BookOpen, Calendar, GraduationCap, LayoutGrid, Megaphone } from 'lucide-react';
 import AppLogo from '@/components/layout/app-logo';
 import { NavMain } from '@/components/layout/nav-main';
 import { NavUser } from '@/components/layout/nav-user';
@@ -14,10 +14,6 @@ const items: NavItem[] = [
     { title: 'Laporan Absensi',     href: '/laporan/absensi',           icon: BarChart3     },
     { title: 'Materi Pembelajaran', href: '/materi',                    icon: BookOpen      },
     { title: 'Assessment',          href: '/assessment',                icon: GraduationCap },
-    { title: 'Learning Journey',    href: '/learning-journey',          icon: BookOpen      },
-    { title: 'Portfolio',           href: '/portfolio',                 icon: Wallet        },
-    { title: 'Challenges',          href: '/challenges',                icon: Trophy        },
-    { title: 'Analytics',           href: '/analytics',                 icon: Brain         },
 ];
 
 export function AppSidebarGuru() {

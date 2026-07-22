@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Brain, GraduationCap, LayoutGrid, Library, Megaphone, QrCode, Trophy, Wallet } from 'lucide-react';
+import { GraduationCap, LayoutGrid, Library, Megaphone, QrCode } from 'lucide-react';
 import AppLogo from '@/components/layout/app-logo';
 import { NavMain } from '@/components/layout/nav-main';
 import { NavUser } from '@/components/layout/nav-user';
@@ -11,12 +11,8 @@ const items: NavItem[] = [
     { title: 'Dashboard',           href: dashboard(),                  icon: LayoutGrid    },
     { title: 'Pengumuman',          href: '/pengumuman',                icon: Megaphone     },
     { title: 'Materi',              href: '/materi-saya',               icon: Library       },
-    { title: 'Learning Journey',    href: '/learning-journey',          icon: BookOpen      },
     { title: 'Absensi',             href: '/absen',                     icon: QrCode        },
     { title: 'Assessment',          href: '/assessment',                icon: GraduationCap },
-    { title: 'Portfolio',           href: '/portfolio',                 icon: Wallet        },
-    { title: 'Challenges',          href: '/challenges',                icon: Trophy        },
-    { title: 'Analytics',           href: '/analytics',                 icon: Brain         },
 ];
 
 export function AppSidebarSiswa() {

@@ -21,9 +21,6 @@ const recentActivities = [
 
 const quickActions = [
     { title: 'Buat Assessment', description: 'Buat assessment baru',      href: '/assessment/create', icon: GraduationCap },
-    { title: 'Lihat Portfolio', description: 'Review portfolio siswa',     href: '/portfolio',         icon: BookOpen      },
-    { title: 'Buat Challenge',  description: 'Buat challenge baru',        href: '/challenges/create', icon: Trophy        },
-    { title: 'Lihat Analytics', description: 'Analisis data pembelajaran', href: '/analytics',         icon: TrendingUp    },
 ];
 
 export default function RegularDashboard() {

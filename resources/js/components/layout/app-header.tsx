@@ -1,13 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
-    BarChart3,
-    BookOpen,
     GraduationCap,
     LayoutGrid,
     Menu,
     Search,
-    Trophy,
-    Users,
 } from 'lucide-react';
 import AppLogo from '@/components/layout/app-logo';
 import AppLogoIcon from '@/components/layout/app-logo-icon';
@@ -50,29 +46,9 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Learning',
-        href: '/learning-journey',
-        icon: BookOpen,
-    },
-    {
         title: 'Assessment',
         href: '/assessment',
         icon: GraduationCap,
-    },
-    {
-        title: 'Portfolio',
-        href: '/portfolio',
-        icon: Users,
-    },
-    {
-        title: 'Challenges',
-        href: '/challenges',
-        icon: Trophy,
-    },
-    {
-        title: 'Analytics',
-        href: '/analytics',
-        icon: BarChart3,
     },
 ];
 

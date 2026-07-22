@@ -40,9 +40,6 @@ export default function StudentDashboard({ studentData }: { studentData: Student
 
     const quickActions = [
         { title: 'Ikuti Assessment', description: 'Kerjakan assessment tersedia', href: '/assessment', icon: GraduationCap },
-        { title: 'Portfolio Saya', description: 'Lihat karya portfolio', href: '/portfolio', icon: BookOpen },
-        { title: 'Learning Path', description: 'Lanjutkan pembelajaran', href: '/learning-journey', icon: BookOpen },
-        { title: 'Peringkat', description: 'Lihat leaderboard', href: '/challenges', icon: Trophy },
     ];
 
     return (
