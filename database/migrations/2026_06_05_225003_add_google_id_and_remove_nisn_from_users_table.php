@@ -13,6 +13,15 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('google_id')->nullable()->unique()->after('id');
+        });
+
+        if (Schema::hasIndex('users', 'users_nis_unique')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropIndex('users_nis_unique');
+            });
+        }
+
+        Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('nisn');
         });
     }
