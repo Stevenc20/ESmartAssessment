@@ -1,0 +1,37 @@
+services:
+  app:
+    build: .
+    container_name: esmart-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    depends_on:
+      - mysql
+    networks:
+      - esmart
+    volumes:
+      - .:/var/www/html
+      - storage:/var/www/html/storage
+
+  mysql:
+    image: mysql:8.0
+    container_name: esmart-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-esmart}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_USER: ${DB_USERNAME:-esmart}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      - esmart
+
+volumes:
+  storage:
+  mysql:
+
+networks:
+  esmart:
+    driver: bridge

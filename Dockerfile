@@ -1,0 +1,39 @@
+FROM php:8.3-fpm
+
+# System dependencies
+RUN apt-get update && apt-get install -y \
+    git curl zip unzip libpng-dev libonig-dev libxml2-dev \
+    libzip-dev libicu-dev nginx supervisor \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Node.js 22
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y nodejs
+
+# Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www/html
+
+# Nginx config
+COPY nginx/default.conf /etc/nginx/sites-available/default
+
+# Supervisor config
+COPY supervisor.conf /etc/supervisor/conf.d/app.conf
+
+# Copy project
+COPY . .
+
+# Install deps & build
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN npm ci && npm run build
+
+# Permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache
+
+EXPOSE 80
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/app.conf"]
