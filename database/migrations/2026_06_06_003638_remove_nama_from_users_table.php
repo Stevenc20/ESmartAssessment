@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('nama');
-        });
+        if (Schema::hasColumn('users', 'nama')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn('nama');
+            });
+        }
     }
 
     /**
