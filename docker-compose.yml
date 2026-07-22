@@ -8,6 +8,8 @@ services:
       - mysql
     networks:
       - esmart
+    ports:
+      - "8002:80"
     volumes:
       - .:/var/www/html
       - storage:/var/www/html/storage
