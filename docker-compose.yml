@@ -9,6 +9,7 @@ services:
     environment:
       - APP_URL=https://esmart.tantechstev.com
       - ASSET_URL=https://esmart.tantechstev.com
+      - SESSION_SECURE_COOKIE=true
     networks:
       - esmart
     ports:

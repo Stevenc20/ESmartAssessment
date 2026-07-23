@@ -32,6 +32,16 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+
+        $this->app->bind(
+            \Laravel\Fortify\Http\Responses\LoginResponse::class,
+            \App\Http\Responses\FortifyLoginResponse::class
+        );
+
+        $this->app->bind(
+            \Laravel\Fortify\Http\Responses\LogoutResponse::class,
+            \App\Http\Responses\FortifyLogoutResponse::class
+        );
     }
 
     private function configureViews(): void
