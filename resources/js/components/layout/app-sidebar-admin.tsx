@@ -24,11 +24,10 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
 const items: NavItem[] = [
-    { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+    { title: 'Dashboard', href: '/admin/dashboard', icon: LayoutGrid },
     { title: 'Management Users', href: '/admin/users', icon: Users },
     { title: 'Role & Permission', href: '/admin/roles', icon: Shield },
     { title: 'Tahun Ajaran', href: '/admin/tahun-ajaran', icon: Calendar },

@@ -27,13 +27,12 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
 const sections: { label: string; items: NavItem[] }[] = [
     {
         label: 'Overview',
-        items: [{ title: 'Dashboard', href: dashboard(), icon: LayoutGrid }],
+        items: [{ title: 'Dashboard', href: '/admin/dashboard', icon: LayoutGrid }],
     },
     {
         label: 'Management',

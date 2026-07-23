@@ -14,14 +14,28 @@ use Inertia\Inertia;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('role')->latest()->paginate(20);
+        $query = User::with('role')->latest();
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%")
+                    ->orWhere('email', 'like', "%{$request->search}%");
+            });
+        }
+
+        if ($request->filled('role_id')) {
+            $query->where('role_id', $request->role_id);
+        }
+
+        $users = $query->paginate(20)->withQueryString();
         $roles = Role::all();
 
         return Inertia::render('admin/users/index', [
             'users' => $users,
             'roles' => $roles,
+            'filters' => $request->only('search', 'role_id'),
         ]);
     }
 
