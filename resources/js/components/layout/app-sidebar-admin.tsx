@@ -51,7 +51,7 @@ export function AppSidebarAdmin() {
                             asChild
                             className="hover:bg-transparent focus-visible:ring-0"
                         >
-                            <Link href={dashboard()}>
+                            <Link href="/admin/dashboard">
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
