@@ -23,8 +23,8 @@ class DashboardController extends Controller
         $roleSuperAdminId = DB::table('roles')->where('role_name', 'super_admin')->value('id');
         $roleAdminId = DB::table('roles')->where('role_name', 'admin')->value('id');
 
-        $totalSiswa = $roleSiswaId ? User::where('role_id', $roleSiswaId)->count() : 0;
-        $totalGuru = $roleGuruId ? User::where('role_id', $roleGuruId)->count() : 0;
+        $totalSiswa = $roleSiswaId ? User::where('role_id', $roleSiswaId)->where('status', 'active')->count() : 0;
+        $totalGuru = $roleGuruId ? User::where('role_id', $roleGuruId)->where('status', 'active')->count() : 0;
         $totalAdmin = User::whereIn('role_id', array_filter([$roleAdminId, $roleSuperAdminId]))->count();
         $totalUser = User::count();
 

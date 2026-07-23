@@ -31,8 +31,8 @@ class DashboardController extends Controller
         $roleAdminIds = DB::table('roles')->whereIn('role_name', ['admin', 'super_admin'])->pluck('id');
 
         $stats = [
-            'totalSiswa' => $roleSiswaId ? User::where('role_id', $roleSiswaId)->count() : 0,
-            'totalGuru' => $roleGuruId ? User::where('role_id', $roleGuruId)->count() : 0,
+            'totalSiswa' => $roleSiswaId ? User::where('role_id', $roleSiswaId)->where('status', 'active')->count() : 0,
+            'totalGuru' => $roleGuruId ? User::where('role_id', $roleGuruId)->where('status', 'active')->count() : 0,
             'totalAdmin' => $roleAdminIds->isNotEmpty() ? User::whereIn('role_id', $roleAdminIds)->count() : 0,
             'totalSiswaWithKelas' => DB::table('siswa_kelas')->distinct('siswa_id')->count('siswa_id'),
             'totalKelas' => Kelas::count(),
@@ -79,7 +79,7 @@ class DashboardController extends Controller
 
             $totalSiswa = $absensiSiswa > 0
                 ? $absensiSiswa
-                : ($roleSiswaId ? User::where('role_id', $roleSiswaId)->count() : 0);
+                : ($roleSiswaId ? User::where('role_id', $roleSiswaId)->where('status', 'active')->count() : 0);
 
             $tugasAktif = Tugas::whereIn('materi_id', $materiIds)
                 ->where('deadline', '>', now())
