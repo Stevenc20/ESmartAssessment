@@ -267,7 +267,13 @@ export default function CompleteRegistration({ googleUser }: Props) {
                             </Label>
                             <Select
                                 value={data.kelas}
-                                onValueChange={(v) => setData('kelas', v)}
+                                onValueChange={(v) => {
+                                    try {
+                                        setData('kelas', v);
+                                    } catch (e) {
+                                        console.error('kelas error:', e);
+                                    }
+                                }}
                             >
                                 <SelectTrigger id="kelas" tabIndex={1}>
                                     <SelectValue placeholder="Pilih kelas" />
@@ -290,7 +296,13 @@ export default function CompleteRegistration({ googleUser }: Props) {
                             </Label>
                             <Select
                                 value={data.jurusan}
-                                onValueChange={(v) => setData('jurusan', v)}
+                                onValueChange={(v) => {
+                                    try {
+                                        setData('jurusan', v);
+                                    } catch (e) {
+                                        console.error('jurusan error:', e);
+                                    }
+                                }}
                             >
                                 <SelectTrigger id="jurusan" tabIndex={2}>
                                     <SelectValue placeholder="Pilih jurusan" />

@@ -565,7 +565,7 @@
     border: none;
     /* Transparent — white glass surface is handled by ::before */
     background: transparent;
-    overflow: hidden;
+    overflow: visible;
     /* Outer glow that cycles colors */
     animation: auth-card-breathe 5s ease-in-out infinite;
 }
@@ -645,6 +645,8 @@
     position: relative;
     z-index: 2; /* above ::before glass layer */
     padding: 1.75rem 2rem 2rem;
+    overflow-y: auto;
+    max-height: 70vh;
 }
 
 .auth-footer-text {
@@ -723,7 +725,7 @@
     );
     animation: auth-field-scan 2.5s ease-in-out infinite;
     pointer-events: none;
-    z-index: 1;
+    z-index: 0;
 }
 
 .auth-glass-card button[type='submit'],
