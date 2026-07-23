@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\Challenge;
-use App\Models\Kelas;
 use App\Models\Materi;
 use App\Models\User;
 use App\Models\UserLog;
@@ -66,14 +65,30 @@ class DashboardController extends Controller
             'challengeBaru' => $todayChallenge,
         ];
 
-        $kelasAttendance = Kelas::withCount([
-            'siswa as total_siswa',
-            'siswa as hadir' => function ($q) {
-                $q->whereHas('absensi', fn ($a) => $a->where('status', 'hadir'));
-            },
-        ])->get()->map(fn ($k) => [
+        $kelasWithSiswa = DB::table('kelas')
+            ->leftJoin('siswa_kelas', 'kelas.id', '=', 'siswa_kelas.kelas_id')
+            ->leftJoin('users', function ($q) use ($roleSiswaId) {
+                $q->on('siswa_kelas.siswa_id', '=', 'users.id')
+                  ->where('users.role_id', '=', $roleSiswaId)
+                  ->where('users.status', '=', 'active');
+            })
+            ->select('kelas.id', 'kelas.nama_kelas', DB::raw('COUNT(DISTINCT users.id) as total_siswa'))
+            ->groupBy('kelas.id', 'kelas.nama_kelas')
+            ->get();
+
+        $kelasIds = $kelasWithSiswa->pluck('id');
+
+        $hadirCounts = DB::table('absensi')
+            ->join('siswa_kelas', 'absensi.siswa_id', '=', 'siswa_kelas.siswa_id')
+            ->where('absensi.status', 'hadir')
+            ->whereIn('siswa_kelas.kelas_id', $kelasIds)
+            ->select('siswa_kelas.kelas_id', DB::raw('COUNT(DISTINCT absensi.siswa_id) as hadir'))
+            ->groupBy('siswa_kelas.kelas_id')
+            ->pluck('hadir', 'kelas_id');
+
+        $kelasAttendance = $kelasWithSiswa->map(fn ($k) => [
             'kelas' => $k->nama_kelas,
-            'kehadiran' => $k->total_siswa > 0 ? round(($k->hadir / $k->total_siswa) * 100) : 0,
+            'kehadiran' => $k->total_siswa > 0 ? round(($hadirCounts->get($k->id, 0) / $k->total_siswa) * 100) : 0,
         ]);
 
         $monthlyGrowth = DB::table('users')

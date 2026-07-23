@@ -62,21 +62,21 @@ function KpiCard({ k, size }: { k: KpiCard; size: 'lg' | 'sm' }) {
     const isLg = size === 'lg';
 
     return (
-        <div className="group relative min-h-[130px] overflow-hidden rounded-xl border border-[#e9edf3] bg-white p-5 transition-all hover:border-slate-300 hover:shadow-md">
+        <div className={`group relative overflow-hidden rounded-xl border border-[#e9edf3] bg-white transition-all hover:border-slate-300 hover:shadow-md ${isLg ? 'p-5' : 'p-4'}`}>
             <div className="flex items-start justify-between">
                 <span className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
                     {k.title}
                 </span>
                 <div
-                    className={`flex items-center justify-center rounded-lg transition-transform group-hover:scale-110 ${isLg ? 'h-10 w-10' : 'h-9 w-9'}`}
+                    className={`flex items-center justify-center rounded-lg transition-transform group-hover:scale-110 ${isLg ? 'h-9 w-9' : 'h-8 w-8'}`}
                     style={{ backgroundColor: k.color + '18', color: k.color }}
                 >
-                    <k.icon className={isLg ? 'h-5 w-5' : 'h-4 w-4'} />
+                    <k.icon className={isLg ? 'h-4 w-4' : 'h-3.5 w-3.5'} />
                 </div>
             </div>
             <div className="mt-2 flex items-baseline gap-2">
                 <span
-                    className={`font-bold text-slate-900 ${isLg ? 'text-3xl' : 'text-2xl'}`}
+                    className={`font-bold text-slate-900 ${isLg ? 'text-2xl' : 'text-xl'}`}
                 >
                     {k.value.toLocaleString()}
                 </span>
@@ -223,7 +223,7 @@ export default function SuperAdminDashboard({
         <>
             <Head title="Control Center" />
 
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+            <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
                 {/* ── Hero ── */}
                 <div className="relative overflow-hidden rounded-xl border border-[#e9edf3] bg-white shadow-sm">
                     <div
