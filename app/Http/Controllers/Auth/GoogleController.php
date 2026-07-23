@@ -39,7 +39,7 @@ class GoogleController extends Controller
 
             Auth::login($existing);
 
-            return redirect()->intended('/dashboard');
+        return Inertia::location('/dashboard');
         }
 
         $settings = Cache::get('app_settings', ['registration_open' => true]);
@@ -81,7 +81,7 @@ class GoogleController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'no_hp' => 'nullable|string|max:20',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
             'kelas' => 'required|in:10,11',
             'jurusan' => 'required|string|max:255',
         ]);
@@ -115,6 +115,6 @@ class GoogleController extends Controller
 
         Auth::login($user);
 
-        return redirect()->intended('/dashboard');
+        return Inertia::location('/dashboard');
     }
 }

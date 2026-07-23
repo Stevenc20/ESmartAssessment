@@ -53,15 +53,60 @@ export default function CompleteRegistration({ googleUser }: Props) {
     const [preview, setPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0] || null;
-        setData('foto', file);
+    function compressImage(file: File): Promise<File> {
+        return new Promise((resolve) => {
+            const maxDim = 800;
+            const quality = 0.7;
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+                let { width, height } = img;
 
-        if (file) {
-            setPreview(URL.createObjectURL(file));
-        } else {
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                        height = Math.round((height / width) * maxDim);
+                        width = maxDim;
+                    } else {
+                        width = Math.round((width / height) * maxDim);
+                        height = maxDim;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d')!;
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob(
+                    (blob) => {
+                        const compressed = new File([blob!], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now(),
+                        });
+                        URL.revokeObjectURL(url);
+                        resolve(compressed);
+                    },
+                    'image/jpeg',
+                    quality,
+                );
+            };
+            img.src = url;
+        });
+    }
+
+    async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0] || null;
+
+        if (!file) {
+            setData('foto', null);
             setPreview(null);
+
+            return;
         }
+
+        const compressed = await compressImage(file);
+        setData('foto', compressed);
+        setPreview(URL.createObjectURL(compressed));
     }
 
     function handleSubmit(e: React.FormEvent) {
