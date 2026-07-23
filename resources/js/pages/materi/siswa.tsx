@@ -144,6 +144,7 @@ function TugasCard({ tugas }: { tugas: TugasItem }) {
     });
     const fileRef = useRef<HTMLInputElement>(null);
     const [fileName, setFileName] = useState<string | null>(null);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const cfg = tugasStatusConfig[tugas.status];
 
     function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -159,14 +160,18 @@ function TugasCard({ tugas }: { tugas: TugasItem }) {
 
         post(`/materi-saya/tugas/${tugas.id}/submit`, {
             preserveScroll: true,
+            only: ['flash'],
+            onProgress: (progress) => setUploadProgress(progress.percentage),
             onSuccess: () => {
                 setFileName(null);
                 setData('file_tugas', null);
+                setUploadProgress(0);
 
                 if (fileRef.current) {
                     fileRef.current.value = '';
                 }
             },
+            onFinish: () => setUploadProgress(0),
         });
     }
 
@@ -291,9 +296,13 @@ function TugasCard({ tugas }: { tugas: TugasItem }) {
                             <button
                                 onClick={submitTugas}
                                 disabled={processing}
-                                className="ml-auto rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                                className="ml-auto rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 min-w-[120px]"
                             >
-                                {processing ? '...' : 'Kumpulkan'}
+                                {processing
+                                    ? uploadProgress > 0
+                                        ? `${uploadProgress}%`
+                                        : '...'
+                                    : 'Kumpulkan'}
                             </button>
                         )}
                     </div>

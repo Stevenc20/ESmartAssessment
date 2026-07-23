@@ -30,10 +30,12 @@ export default function MateriCreate({
     const [videoUrl, setVideoUrl] = useState('');
     const [driveLink, setDriveLink] = useState('');
     const [processing, setProcessing] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
         setProcessing(true);
+        setUploadProgress(0);
 
         const form = new FormData();
         form.append('pertemuan_id', pertemuanId);
@@ -41,19 +43,23 @@ export default function MateriCreate({
         form.append('deskripsi', deskripsi);
 
         if (thumbRef.current?.files?.[0]) {
-form.append('thumbnail', thumbRef.current.files[0]);
-}
+            form.append('thumbnail', thumbRef.current.files[0]);
+        }
 
         if (fileRef.current?.files?.[0]) {
-form.append('pdf_file', fileRef.current.files[0]);
-}
+            form.append('pdf_file', fileRef.current.files[0]);
+        }
 
         form.append('video_url', videoUrl);
         form.append('drive_link', driveLink);
 
         router.post('/materi', form, {
             preserveScroll: true,
-            onFinish: () => setProcessing(false),
+            onProgress: (progress) => setUploadProgress(progress.percentage),
+            onFinish: () => {
+                setProcessing(false);
+                setUploadProgress(0);
+            },
         });
     }
 
@@ -219,9 +225,13 @@ form.append('pdf_file', fileRef.current.files[0]);
                                     <Button
                                         type="submit"
                                         disabled={processing}
-                                        className="bg-orange-600 text-white hover:bg-orange-700"
+                                        className="bg-orange-600 text-white hover:bg-orange-700 min-w-[160px]"
                                     >
-                                        {processing ? 'Menyimpan...' : 'Simpan'}
+                                        {processing
+                                            ? uploadProgress > 0
+                                                ? `Menyimpan (${uploadProgress}%)`
+                                                : 'Menyimpan...'
+                                            : 'Simpan'}
                                     </Button>
                                 </div>
                             </form>

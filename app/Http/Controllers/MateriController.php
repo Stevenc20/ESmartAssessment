@@ -88,12 +88,10 @@ class MateriController extends Controller
         }
 
         if ($request->hasFile('thumbnail')) {
-            Storage::disk('public')->makeDirectory('thumbnails');
             $data['thumbnail'] = $request->file('thumbnail')->store('thumbnails', 'public');
         }
 
         if ($request->hasFile('pdf_file')) {
-            Storage::disk('public')->makeDirectory('materi-files');
             $data['pdf_file'] = $request->file('pdf_file')->store('materi-files', 'public');
         }
 
@@ -151,7 +149,6 @@ class MateriController extends Controller
             if ($materi->thumbnail) {
                 Storage::disk('public')->delete($materi->thumbnail);
             }
-            Storage::disk('public')->makeDirectory('thumbnails');
             $data['thumbnail'] = $request->file('thumbnail')->store('thumbnails', 'public');
         } else {
             unset($data['thumbnail']);
@@ -161,7 +158,6 @@ class MateriController extends Controller
             if ($materi->pdf_file) {
                 Storage::disk('public')->delete($materi->pdf_file);
             }
-            Storage::disk('public')->makeDirectory('materi-files');
             $data['pdf_file'] = $request->file('pdf_file')->store('materi-files', 'public');
         } else {
             unset($data['pdf_file']);
