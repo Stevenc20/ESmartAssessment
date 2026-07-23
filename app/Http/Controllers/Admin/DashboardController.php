@@ -65,31 +65,29 @@ class DashboardController extends Controller
             'challengeBaru' => $todayChallenge,
         ];
 
-        $kelasWithSiswa = DB::table('kelas')
-            ->leftJoin('siswa_kelas', 'kelas.id', '=', 'siswa_kelas.kelas_id')
-            ->leftJoin('users', function ($q) use ($roleSiswaId) {
-                $q->on('siswa_kelas.siswa_id', '=', 'users.id')
-                  ->where('users.role_id', '=', $roleSiswaId)
-                  ->where('users.status', '=', 'active');
-            })
-            ->select('kelas.id', 'kelas.nama_kelas', DB::raw('COUNT(DISTINCT users.id) as total_siswa'))
-            ->groupBy('kelas.id', 'kelas.nama_kelas')
-            ->get();
+        $kelasLabels = ['10' => '🌱 Genesis 10', '11' => '🔥 Ascend 11'];
 
-        $kelasIds = $kelasWithSiswa->pluck('id');
+        $siswaByKelas = User::where('role_id', $roleSiswaId)
+            ->where('status', 'active')
+            ->whereNotNull('kelas')
+            ->select('kelas', DB::raw('COUNT(*) as total_siswa'))
+            ->groupBy('kelas')
+            ->pluck('total_siswa', 'kelas');
 
-        $hadirCounts = DB::table('absensi')
-            ->join('siswa_kelas', 'absensi.siswa_id', '=', 'siswa_kelas.siswa_id')
+        $hadirByKelas = DB::table('absensi')
+            ->join('users', 'absensi.siswa_id', '=', 'users.id')
             ->where('absensi.status', 'hadir')
-            ->whereIn('siswa_kelas.kelas_id', $kelasIds)
-            ->select('siswa_kelas.kelas_id', DB::raw('COUNT(DISTINCT absensi.siswa_id) as hadir'))
-            ->groupBy('siswa_kelas.kelas_id')
-            ->pluck('hadir', 'kelas_id');
+            ->where('users.role_id', $roleSiswaId)
+            ->where('users.status', 'active')
+            ->whereNotNull('users.kelas')
+            ->select('users.kelas', DB::raw('COUNT(DISTINCT absensi.siswa_id) as hadir'))
+            ->groupBy('users.kelas')
+            ->pluck('hadir', 'kelas');
 
-        $kelasAttendance = $kelasWithSiswa->map(fn ($k) => [
-            'kelas' => $k->nama_kelas,
-            'kehadiran' => $k->total_siswa > 0 ? round(($hadirCounts->get($k->id, 0) / $k->total_siswa) * 100) : 0,
-        ]);
+        $kelasAttendance = $siswaByKelas->map(fn ($total, $k) => [
+            'kelas' => $kelasLabels[$k] ?? $k,
+            'kehadiran' => $total > 0 ? round(($hadirByKelas->get($k, 0) / $total) * 100) : 0,
+        ])->values();
 
         $monthlyGrowth = DB::table('users')
             ->where('role_id', $roleSiswaId)

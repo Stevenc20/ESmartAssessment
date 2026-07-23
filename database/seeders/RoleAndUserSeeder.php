@@ -84,19 +84,21 @@ class RoleAndUserSeeder extends Seeder
 
         // ── 6. Siswa ───────────────────────────────────────────
         $siswaList = [
-            ['Ahmad Rizki', 'ahmadrizki@esmart.test'],
-            ['Dewi Lestari', 'dewi@esmart.test'],
-            ['Fajar Nugroho', 'fajar@esmart.test'],
-            ['Siti Nurhaliza', 'sitinur@esmart.test'],
-            ['Bagas Pratama', 'bagas@esmart.test'],
+            ['Ahmad Rizki', 'ahmadrizki@esmart.test', '10', 'RPL/PPLG'],
+            ['Dewi Lestari', 'dewi@esmart.test', '10', 'RPL/PPLG'],
+            ['Fajar Nugroho', 'fajar@esmart.test', '11', 'RPL/PPLG'],
+            ['Siti Nurhaliza', 'sitinur@esmart.test', '11', 'RPL/PPLG'],
+            ['Bagas Pratama', 'bagas@esmart.test', '10', 'RPL/PPLG'],
         ];
-        foreach ($siswaList as [$name, $email]) {
+        foreach ($siswaList as [$name, $email, $kelas, $jurusan]) {
             $upsert([
                 'name' => $name,
                 'email' => $email,
                 'password' => 'password',
                 'role_id' => $siswaRoleId,
                 'status' => 'active',
+                'kelas' => $kelas,
+                'jurusan' => $jurusan,
                 'email_verified_at' => now(),
             ]);
         }
