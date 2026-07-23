@@ -69,9 +69,13 @@ class DashboardController extends Controller
             $materiIds = Materi::where('created_by', $guruId)->pluck('id');
             $tugasIds = Tugas::whereIn('materi_id', $materiIds)->pluck('id');
 
-            $totalSiswa = PengumpulanTugas::whereIn('tugas_id', $tugasIds)
+            $absensiSiswa = Absensi::whereIn('pertemuan_id', $pertemuanIds)
                 ->distinct('siswa_id')
                 ->count('siswa_id');
+
+            $totalSiswa = $absensiSiswa > 0
+                ? $absensiSiswa
+                : ($roleSiswaId ? User::where('role_id', $roleSiswaId)->count() : 0);
 
             $tugasAktif = Tugas::whereIn('materi_id', $materiIds)
                 ->where('deadline', '>', now())
