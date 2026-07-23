@@ -399,11 +399,12 @@
 
 .auth-root {
     position: relative;
-    min-height: 100svh;
+    height: 100svh;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     background: linear-gradient(
         135deg,
         #f2dcdb 0%,
