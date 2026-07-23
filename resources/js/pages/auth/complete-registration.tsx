@@ -24,7 +24,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 
 const JURUSAN_LIST = [
-    { value: 'PPLG', label: 'PPLG' },
+    { value: 'RPL_PPLG', label: 'RPL/PPLG' },
     { value: 'DKV_1', label: 'DKV 1' },
     { value: 'DKV_2', label: 'DKV 2' },
     { value: 'AKL', label: 'AKL' },
