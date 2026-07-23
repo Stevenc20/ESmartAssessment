@@ -581,7 +581,7 @@
     border: none;
     /* Transparent — white glass surface is handled by ::before */
     background: transparent;
-    overflow: visible;
+    overflow: hidden;
     /* Outer glow that cycles colors */
     animation: auth-card-breathe 5s ease-in-out infinite;
 }
