@@ -68,6 +68,10 @@ class DashboardController extends Controller
 
             $materiIds = Materi::where('created_by', $guruId)->pluck('id');
             $tugasIds = Tugas::whereIn('materi_id', $materiIds)->pluck('id');
+            $pertemuanIds = \App\Models\Pertemuan::whereIn(
+                'id',
+                Materi::whereIn('id', $materiIds)->pluck('pertemuan_id')
+            )->pluck('id');
 
             $absensiSiswa = Absensi::whereIn('pertemuan_id', $pertemuanIds)
                 ->distinct('siswa_id')
@@ -92,11 +96,6 @@ class DashboardController extends Controller
                 ->avg(fn ($p) => $p->penilaian->nilai);
 
             $rataNilai = $rataNilai ? round($rataNilai, 2) : 0;
-
-            $pertemuanIds = \App\Models\Pertemuan::whereIn(
-                'id',
-                Materi::whereIn('id', $materiIds)->pluck('pertemuan_id')
-            )->pluck('id');
 
             $guruActivity = collect()
                 ->merge(
