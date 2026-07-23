@@ -160,6 +160,7 @@ function TugasCard({ tugas }: { tugas: TugasItem }) {
 
         post(`/materi-saya/tugas/${tugas.id}/submit`, {
             preserveScroll: true,
+            forceFormData: true,
             only: ['flash'],
             onProgress: (progress) => setUploadProgress(progress.percentage),
             onSuccess: () => {

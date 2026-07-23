@@ -55,6 +55,7 @@ export default function MateriCreate({
 
         router.post('/materi', form, {
             preserveScroll: true,
+            forceFormData: true,
             onProgress: (progress) => setUploadProgress(progress.percentage),
             onFinish: () => {
                 setProcessing(false);
