@@ -16,8 +16,10 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Nginx config
-COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+# Nginx config - replace default site config
+RUN rm -f /etc/nginx/sites-enabled/default
+COPY nginx/default.conf /etc/nginx/sites-available/default
+RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 # Supervisor config
 COPY supervisor.conf /etc/supervisor/conf.d/app.conf
