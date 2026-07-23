@@ -6,6 +6,9 @@ services:
     working_dir: /var/www/html
     depends_on:
       - mysql
+    environment:
+      - APP_URL=https://esmart.tantechstev.com
+      - ASSET_URL=https://esmart.tantechstev.com
     networks:
       - esmart
     ports:
