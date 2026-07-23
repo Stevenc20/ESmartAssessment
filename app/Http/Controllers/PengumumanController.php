@@ -34,6 +34,9 @@ class PengumumanController extends Controller
 
         $global = GlobalAnnouncement::where('is_active', true)
             ->where(function ($q) {
+                $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+            })
+            ->where(function ($q) {
                 $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
             })
             ->where(function ($q) use ($roleName) {
