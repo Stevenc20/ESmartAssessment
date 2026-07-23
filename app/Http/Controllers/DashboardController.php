@@ -23,6 +23,7 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        abort(503, 'TEST: DashboardController is running at ' . now()->timestamp);
         $user = $request->user();
         $user->load('role');
 
