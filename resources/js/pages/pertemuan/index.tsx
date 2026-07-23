@@ -191,8 +191,8 @@ acc[r.tahun] = [];
                 },
                 qrUrl: data.qr_url,
                 qrDataUrl,
-                attendees: [],
-                total_scanned: 0,
+                attendees: data.attendees ?? [],
+                total_scanned: data.total_scanned ?? 0,
             });
         } catch (e) {
             console.error('Gagal buka absen:', e);

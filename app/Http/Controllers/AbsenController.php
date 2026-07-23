@@ -22,9 +22,22 @@ class AbsenController extends Controller
         if ($active) {
             $qrUrl = route('absen.scan', $active->token);
 
+            $attendees = Absensi::where('pertemuan_id', $pertemuan->id)
+                ->with('siswa:id,name')
+                ->get()
+                ->map(fn ($a) => [
+                    'id' => $a->id,
+                    'siswa_id' => $a->siswa_id,
+                    'nama' => $a->siswa?->name,
+                    'status' => $a->status,
+                    'scan_time' => $a->scan_time?->format('H:i:s'),
+                ]);
+
             return response()->json([
                 'session' => $active,
                 'qr_url' => $qrUrl,
+                'attendees' => $attendees,
+                'total_scanned' => $attendees->count(),
             ]);
         }
 
@@ -48,9 +61,22 @@ class AbsenController extends Controller
 
         $qrUrl = route('absen.scan', $session->token);
 
+        $attendees = Absensi::where('pertemuan_id', $pertemuan->id)
+            ->with('siswa:id,name')
+            ->get()
+            ->map(fn ($a) => [
+                'id' => $a->id,
+                'siswa_id' => $a->siswa_id,
+                'nama' => $a->siswa?->name,
+                'status' => $a->status,
+                'scan_time' => $a->scan_time?->format('H:i:s'),
+            ]);
+
         return response()->json([
             'session' => $session,
             'qr_url' => $qrUrl,
+            'attendees' => $attendees,
+            'total_scanned' => $attendees->count(),
         ]);
     }
 
@@ -80,7 +106,7 @@ class AbsenController extends Controller
             return response()->json(['active' => false]);
         }
 
-        $attendees = Absensi::where('qr_session_id', $session->id)
+        $attendees = Absensi::where('pertemuan_id', $pertemuan->id)
             ->with('siswa:id,name')
             ->get()
             ->map(fn ($a) => [
@@ -124,7 +150,7 @@ class AbsenController extends Controller
             return redirect()->route('login');
         }
 
-        $existing = Absensi::where('qr_session_id', $session->id)
+        $existing = Absensi::where('pertemuan_id', $session->pertemuan_id)
             ->where('siswa_id', auth()->id())
             ->first();
 
