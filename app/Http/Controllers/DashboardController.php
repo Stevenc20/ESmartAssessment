@@ -290,6 +290,8 @@ class DashboardController extends Controller
             'kehadiran' => $total > 0 ? round(($hadirByKelas->get($k, 0) / $total) * 100) : 0,
         ])->values();
 
+        dd($siswaByKelas->toArray(), $hadirByKelas->toArray(), $kelasAttendance->toArray());
+
         return Inertia::render('dashboard', [
             'stats' => $stats,
             'recentUsers' => $recentUsers,
