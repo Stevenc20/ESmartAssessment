@@ -35,6 +35,11 @@ type ActivityToday = {
 type KelasAttendance = { kelas: string; kehadiran: number };
 type MonthlyGrowth = { bulan: string; total: number };
 
+type GrowthItem = {
+    delta: string;
+    deltaUp: boolean;
+};
+
 type Props = {
     stats: Stats;
     recentLogs: Array<{
@@ -46,6 +51,7 @@ type Props = {
     activityToday: ActivityToday;
     kelasAttendance: KelasAttendance[];
     monthlyGrowth: MonthlyGrowth[];
+    growth: Record<string, GrowthItem>;
 };
 
 type KpiCard = {
@@ -115,6 +121,7 @@ export default function SuperAdminDashboard({
     activityToday,
     kelasAttendance,
     monthlyGrowth,
+    growth,
 }: Props) {
     const primaryKpis: KpiCard[] = [
         {
@@ -122,32 +129,32 @@ export default function SuperAdminDashboard({
             value: stats.totalUser,
             icon: Users,
             color: '#3b82f6',
-            delta: '+18%',
-            deltaUp: true,
+            delta: growth.totalUser?.delta ?? '0%',
+            deltaUp: growth.totalUser?.deltaUp ?? false,
         },
         {
             title: 'Total Siswa',
             value: stats.totalSiswa,
             icon: GraduationCap,
             color: '#8b5cf6',
-            delta: '+12%',
-            deltaUp: true,
+            delta: growth.totalSiswa?.delta ?? '0%',
+            deltaUp: growth.totalSiswa?.deltaUp ?? false,
         },
         {
             title: 'Total Guru',
             value: stats.totalGuru,
             icon: UserCheck,
             color: '#10b981',
-            delta: '+8%',
-            deltaUp: true,
+            delta: growth.totalGuru?.delta ?? '0%',
+            deltaUp: growth.totalGuru?.deltaUp ?? false,
         },
         {
             title: 'Total Materi',
             value: stats.totalMateri,
             icon: BookOpen,
             color: '#f59e0b',
-            delta: '+3',
-            deltaUp: true,
+            delta: growth.totalMateri?.delta ?? '0%',
+            deltaUp: growth.totalMateri?.deltaUp ?? false,
         },
     ];
 
@@ -157,8 +164,8 @@ export default function SuperAdminDashboard({
             value: stats.totalChallenge,
             icon: Trophy,
             color: '#f43f5e',
-            delta: '0%',
-            deltaUp: false,
+            delta: growth.totalChallenge?.delta ?? '0%',
+            deltaUp: growth.totalChallenge?.deltaUp ?? false,
             subtitle: 'Total',
         },
         {
@@ -166,8 +173,8 @@ export default function SuperAdminDashboard({
             value: stats.totalCertificate,
             icon: Shield,
             color: '#14b8a6',
-            delta: '0%',
-            deltaUp: false,
+            delta: growth.totalCertificate?.delta ?? '0%',
+            deltaUp: growth.totalCertificate?.deltaUp ?? false,
             subtitle: 'Diterbitkan',
         },
         {

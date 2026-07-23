@@ -101,12 +101,55 @@ class DashboardController extends Controller
                 'total' => $r->total,
             ]);
 
+        $thisMonthStart = Carbon::now()->startOfMonth();
+        $lastMonthStart = Carbon::now()->subMonth()->startOfMonth();
+        $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
+
+        $calcGrowth = function ($thisMonth, $lastMonth) {
+            if ($lastMonth == 0 && $thisMonth == 0) {
+                return ['delta' => '0%', 'deltaUp' => false];
+            }
+            if ($lastMonth == 0) {
+                return ['delta' => '+' . $thisMonth . ' baru', 'deltaUp' => true];
+            }
+            $pct = round(($thisMonth - $lastMonth) / $lastMonth * 100);
+            return ['delta' => ($pct >= 0 ? '+' : '') . $pct . '%', 'deltaUp' => $pct >= 0];
+        };
+
+        $userThisMonth = User::where('created_at', '>=', $thisMonthStart)->count();
+        $userLastMonth = User::whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count();
+
+        $siswaThisMonth = User::where('role_id', $roleSiswaId)->where('created_at', '>=', $thisMonthStart)->count();
+        $siswaLastMonth = User::where('role_id', $roleSiswaId)->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count();
+
+        $guruThisMonth = User::where('role_id', $roleGuruId)->where('created_at', '>=', $thisMonthStart)->count();
+        $guruLastMonth = User::where('role_id', $roleGuruId)->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count();
+
+        $materiThisMonth = Materi::where('created_at', '>=', $thisMonthStart)->count();
+        $materiLastMonth = Materi::whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count();
+
+        $challengeThisMonth = Challenge::where('created_at', '>=', $thisMonthStart)->count();
+        $challengeLastMonth = Challenge::whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count();
+
+        $certThisMonth = Certificate::where('created_at', '>=', $thisMonthStart)->count();
+        $certLastMonth = Certificate::whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count();
+
+        $growth = [
+            'totalUser' => $calcGrowth($userThisMonth, $userLastMonth),
+            'totalSiswa' => $calcGrowth($siswaThisMonth, $siswaLastMonth),
+            'totalGuru' => $calcGrowth($guruThisMonth, $guruLastMonth),
+            'totalMateri' => $calcGrowth($materiThisMonth, $materiLastMonth),
+            'totalChallenge' => $calcGrowth($challengeThisMonth, $challengeLastMonth),
+            'totalCertificate' => $calcGrowth($certThisMonth, $certLastMonth),
+        ];
+
         return Inertia::render('admin/dashboard', [
             'stats' => $stats,
             'recentLogs' => $recentLogs,
             'activityToday' => $activityToday,
             'kelasAttendance' => $kelasAttendance,
             'monthlyGrowth' => $monthlyGrowth,
+            'growth' => $growth,
         ]);
     }
 }
