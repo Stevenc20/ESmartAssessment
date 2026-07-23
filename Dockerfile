@@ -30,9 +30,9 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN npm ci && npm run build
 
 # Permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/public \
+    && chown -R www-data:www-data /var/www/html/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/storage
 
 EXPOSE 80
 
