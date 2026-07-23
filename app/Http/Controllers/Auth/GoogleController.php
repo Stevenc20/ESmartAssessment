@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -87,7 +88,12 @@ class GoogleController extends Controller
 
         $fotoPath = null;
         if ($request->hasFile('foto')) {
-            $fotoPath = $request->file('foto')->store('profile-photos', 'public');
+            $disk = 'public';
+            $dir = 'profile-photos';
+            if (! Storage::disk($disk)->exists($dir)) {
+                \Storage::disk($disk)->makeDirectory($dir);
+            }
+            $fotoPath = $request->file('foto')->store($dir, $disk);
         }
 
         $siswaRole = Role::where('role_name', 'siswa')->first();
