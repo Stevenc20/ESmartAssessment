@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import {
     Activity,
     BookOpen,
+    Calendar,
     GraduationCap,
     Shield,
     Sparkles,
@@ -37,11 +38,14 @@ type RecentLog = {
     created_at: string;
 };
 
+type KelasAttendance = { kelas: string; kehadiran: number };
+
 type Props = {
     auth: { user: Auth['user'] };
     stats: Stats;
     recentUsers: RecentUser[];
     recentLogs: RecentLog[];
+    kelasAttendance?: KelasAttendance[];
 };
 
 const statCards = [
@@ -158,6 +162,7 @@ export default function SuperadminDashboard({
     stats,
     recentUsers,
     recentLogs,
+    kelasAttendance = [],
 }: Props) {
     if (!stats) {
 return null;
@@ -297,40 +302,117 @@ return null;
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-[#e9edf3] bg-white">
-                        <div className="border-b border-[#e9edf3] px-5 py-4">
-                            <div className="flex items-center gap-2.5">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-                                    <Zap className="h-4 w-4" />
+                    <div className="flex flex-col gap-4">
+                        <div className="rounded-xl border border-[#e9edf3] bg-white">
+                            <div className="border-b border-[#e9edf3] px-5 py-4">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                                        <Zap className="h-4 w-4" />
+                                    </div>
+                                    <h2 className="text-sm font-semibold text-slate-900">
+                                        Quick Actions
+                                    </h2>
                                 </div>
-                                <h2 className="text-sm font-semibold text-slate-900">
-                                    Quick Actions
-                                </h2>
+                            </div>
+                            <div className="p-3">
+                                <div className="space-y-1">
+                                    {quickActions.map((action) => (
+                                        <a
+                                            key={action.title}
+                                            href={action.href}
+                                            className="group flex items-center gap-3 rounded-lg p-2.5 transition-colors hover:bg-slate-50"
+                                        >
+                                            <div
+                                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                                                style={{
+                                                    backgroundColor:
+                                                        action.color + '18',
+                                                    color: action.color,
+                                                }}
+                                            >
+                                                <action.icon className="h-4 w-4" />
+                                            </div>
+                                            <span className="flex-1 text-sm font-semibold text-slate-900">
+                                                {action.title}
+                                            </span>
+                                        </a>
+                                    ))}
+                                </div>
                             </div>
                         </div>
-                        <div className="p-3">
-                            <div className="space-y-1">
-                                {quickActions.map((action) => (
-                                    <a
-                                        key={action.title}
-                                        href={action.href}
-                                        className="group flex items-center gap-3 rounded-lg p-2.5 transition-colors hover:bg-slate-50"
-                                    >
-                                        <div
-                                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-                                            style={{
-                                                backgroundColor:
-                                                    action.color + '18',
-                                                color: action.color,
-                                            }}
-                                        >
-                                            <action.icon className="h-4 w-4" />
+
+                        <div className="rounded-xl border border-[#e9edf3] bg-white">
+                            <div className="flex items-center justify-between border-b border-[#e9edf3] px-5 py-4">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                                        <Calendar className="h-4 w-4" />
+                                    </div>
+                                    <h2 className="text-sm font-semibold text-slate-900">
+                                        Kehadiran Global
+                                    </h2>
+                                </div>
+                                <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                                    Per Kelas
+                                </span>
+                            </div>
+                            <div className="p-5">
+                                {kelasAttendance.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {kelasAttendance.map((k) => (
+                                            <div
+                                                key={k.kelas}
+                                                className="space-y-1.5"
+                                            >
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="font-semibold text-slate-700">
+                                                        {k.kelas}
+                                                    </span>
+                                                    <span
+                                                        className="font-bold"
+                                                        style={{
+                                                            color:
+                                                                k.kehadiran >= 85
+                                                                    ? '#059669'
+                                                                    : k.kehadiran >=
+                                                                        70
+                                                                      ? '#d97706'
+                                                                      : '#dc2626',
+                                                        }}
+                                                    >
+                                                        {k.kehadiran}%
+                                                    </span>
+                                                </div>
+                                                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                                                    <div
+                                                        className="h-full rounded-full transition-all duration-500"
+                                                        style={{
+                                                            width: `${k.kehadiran}%`,
+                                                            background:
+                                                                k.kehadiran >= 85
+                                                                    ? 'linear-gradient(90deg, #10b981, #34d399)'
+                                                                    : k.kehadiran >=
+                                                                        70
+                                                                      ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+                                                                      : 'linear-gradient(90deg, #ef4444, #f87171)',
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center gap-3 py-8 text-center">
+                                        <Calendar className="h-10 w-10 text-slate-300" />
+                                        <div>
+                                            <p className="text-sm font-semibold text-slate-500">
+                                                Belum ada data kehadiran
+                                            </p>
+                                            <p className="mt-1 text-xs text-slate-400">
+                                                Absensi pertama akan muncul di sini
+                                            </p>
                                         </div>
-                                        <span className="flex-1 text-sm font-semibold text-slate-900">
-                                            {action.title}
-                                        </span>
-                                    </a>
-                                ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

@@ -266,12 +266,37 @@ class DashboardController extends Controller
             ];
         }
 
+        $kelasLabels = ['10' => '🌱 Genesis 10', '11' => '🔥 Ascend 11'];
+
+        $siswaByKelas = User::where('role_id', $roleSiswaId)
+            ->where('status', 'active')
+            ->where('kelas', '!=', '')
+            ->whereNotNull('kelas')
+            ->select('kelas', DB::raw('COUNT(*) as total_siswa'))
+            ->groupBy('kelas')
+            ->pluck('total_siswa', 'kelas');
+
+        $hadirByKelas = DB::table('absensi')
+            ->join('users', 'absensi.siswa_id', '=', 'users.id')
+            ->where('absensi.status', 'hadir')
+            ->where('users.kelas', '!=', '')
+            ->whereNotNull('users.kelas')
+            ->select('users.kelas', DB::raw('COUNT(DISTINCT absensi.siswa_id) as hadir'))
+            ->groupBy('users.kelas')
+            ->pluck('hadir', 'kelas');
+
+        $kelasAttendance = $siswaByKelas->map(fn ($total, $k) => [
+            'kelas' => $kelasLabels[$k] ?? $k,
+            'kehadiran' => $total > 0 ? round(($hadirByKelas->get($k, 0) / $total) * 100) : 0,
+        ])->values();
+
         return Inertia::render('dashboard', [
             'stats' => $stats,
             'recentUsers' => $recentUsers,
             'recentLogs' => $recentLogs,
             'guruDashboard' => $guruDashboard,
             'studentDashboard' => $studentDashboard,
+            'kelasAttendance' => $kelasAttendance,
         ]);
     }
 }
