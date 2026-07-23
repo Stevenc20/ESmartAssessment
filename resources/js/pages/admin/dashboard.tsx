@@ -62,7 +62,7 @@ function KpiCard({ k, size }: { k: KpiCard; size: 'lg' | 'sm' }) {
     const isLg = size === 'lg';
 
     return (
-        <div className={`group relative overflow-hidden rounded-xl border border-[#e9edf3] bg-white transition-all hover:border-slate-300 hover:shadow-md ${isLg ? 'p-5' : 'p-4'}`}>
+        <div className={`group relative overflow-hidden rounded-xl border border-slate-200 bg-white transition-all hover:border-slate-300 hover:shadow-md ${isLg ? 'p-5' : 'p-4'}`}>
             <div className="flex items-start justify-between">
                 <span className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
                     {k.title}
@@ -223,9 +223,10 @@ export default function SuperAdminDashboard({
         <>
             <Head title="Control Center" />
 
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
+            <div className="min-h-screen bg-slate-100/60">
+                <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-6 sm:px-6 lg:px-8">
                 {/* ── Hero ── */}
-                <div className="relative overflow-hidden rounded-xl border border-[#e9edf3] bg-white shadow-sm">
+                <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                     <div
                         className="absolute inset-0 opacity-[0.04]"
                         style={{
@@ -266,7 +267,7 @@ export default function SuperAdminDashboard({
                             </div>
                         </div>
                         <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs">
-                            <span className="rounded-lg border border-[#e9edf3] bg-slate-50 px-3 py-1.5 font-semibold text-slate-600">
+                            <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 font-semibold text-slate-600">
                                 {new Date().toLocaleDateString('id-ID', {
                                     weekday: 'long',
                                     day: 'numeric',
@@ -295,8 +296,8 @@ export default function SuperAdminDashboard({
                 {/* ── Charts + Aktivitas Hari Ini ── */}
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                     {/* Pertumbuhan Siswa */}
-                    <div className="rounded-xl border border-[#e9edf3] bg-white lg:col-span-7">
-                        <div className="flex items-center justify-between border-b border-[#e9edf3] px-5 py-4">
+                    <div className="rounded-xl border border-slate-200 bg-white lg:col-span-7">
+                        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
                             <div className="flex items-center gap-2.5">
                                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                                     <Activity className="h-4 w-4" />
@@ -348,8 +349,8 @@ export default function SuperAdminDashboard({
                     </div>
 
                     {/* Aktivitas Hari Ini — Compact List */}
-                    <div className="rounded-xl border border-[#e9edf3] bg-white lg:col-span-5">
-                        <div className="flex items-center justify-between border-b border-[#e9edf3] px-5 py-4">
+                    <div className="rounded-xl border border-slate-200 bg-white lg:col-span-5">
+                        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
                             <div className="flex items-center gap-2.5">
                                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
                                     <Activity className="h-4 w-4" />
@@ -394,8 +395,8 @@ export default function SuperAdminDashboard({
                 {/* ── Kehadiran Global + Aktivitas Terbaru ── */}
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                     {/* Kehadiran Global */}
-                    <div className="rounded-xl border border-[#e9edf3] bg-white lg:col-span-6">
-                        <div className="flex items-center justify-between border-b border-[#e9edf3] px-5 py-4">
+                    <div className="rounded-xl border border-slate-200 bg-white lg:col-span-6">
+                        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
                             <div className="flex items-center gap-2.5">
                                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
                                     <Calendar className="h-4 w-4" />
@@ -466,7 +467,7 @@ export default function SuperAdminDashboard({
                                     </div>
                                     <button
                                         disabled
-                                        className="mt-1 rounded-lg border border-[#e9edf3] bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-400 transition-colors"
+                                        className="mt-1 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-400 transition-colors"
                                     >
                                         + Buat Absensi
                                     </button>
@@ -476,8 +477,8 @@ export default function SuperAdminDashboard({
                     </div>
 
                     {/* Aktivitas Terbaru */}
-                    <div className="rounded-xl border border-[#e9edf3] bg-white lg:col-span-6">
-                        <div className="flex items-center justify-between border-b border-[#e9edf3] px-5 py-4">
+                    <div className="rounded-xl border border-slate-200 bg-white lg:col-span-6">
+                        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
                             <div className="flex items-center gap-2.5">
                                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
                                     <Activity className="h-4 w-4" />
@@ -536,6 +537,7 @@ export default function SuperAdminDashboard({
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         </>
     );
