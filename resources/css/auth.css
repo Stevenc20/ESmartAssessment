@@ -661,8 +661,6 @@
     position: relative;
     z-index: 2; /* above ::before glass layer */
     padding: 1.75rem 2rem 2rem;
-    overflow-y: auto;
-    max-height: 70vh;
 }
 
 .auth-footer-text {

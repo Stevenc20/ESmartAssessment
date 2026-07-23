@@ -172,7 +172,7 @@ export default function CompleteRegistration({ googleUser }: Props) {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5 overflow-y-auto max-h-[70vh]">
                 <div className="grid gap-5">
                     {/* Name Input — Editable */}
                     <div className="grid gap-2">
