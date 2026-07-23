@@ -55,8 +55,11 @@ function SelectContent({
   side = "bottom",
   sideOffset = 4,
   align = "center",
+  collisionBoundary,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Content>) {
+}: React.ComponentProps<typeof SelectPrimitive.Content> & {
+  collisionBoundary?: React.RefObject<HTMLElement | null> | HTMLElement | null | Array<HTMLElement | null>;
+}) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -71,6 +74,7 @@ function SelectContent({
         side={side}
         sideOffset={sideOffset}
         align={align}
+        collisionBoundary={collisionBoundary}
         {...props}
       >
         <SelectScrollUpButton />

@@ -278,7 +278,7 @@ export default function CompleteRegistration({ googleUser }: Props) {
                                 <SelectTrigger id="kelas" tabIndex={1}>
                                     <SelectValue placeholder="Pilih kelas" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent collisionBoundary={typeof document !== 'undefined' ? document.documentElement : undefined}>
                                     <SelectItem value="10">Kelas 10</SelectItem>
                                     <SelectItem value="11">Kelas 11</SelectItem>
                                 </SelectContent>
@@ -307,7 +307,7 @@ export default function CompleteRegistration({ googleUser }: Props) {
                                 <SelectTrigger id="jurusan" tabIndex={2}>
                                     <SelectValue placeholder="Pilih jurusan" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent collisionBoundary={typeof document !== 'undefined' ? document.documentElement : undefined}>
                                     {JURUSAN_LIST.map((j) => (
                                         <SelectItem
                                             key={j.value}

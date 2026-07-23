@@ -1,5 +1,12 @@
 /* AUTH PAGES — Custom styles only (Tailwind + theme comes from app.css) */
 
+/* ── Custom properties for gradient animation ──────────────────────────── */
+@property --shimmer-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
 /* ── Gradient background hue-shift ─────────────────────────────────────── */
 @keyframes auth-bg-shift {
     0% {
@@ -159,6 +166,15 @@
     }
     100% {
         transform: rotate(360deg);
+    }
+}
+
+@keyframes auth-shimmer-angle {
+    from {
+        --shimmer-angle: 0deg;
+    }
+    to {
+        --shimmer-angle: 360deg;
     }
 }
 
@@ -590,7 +606,7 @@
     z-index: 0; /* visible — white ::before sits on top at z-index:1 */
     /* Vivid full-color conic gradient — visible as the 2px border ring */
     background: conic-gradient(
-        from 0deg,
+        from var(--shimmer-angle),
         #f2aebc,
         #e879a0,
         #c4607a,
@@ -602,7 +618,7 @@
         #f2aebc
     );
     animation:
-        auth-shimmer-rotate 3.5s linear infinite,
+        auth-shimmer-angle 3.5s linear infinite,
         auth-shimmer-hue 4s ease-in-out infinite;
     animation-play-state: running;
 }
