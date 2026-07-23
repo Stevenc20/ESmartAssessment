@@ -69,6 +69,7 @@ class DashboardController extends Controller
 
         $siswaByKelas = User::where('role_id', $roleSiswaId)
             ->where('status', 'active')
+            ->where('kelas', '!=', '')
             ->whereNotNull('kelas')
             ->select('kelas', DB::raw('COUNT(*) as total_siswa'))
             ->groupBy('kelas')
@@ -77,8 +78,7 @@ class DashboardController extends Controller
         $hadirByKelas = DB::table('absensi')
             ->join('users', 'absensi.siswa_id', '=', 'users.id')
             ->where('absensi.status', 'hadir')
-            ->where('users.role_id', $roleSiswaId)
-            ->where('users.status', 'active')
+            ->where('users.kelas', '!=', '')
             ->whereNotNull('users.kelas')
             ->select('users.kelas', DB::raw('COUNT(DISTINCT absensi.siswa_id) as hadir'))
             ->groupBy('users.kelas')
