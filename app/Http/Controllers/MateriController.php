@@ -74,20 +74,26 @@ class MateriController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'pertemuan_id' => 'nullable|exists:pertemuan,id',
+            'pertemuan_id' => 'nullable|integer|exists:pertemuan,id',
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'pdf_file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:20480',
             'video_url' => 'nullable|string|max:255',
             'drive_link' => 'nullable|string|max:255',
         ]);
 
+        if (empty($data['pertemuan_id'])) {
+            $data['pertemuan_id'] = null;
+        }
+
         if ($request->hasFile('thumbnail')) {
+            Storage::disk('public')->makeDirectory('thumbnails');
             $data['thumbnail'] = $request->file('thumbnail')->store('thumbnails', 'public');
         }
 
         if ($request->hasFile('pdf_file')) {
+            Storage::disk('public')->makeDirectory('materi-files');
             $data['pdf_file'] = $request->file('pdf_file')->store('materi-files', 'public');
         }
 
@@ -128,19 +134,24 @@ class MateriController extends Controller
     public function update(Request $request, Materi $materi)
     {
         $data = $request->validate([
-            'pertemuan_id' => 'nullable|exists:pertemuan,id',
+            'pertemuan_id' => 'nullable|integer|exists:pertemuan,id',
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'pdf_file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:20480',
             'video_url' => 'nullable|string|max:255',
             'drive_link' => 'nullable|string|max:255',
         ]);
 
+        if (empty($data['pertemuan_id'])) {
+            $data['pertemuan_id'] = null;
+        }
+
         if ($request->hasFile('thumbnail')) {
             if ($materi->thumbnail) {
                 Storage::disk('public')->delete($materi->thumbnail);
             }
+            Storage::disk('public')->makeDirectory('thumbnails');
             $data['thumbnail'] = $request->file('thumbnail')->store('thumbnails', 'public');
         } else {
             unset($data['thumbnail']);
@@ -150,6 +161,7 @@ class MateriController extends Controller
             if ($materi->pdf_file) {
                 Storage::disk('public')->delete($materi->pdf_file);
             }
+            Storage::disk('public')->makeDirectory('materi-files');
             $data['pdf_file'] = $request->file('pdf_file')->store('materi-files', 'public');
         } else {
             unset($data['pdf_file']);
