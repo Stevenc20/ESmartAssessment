@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Kelas;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -110,6 +112,15 @@ class GoogleController extends Controller
             'role_id' => $siswaRole?->id,
             'status' => 'active',
         ]);
+
+        $kelas = Kelas::where('tingkat', $validated['kelas'])->first();
+        if ($kelas) {
+            DB::table('siswa_kelas')->insert([
+                'siswa_id' => $user->id,
+                'kelas_id' => $kelas->id,
+                'tanggal_masuk' => now()->toDateString(),
+            ]);
+        }
 
         Session::forget('google_user');
 
