@@ -83,7 +83,7 @@ class GoogleController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'no_hp' => 'nullable|string|max:20',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:102400',
             'kelas' => 'required|in:10,11',
             'jurusan' => 'required|string|max:255',
         ]);

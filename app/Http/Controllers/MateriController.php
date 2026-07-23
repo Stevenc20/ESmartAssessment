@@ -77,8 +77,8 @@ class MateriController extends Controller
             'pertemuan_id' => 'nullable|integer|exists:pertemuan,id',
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-            'pdf_file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:20480',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:102400',
+            'pdf_file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:102400',
             'video_url' => 'nullable|string|max:255',
             'drive_link' => 'nullable|string|max:255',
         ]);
@@ -137,8 +137,8 @@ class MateriController extends Controller
             'pertemuan_id' => 'nullable|integer|exists:pertemuan,id',
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-            'pdf_file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:20480',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:102400',
+            'pdf_file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:102400',
             'video_url' => 'nullable|string|max:255',
             'drive_link' => 'nullable|string|max:255',
         ]);
@@ -260,7 +260,7 @@ class MateriController extends Controller
         $user = $request->user();
 
         $request->validate([
-            'file_tugas' => 'required|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,zip,rar,jpg,jpeg,png|max:20480',
+            'file_tugas' => 'required|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,zip,rar,jpg,jpeg,png|max:102400',
         ]);
 
         $lastSubmission = PengumpulanTugas::where('tugas_id', $tugas->id)
