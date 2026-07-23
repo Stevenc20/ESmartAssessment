@@ -7,6 +7,7 @@ use App\Models\Certificate;
 use App\Models\Challenge;
 use App\Models\ChallengeSubmission;
 use App\Models\Kelas;
+use App\Models\Materi;
 use App\Models\PengumpulanTugas;
 use App\Models\Portfolio;
 use App\Models\ProgressMateri;
@@ -60,6 +61,87 @@ class DashboardController extends Controller
                 'activity' => $l->activity ?? '-',
                 'created_at' => Carbon::parse($l->created_at)->diffForHumans(),
             ]);
+
+        $guruDashboard = null;
+        if ($user->role?->role_name === 'guru') {
+            $guruId = $user->id;
+
+            $materiIds = Materi::where('created_by', $guruId)->pluck('id');
+            $tugasIds = Tugas::whereIn('materi_id', $materiIds)->pluck('id');
+
+            $totalSiswa = PengumpulanTugas::whereIn('tugas_id', $tugasIds)
+                ->distinct('siswa_id')
+                ->count('siswa_id');
+
+            $tugasAktif = Tugas::whereIn('materi_id', $materiIds)
+                ->where('deadline', '>', now())
+                ->count();
+
+            $menungguPenilaian = PengumpulanTugas::whereIn('tugas_id', $tugasIds)
+                ->whereDoesntHave('penilaian')
+                ->count();
+
+            $rataNilai = PengumpulanTugas::whereIn('tugas_id', $tugasIds)
+                ->whereHas('penilaian')
+                ->with('penilaian')
+                ->get()
+                ->avg(fn ($p) => $p->penilaian->nilai);
+
+            $rataNilai = $rataNilai ? round($rataNilai, 2) : 0;
+
+            $pertemuanIds = \App\Models\Pertemuan::whereIn(
+                'id',
+                Materi::whereIn('id', $materiIds)->pluck('pertemuan_id')
+            )->pluck('id');
+
+            $guruActivity = collect()
+                ->merge(
+                    PengumpulanTugas::whereIn('tugas_id', $tugasIds)
+                        ->with(['siswa', 'tugas'])
+                        ->latest()
+                        ->take(5)
+                        ->get()
+                        ->map(fn ($p) => [
+                            'id' => 't-'.$p->id,
+                            'type' => 'submission',
+                            'user' => $p->siswa?->name ?? 'Siswa',
+                            'description' => 'Mengirim tugas: '.($p->tugas?->judul ?? 'Tugas'),
+                            'time' => $p->created_at->diffForHumans(),
+                            'sort_time' => $p->created_at->timestamp,
+                        ])
+                )
+                ->merge(
+                    Absensi::whereIn('pertemuan_id', $pertemuanIds)
+                        ->with('siswa')
+                        ->latest()
+                        ->take(5)
+                        ->get()
+                        ->map(fn ($a) => [
+                            'id' => 'a-'.$a->id,
+                            'type' => 'absensi',
+                            'user' => $a->siswa?->name ?? 'Siswa',
+                            'description' => match ($a->status) {
+                                'hadir' => 'Hadir di pertemuan',
+                                'terlambat' => 'Terlambat di pertemuan',
+                                default => 'Tidak hadir di pertemuan',
+                            },
+                            'time' => $a->created_at->diffForHumans(),
+                            'sort_time' => $a->created_at->timestamp,
+                        ])
+                )
+                ->sortByDesc('sort_time')
+                ->take(5)
+                ->values()
+                ->map(fn ($item) => collect($item)->except('sort_time')->toArray());
+
+            $guruDashboard = [
+                'totalSiswa' => $totalSiswa,
+                'tugasAktif' => $tugasAktif,
+                'menungguPenilaian' => $menungguPenilaian,
+                'rataNilai' => $rataNilai,
+                'recentActivity' => $guruActivity,
+            ];
+        }
 
         $studentDashboard = null;
         if ($user->role?->role_name === 'siswa') {
@@ -185,6 +267,7 @@ class DashboardController extends Controller
             'stats' => $stats,
             'recentUsers' => $recentUsers,
             'recentLogs' => $recentLogs,
+            'guruDashboard' => $guruDashboard,
             'studentDashboard' => $studentDashboard,
         ]);
     }

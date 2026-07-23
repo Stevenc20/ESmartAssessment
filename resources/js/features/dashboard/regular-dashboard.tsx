@@ -2,96 +2,38 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     ArrowRight,
     BookOpen,
+    CheckCircle,
     Clock,
+    FileText,
     GraduationCap,
     Sparkles,
-    Star,
     TrendingUp,
-    Trophy,
     Users,
-    Zap,
+    ClipboardList,
+    AlertCircle,
 } from 'lucide-react';
 import type { Auth } from '@/types';
 
-type PageProps = { auth: Auth };
+type GuruActivity = {
+    id: string;
+    type: 'submission' | 'absensi';
+    user: string;
+    description: string;
+    time: string;
+};
 
-const stats = [
-    {
-        title: 'Total Siswa',
-        value: '128',
-        change: '+12%',
-        icon: Users,
-        color: '#436391',
-        bgColor: 'bg-white',
-    },
-    {
-        title: 'Assessment Selesai',
-        value: '45',
-        change: '+8%',
-        icon: GraduationCap,
-        color: '#7c3aed',
-        bgColor: 'bg-white',
-    },
-    {
-        title: 'Challenge Aktif',
-        value: '12',
-        change: '+3',
-        icon: Trophy,
-        color: '#d97706',
-        bgColor: 'bg-white',
-    },
-    {
-        title: 'Rata-rata Nilai',
-        value: '82.5',
-        change: '+2.3',
-        icon: TrendingUp,
-        color: '#059669',
-        bgColor: 'bg-white',
-    },
-];
+type GuruDashboard = {
+    totalSiswa: number;
+    tugasAktif: number;
+    menungguPenilaian: number;
+    rataNilai: number;
+    recentActivity: GuruActivity[];
+} | null;
 
-const recentActivities = [
-    {
-        id: 1,
-        user: 'Ahmad Rizki',
-        action: 'Menyelesaikan Assessment',
-        detail: 'Pemrograman Web - Bagian 3',
-        time: '5 menit lalu',
-        icon: GraduationCap,
-    },
-    {
-        id: 2,
-        user: 'Siti Nurhaliza',
-        action: 'Mengirim Portfolio',
-        detail: 'Project Akhir - E-Commerce App',
-        time: '15 menit lalu',
-        icon: BookOpen,
-    },
-    {
-        id: 3,
-        user: 'Budi Santoso',
-        action: 'Menyelesaikan Challenge',
-        detail: 'Algorithm Challenge #12',
-        time: '30 menit lalu',
-        icon: Trophy,
-    },
-    {
-        id: 4,
-        user: 'Dewi Lestari',
-        action: 'Mendapatkan Badge',
-        detail: 'Fast Learner Badge',
-        time: '1 jam lalu',
-        icon: Star,
-    },
-    {
-        id: 5,
-        user: 'Fajar Nugroho',
-        action: 'Memulai Learning Path',
-        detail: 'Data Science Fundamentals',
-        time: '2 jam lalu',
-        icon: BookOpen,
-    },
-];
+type PageProps = {
+    auth: Auth;
+    guruDashboard: GuruDashboard;
+};
 
 const quickActions = [
     {
@@ -100,10 +42,16 @@ const quickActions = [
         href: '/assessment/create',
         icon: GraduationCap,
     },
+    {
+        title: 'Lihat Semua Tugas',
+        description: 'Kelola tugas yang sudah dibuat',
+        href: '/assessment',
+        icon: ClipboardList,
+    },
 ];
 
 export default function RegularDashboard() {
-    const { auth } = usePage<PageProps>().props;
+    const { auth, guruDashboard } = usePage<PageProps>().props;
     const userName = auth.user?.name ?? 'User';
     const initials = userName
         .split(' ')
@@ -111,6 +59,35 @@ export default function RegularDashboard() {
         .join('')
         .slice(0, 2)
         .toUpperCase();
+
+    const stats = [
+        {
+            title: 'Total Siswa',
+            value: guruDashboard?.totalSiswa ?? 0,
+            icon: Users,
+            color: '#436391',
+        },
+        {
+            title: 'Tugas Aktif',
+            value: guruDashboard?.tugasAktif ?? 0,
+            icon: FileText,
+            color: '#7c3aed',
+        },
+        {
+            title: 'Menunggu Penilaian',
+            value: guruDashboard?.menungguPenilaian ?? 0,
+            icon: AlertCircle,
+            color: '#d97706',
+        },
+        {
+            title: 'Rata-rata Nilai',
+            value: (guruDashboard?.rataNilai ?? 0).toFixed(1),
+            icon: TrendingUp,
+            color: '#059669',
+        },
+    ];
+
+    const activities = guruDashboard?.recentActivity ?? [];
 
     return (
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
@@ -177,14 +154,14 @@ export default function RegularDashboard() {
                 {stats.map((stat) => (
                     <div
                         key={stat.title}
-                        className={`${stat.bgColor} group relative overflow-hidden rounded-xl border border-slate-200 p-5 transition-all hover:border-slate-300 hover:shadow-md`}
+                        className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 transition-all hover:border-slate-300 hover:shadow-md"
                     >
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
                                 {stat.title}
                             </span>
                             <div
-                                className={`flex h-10 w-10 items-center justify-center rounded-lg transition-transform group-hover:scale-110`}
+                                className="flex h-10 w-10 items-center justify-center rounded-lg transition-transform group-hover:scale-110"
                                 style={{
                                     backgroundColor: stat.color + '18',
                                     color: stat.color,
@@ -196,12 +173,6 @@ export default function RegularDashboard() {
                         <div className="mt-3 text-3xl font-bold text-slate-900">
                             {stat.value}
                         </div>
-                        <p className="mt-1 text-xs text-slate-500">
-                            <span className="font-bold text-emerald-600">
-                                {stat.change}
-                            </span>{' '}
-                            dari bulan lalu
-                        </p>
                     </div>
                 ))}
             </div>
@@ -219,38 +190,49 @@ export default function RegularDashboard() {
                                 Aktivitas Terbaru
                             </h2>
                         </div>
-                        <Link
-                            href="/analytics"
-                            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700"
-                        >
-                            Lihat Semua <ArrowRight className="h-3.5 w-3.5" />
-                        </Link>
                     </div>
                     <div className="p-0">
-                        <ul className="divide-y divide-slate-100">
-                            {recentActivities.map((activity) => (
-                                <li
-                                    key={activity.id}
-                                    className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-slate-50"
-                                >
-                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
-                                        <activity.icon className="h-4 w-4" />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-semibold text-slate-900">
-                                            {activity.user}
-                                        </p>
-                                        <p className="truncate text-xs text-slate-500">
-                                            {activity.action} ·{' '}
-                                            {activity.detail}
-                                        </p>
-                                    </div>
-                                    <span className="shrink-0 text-xs whitespace-nowrap text-slate-400">
-                                        {activity.time}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
+                        {activities.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center px-5 py-10 text-center">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                                    <Clock className="h-6 w-6" />
+                                </div>
+                                <p className="mt-3 text-sm font-medium text-slate-500">
+                                    Belum ada aktivitas
+                                </p>
+                                <p className="text-xs text-slate-400">
+                                    Aktivitas siswa akan muncul di sini
+                                </p>
+                            </div>
+                        ) : (
+                            <ul className="divide-y divide-slate-100">
+                                {activities.map((activity) => (
+                                    <li
+                                        key={activity.id}
+                                        className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-slate-50"
+                                    >
+                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+                                            {activity.type === 'submission' ? (
+                                                <CheckCircle className="h-4 w-4" />
+                                            ) : (
+                                                <BookOpen className="h-4 w-4" />
+                                            )}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-semibold text-slate-900">
+                                                {activity.user}
+                                            </p>
+                                            <p className="truncate text-xs text-slate-500">
+                                                {activity.description}
+                                            </p>
+                                        </div>
+                                        <span className="shrink-0 text-xs whitespace-nowrap text-slate-400">
+                                            {activity.time}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                 </div>
 
@@ -259,7 +241,7 @@ export default function RegularDashboard() {
                     <div className="border-b border-slate-100 px-5 py-4">
                         <div className="flex items-center gap-2.5">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
-                                <Zap className="h-4 w-4" />
+                                <Sparkles className="h-4 w-4" />
                             </div>
                             <h2 className="text-sm font-semibold text-slate-900">
                                 Quick Actions
