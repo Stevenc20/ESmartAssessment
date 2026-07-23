@@ -17,7 +17,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Nginx config
-COPY nginx/default.conf /etc/nginx/sites-available/default
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
 # Supervisor config
 COPY supervisor.conf /etc/supervisor/conf.d/app.conf
@@ -34,7 +34,9 @@ RUN echo "upload_max_filesize = 100M" > /usr/local/etc/php/conf.d/uploads.ini \
     && echo "post_max_size = 120M" >> /usr/local/etc/php/conf.d/uploads.ini \
     && echo "memory_limit = 256M" >> /usr/local/etc/php/conf.d/uploads.ini \
     && echo "max_execution_time = 300" >> /usr/local/etc/php/conf.d/uploads.ini \
-    && echo "max_input_time = 300" >> /usr/local/etc/php/conf.d/uploads.ini
+    && echo "max_input_time = 300" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "max_file_uploads = 20" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && mkdir -p /tmp/nginx && chmod 1777 /tmp/nginx
 
 # Permissions
 RUN chown -R www-data:www-data /var/www/html/public \
