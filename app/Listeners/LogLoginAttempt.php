@@ -8,6 +8,7 @@ use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Laravel\Fortify\Fortify;
 
 class LogLoginAttempt
@@ -43,10 +44,11 @@ class LogLoginAttempt
         $ip = $this->request->ip();
         $email = $this->request->input(Fortify::username()) ?? 'unknown';
 
-        UserLog::create([
-            'user_id' => null,
+        DB::table('user_logs')->insert([
             'activity' => 'Login gagal: '.$email,
             'ip_address' => $ip,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
 
