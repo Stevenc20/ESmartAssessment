@@ -76,7 +76,7 @@ export default function Welcome() {
             <div className="lp-root">
                 {/* ── Navbar ── */}
                 <header
-                    className={`lp-navbar${scrolled ? 'lp-navbar--scrolled' : ''}`}
+                    className={`lp-navbar${scrolled ? ' lp-navbar--scrolled' : ''}`}
                 >
                     <nav className="lp-nav-inner">
                         {/* Logo */}
