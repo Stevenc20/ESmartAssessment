@@ -81,11 +81,6 @@ export default function HeroSection({ onScrollDown }: HeroSectionProps) {
 
             {/* Content */}
             <div className="lp-hero-content">
-                {/* Badge */}
-                <div className="lp-hero-badge">
-                    Intelligent Learning Platform v1.0
-                </div>
-
                 {/* Headline */}
                 <h1 className="lp-hero-h1">
                     <span className="lp-hero-h1-plain">Belajar Lebih</span>

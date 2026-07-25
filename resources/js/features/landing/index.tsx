@@ -40,8 +40,6 @@ export default function Welcome() {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
                         entry.target.classList.add('lp-revealed');
-                    } else {
-                        entry.target.classList.remove('lp-revealed');
                     }
                 });
             },
