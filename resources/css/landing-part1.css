@@ -11,9 +11,7 @@
     top: 0;
     z-index: 50;
     transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-    background: rgba(255, 255, 255, 0.55);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 1);
     border-bottom: 1px solid rgba(242, 174, 188, 0.2);
 }
 .lp-navbar--scrolled {
@@ -1209,7 +1207,7 @@
 .lp-footer-tagline {
     font-size: 0.875rem;
     line-height: 1.65;
-    color: #a0aec0;
+    color: #b4bfcc;
     max-width: 260px;
 }
 .lp-footer-socials {
@@ -1226,7 +1224,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #a0aec0;
+    color: #b4bfcc;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -1253,7 +1251,7 @@
 }
 .lp-footer-link {
     font-size: 0.875rem;
-    color: #a0aec0;
+    color: #b4bfcc;
     text-decoration: none;
     transition: color 0.2s;
 }
@@ -1273,11 +1271,11 @@
 }
 .lp-footer-copy {
     font-size: 0.8125rem;
-    color: #718096;
+    color: #a0aec0;
 }
 .lp-footer-made {
     font-size: 0.8125rem;
-    color: #718096;
+    color: #a0aec0;
     display: flex;
     align-items: center;
     gap: 0.25rem;
