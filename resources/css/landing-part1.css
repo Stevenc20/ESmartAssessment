@@ -10,14 +10,16 @@
     right: 0;
     top: 0;
     z-index: 50;
-    transition: all 0.3s ease;
-    background: rgba(255, 255, 255, 0.85);
+    transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(242, 174, 188, 0.2);
 }
 .lp-navbar--scrolled {
-    background: rgba(255, 255, 255, 0.88);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
     box-shadow: 0 4px 24px rgba(67, 99, 145, 0.1);
     border-bottom-color: rgba(242, 174, 188, 0.4);
 }
@@ -1154,7 +1156,7 @@
 
 /* Footer */
 .lp-footer {
-    background: #1a2332;
+    background: #263b50;
     color: #a0aec0;
     border-top: none;
 }

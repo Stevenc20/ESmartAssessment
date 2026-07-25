@@ -40,15 +40,12 @@ return;
                         setCount(Math.round(eased * target));
 
                         if (progress < 1) {
-requestAnimationFrame(animate);
-}
+                            requestAnimationFrame(animate);
+                        }
                     };
 
                     requestAnimationFrame(animate);
                 }
-            } else {
-                startedRef.current = false;
-                setCount(0);
             }
         });
 
