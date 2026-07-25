@@ -48,6 +48,10 @@ class BackupController extends Controller
 
     public function download(string $filename)
     {
+        if (! preg_match('/^[a-zA-Z0-9\-_.]+$/', $filename)) {
+            return back()->with('error', 'Nama file tidak valid.');
+        }
+
         $storage = Storage::disk($this->disk);
 
         if (! $storage->exists($this->path.'/'.$filename)) {
