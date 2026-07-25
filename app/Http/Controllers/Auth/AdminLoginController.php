@@ -14,7 +14,7 @@ class AdminLoginController extends Controller
     public function showForm()
     {
         return Inertia::render('auth/admin-login', [
-            'recaptcha_site_key' => config('no-captcha.sitekey'),
+            'recaptcha_site_key' => config('captcha.sitekey'),
         ]);
     }
 
@@ -60,7 +60,7 @@ class AdminLoginController extends Controller
 
     protected function verifyRecaptcha(string $token, string $ip): bool
     {
-        $secret = config('no-captcha.secret');
+        $secret = config('captcha.secret');
 
         if (! $secret) {
             return true;
