@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AbsenController;
 use App\Http\Controllers\AssessmentController;
+use App\Http\Controllers\Auth\AdminLoginController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaporanController;
@@ -21,7 +22,8 @@ Route::middleware(['guest'])->group(function () {
     Route::get('register/complete', [GoogleController::class, 'showCompleteForm'])->name('register.complete');
     Route::post('register/complete', [GoogleController::class, 'completeRegistration'])->name('register.complete.store');
 
-    Route::inertia('admin/login', 'auth/admin-login')->name('admin.login');
+    Route::get('admin/login', [AdminLoginController::class, 'showForm'])->name('admin.login');
+    Route::post('admin/login', [AdminLoginController::class, 'login'])->middleware('throttle:admin-login')->name('admin.login.store');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

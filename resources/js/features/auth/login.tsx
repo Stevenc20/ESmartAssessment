@@ -1,5 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import { Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 function GoogleLogo() {
@@ -52,13 +51,6 @@ export default function Login() {
                         Daftar dengan Google
                     </a>
                 </div>
-            </div>
-
-            <div className="auth-admin-link-wrapper mt-6 border-t border-gray-200/60 pt-4">
-                <Link href="/admin/login" className="auth-admin-link">
-                    <Shield className="auth-admin-link-icon" />
-                    <span>Login Admin / Guru</span>
-                </Link>
             </div>
         </>
     );
