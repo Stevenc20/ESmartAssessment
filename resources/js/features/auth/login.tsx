@@ -52,6 +52,13 @@ export default function Login() {
                     </a>
                 </div>
             </div>
+
+            <a
+                href="/admin/login"
+                className="mt-8 block text-center text-[0.65rem] text-gray-300 hover:text-gray-500 transition-colors"
+            >
+                ●
+            </a>
         </>
     );
 }
