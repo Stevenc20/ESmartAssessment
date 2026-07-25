@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ArrowUp } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import CoreExperienceSection from '@/features/landing/components/core-experience-section';
@@ -14,9 +14,13 @@ export default function Welcome() {
     const { auth } = usePage().props;
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [showBackToTop, setShowBackToTop] = useState(false);
 
     useEffect(() => {
-        const handleScroll = () => setScrolled(window.scrollY > 20);
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
+            setShowBackToTop(window.scrollY > 400);
+        };
         window.addEventListener('scroll', handleScroll, { passive: true });
 
         return () => window.removeEventListener('scroll', handleScroll);
@@ -218,6 +222,16 @@ export default function Welcome() {
                 </main>
 
                 <Footer />
+
+                {/* Back to top */}
+                <button
+                    type="button"
+                    className={`lp-back-to-top${showBackToTop ? ' lp-back-to-top--visible' : ''}`}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    aria-label="Kembali ke atas"
+                >
+                    <ArrowUp className="h-5 w-5" />
+                </button>
             </div>
         </>
     );

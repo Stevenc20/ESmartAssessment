@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
+import { BookOpen, ArrowRight, ChevronDown } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { login } from '@/routes';
 
@@ -83,8 +83,7 @@ export default function HeroSection({ onScrollDown }: HeroSectionProps) {
             <div className="lp-hero-content">
                 {/* Badge */}
                 <div className="lp-hero-badge">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>Intelligent Learning Platform v1.0</span>
+                    Intelligent Learning Platform v1.0
                 </div>
 
                 {/* Headline */}

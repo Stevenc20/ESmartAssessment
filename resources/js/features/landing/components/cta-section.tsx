@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { login } from '@/routes';
 
 export default function CtaSection() {
@@ -16,8 +16,7 @@ export default function CtaSection() {
             <div className="lp-cta-content" data-reveal>
                 {/* Badge */}
                 <div className="lp-cta-badge">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>Mulai perjalanan belajarmu</span>
+                    Mulai perjalanan belajarmu
                 </div>
 
                 <h2 className="lp-cta-h2">

@@ -540,7 +540,7 @@
 .lp-section-badge {
     display: inline-flex;
     align-items: center;
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -1463,4 +1463,36 @@
     .lp-experience-inner {
         gap: 2.5rem;
     }
+}
+
+/* =============================================
+   Back to Top Button
+   ============================================= */
+.lp-back-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #436391;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(67, 99, 145, 0.3);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 40;
+}
+.lp-back-to-top--visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+.lp-back-to-top:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(67, 99, 145, 0.4);
 }
