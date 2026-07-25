@@ -11,15 +11,15 @@
     top: 0;
     z-index: 50;
     transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid rgba(242, 174, 188, 0.2);
 }
 .lp-navbar--scrolled {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     box-shadow: 0 4px 24px rgba(67, 99, 145, 0.1);
     border-bottom-color: rgba(242, 174, 188, 0.4);
 }
@@ -1209,7 +1209,7 @@
 .lp-footer-tagline {
     font-size: 0.875rem;
     line-height: 1.65;
-    color: #718096;
+    color: #a0aec0;
     max-width: 260px;
 }
 .lp-footer-socials {
@@ -1253,7 +1253,7 @@
 }
 .lp-footer-link {
     font-size: 0.875rem;
-    color: #718096;
+    color: #a0aec0;
     text-decoration: none;
     transition: color 0.2s;
 }
@@ -1264,7 +1264,7 @@
     max-width: 1280px;
     margin: 0 auto;
     padding: 1.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -1273,11 +1273,11 @@
 }
 .lp-footer-copy {
     font-size: 0.8125rem;
-    color: #4a5568;
+    color: #718096;
 }
 .lp-footer-made {
     font-size: 0.8125rem;
-    color: #4a5568;
+    color: #718096;
     display: flex;
     align-items: center;
     gap: 0.25rem;
