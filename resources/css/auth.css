@@ -399,7 +399,8 @@
 
 .auth-root {
     position: relative;
-    height: 100svh;
+    min-height: 100svh;
+    height: auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1471,7 +1472,7 @@
     }
 
     .auth-card-body {
-        padding: 1.5rem;
+        padding: 1.25rem 1.5rem 1.5rem;
     }
 
     .auth-blob-1 {
@@ -1486,6 +1487,19 @@
         display: none;
     }
 
+    .auth-root {
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        align-items: flex-start;
+        padding-top: 3.5rem;
+        padding-bottom: 2rem;
+    }
+
+    .auth-content-wrapper {
+        margin: 0 auto;
+    }
+
     .auth-step-connector {
         width: 24px;
     }
@@ -1498,6 +1512,303 @@
     }
     .auth-readonly-field {
         padding: 0.625rem 0.75rem;
+    }
+
+    .auth-glass-card {
+        max-height: calc(100svh - 6rem);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Slow down heavy animations on mobile to prevent flickering */
+    .auth-glass-card {
+        animation-duration: 15s !important;
+    }
+    .auth-card-shimmer {
+        animation-duration: 10s, 12s !important;
+    }
+    .auth-profile-avatar-ring {
+        animation-duration: 12s !important;
+    }
+    .auth-logo-ring {
+        animation-duration: 10s !important;
+    }
+    .auth-page-icon {
+        animation-duration: 8s, 8s, 15s !important;
+    }
+    .auth-blob-1 {
+        animation-duration: 28s, 20s !important;
+    }
+    .auth-blob-2 {
+        animation-duration: 36s, 25s !important;
+    }
+    .auth-blob-3 {
+        animation-duration: 44s, 18s !important;
+    }
+
+    /* Slow input animations */
+    .auth-glass-card input[type='text'],
+    .auth-glass-card input[type='email'],
+    .auth-glass-card input[type='password'] {
+        animation-duration: 15s !important;
+    }
+    .auth-glass-card input[type='text']:focus,
+    .auth-glass-card input[type='email']:focus,
+    .auth-glass-card input[type='password']:focus {
+        animation-duration: 6s !important;
+    }
+    .auth-glass-card [role='combobox'],
+    .auth-glass-card button[data-slot='select-trigger'] {
+        animation-duration: 15s !important;
+    }
+    .auth-glass-card [role='combobox']:focus,
+    .auth-glass-card button[data-slot='select-trigger']:focus {
+        animation-duration: 6s !important;
+    }
+    .auth-glass-card .grid:focus-within::after {
+        animation-duration: 8s !important;
+    }
+    .auth-glass-card .grid:focus-within > label,
+    .auth-glass-card .grid:focus-within > [class*='label'] {
+        animation-duration: 9s !important;
+    }
+    .auth-glass-card button[type='submit']::before,
+    .auth-glass-card [data-test]::before {
+        animation-duration: 8s !important;
+    }
+    .auth-step.active .auth-step-dot {
+        animation-duration: 8s !important;
+    }
+}
+
+/* ── Extra small phones (320-380px) ── */
+@media (max-width: 380px) {
+    .auth-root {
+        padding-top: 3rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .auth-content-wrapper {
+        padding: 0.75rem;
+        gap: 1rem;
+    }
+
+    .auth-card-header {
+        padding: 1.25rem 1.25rem 0;
+    }
+
+    .auth-card-body {
+        padding: 1rem 1.25rem 1.25rem;
+    }
+
+    .auth-title {
+        font-size: 1.125rem;
+    }
+
+    .auth-description {
+        font-size: 0.75rem;
+    }
+
+    .auth-logo-ring {
+        width: 52px;
+        height: 52px;
+    }
+
+    .auth-step-dot {
+        width: 26px;
+        height: 26px;
+    }
+
+    .auth-step-icon {
+        width: 11px;
+        height: 11px;
+    }
+
+    .auth-step-connector {
+        width: 16px;
+    }
+
+    .auth-step-label {
+        font-size: 0.5rem;
+    }
+
+    .auth-profile-avatar-ring {
+        width: 44px;
+        height: 44px;
+    }
+
+    .auth-upload-area {
+        min-height: 100px;
+    }
+}
+
+/* ── Tablets (481-768px) ── */
+@media (min-width: 481px) and (max-width: 768px) {
+    .auth-content-wrapper {
+        max-width: 400px;
+        padding: 1.25rem;
+    }
+
+    .auth-blob-1 {
+        width: 360px;
+        height: 360px;
+    }
+    .auth-blob-2 {
+        width: 300px;
+        height: 300px;
+    }
+}
+
+/* ── Desktops (769-1024px) ── */
+@media (min-width: 769px) {
+    .auth-content-wrapper {
+        max-width: 440px;
+    }
+}
+
+/* ── Large screens (1025-1440px) ── */
+@media (min-width: 1025px) {
+    .auth-content-wrapper {
+        max-width: 460px;
+        padding: 2rem;
+        gap: 1.75rem;
+    }
+
+    .auth-card-header {
+        padding: 2.25rem 2.25rem 0;
+    }
+
+    .auth-card-body {
+        padding: 2rem 2.25rem 2.25rem;
+    }
+
+    .auth-title {
+        font-size: 1.5rem;
+    }
+
+    .auth-blob-1 {
+        width: 560px;
+        height: 560px;
+    }
+    .auth-blob-2 {
+        width: 480px;
+        height: 480px;
+    }
+    .auth-blob-3 {
+        width: 360px;
+        height: 360px;
+    }
+}
+
+/* ── TV / Extra large (1441px+) ── */
+@media (min-width: 1441px) {
+    .auth-content-wrapper {
+        max-width: 520px;
+        padding: 2.5rem;
+        gap: 2rem;
+    }
+
+    .auth-card-header {
+        padding: 2.5rem 2.5rem 0;
+    }
+
+    .auth-card-body {
+        padding: 2.25rem 2.5rem 2.5rem;
+    }
+
+    .auth-title {
+        font-size: 1.625rem;
+    }
+
+    .auth-description {
+        font-size: 0.875rem;
+    }
+
+    .auth-logo-ring {
+        width: 72px;
+        height: 72px;
+    }
+
+    .auth-brand-name {
+        font-size: 1rem;
+    }
+
+    .auth-blob-1 {
+        width: 680px;
+        height: 680px;
+    }
+    .auth-blob-2 {
+        width: 560px;
+        height: 560px;
+    }
+    .auth-blob-3 {
+        width: 420px;
+        height: 420px;
+    }
+
+    .auth-profile-avatar-ring {
+        width: 72px;
+        height: 72px;
+    }
+
+    .auth-step-dot {
+        width: 38px;
+        height: 38px;
+    }
+
+    .auth-step-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .auth-step-label {
+        font-size: 0.6875rem;
+    }
+
+    .auth-step-connector {
+        width: 52px;
+    }
+
+    .auth-glass-card input[type='text'],
+    .auth-glass-card input[type='email'],
+    .auth-glass-card input[type='password'],
+    .auth-glass-card [role='combobox'],
+    .auth-glass-card button[data-slot='select-trigger'] {
+        font-size: 1rem !important;
+    }
+
+    .auth-glass-card label {
+        font-size: 0.875rem !important;
+    }
+
+    .auth-glass-card button[type='submit'] {
+        font-size: 1rem !important;
+        height: 48px !important;
+    }
+}
+
+/* ── Reduced motion preference ── */
+@media (prefers-reduced-motion: reduce) {
+    .auth-root,
+    .auth-blob,
+    .auth-card-shimmer,
+    .auth-glass-card,
+    .auth-logo-ring,
+    .auth-page-icon,
+    .auth-profile-avatar-ring,
+    .auth-step.active .auth-step-dot,
+    .auth-glass-card input[type='text'],
+    .auth-glass-card input[type='email'],
+    .auth-glass-card input[type='password'],
+    .auth-glass-card [role='combobox'],
+    .auth-glass-card button[data-slot='select-trigger'],
+    .auth-glass-card .grid:focus-within::after,
+    .auth-glass-card .grid:focus-within > label,
+    .auth-glass-card .grid:focus-within > [class*='label'],
+    .auth-glass-card button[type='submit']::before,
+    .auth-glass-card [data-test]::before {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
     }
 }
 

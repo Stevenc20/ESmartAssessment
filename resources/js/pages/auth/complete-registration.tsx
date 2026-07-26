@@ -172,7 +172,7 @@ export default function CompleteRegistration({ googleUser }: Props) {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5 overflow-y-auto max-h-[70vh]">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 <div className="grid gap-5">
                     {/* Name Input — Editable */}
                     <div className="grid gap-2">
@@ -259,7 +259,7 @@ export default function CompleteRegistration({ googleUser }: Props) {
                     </div>
 
                     {/* Editable Fields */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="grid gap-2">
                             <Label htmlFor="kelas" className="auth-field-label">
                                 <GraduationCap className="auth-label-icon" />
@@ -278,7 +278,7 @@ export default function CompleteRegistration({ googleUser }: Props) {
                                 <SelectTrigger id="kelas" tabIndex={1}>
                                     <SelectValue placeholder="Pilih kelas" />
                                 </SelectTrigger>
-                                <SelectContent collisionBoundary={typeof document !== 'undefined' ? document.documentElement : undefined}>
+                                <SelectContent>
                                     <SelectItem value="10">Kelas 10</SelectItem>
                                     <SelectItem value="11">Kelas 11</SelectItem>
                                 </SelectContent>
@@ -307,7 +307,7 @@ export default function CompleteRegistration({ googleUser }: Props) {
                                 <SelectTrigger id="jurusan" tabIndex={2}>
                                     <SelectValue placeholder="Pilih jurusan" />
                                 </SelectTrigger>
-                                <SelectContent collisionBoundary={typeof document !== 'undefined' ? document.documentElement : undefined}>
+                                <SelectContent>
                                     {JURUSAN_LIST.map((j) => (
                                         <SelectItem
                                             key={j.value}
