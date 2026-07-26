@@ -56,6 +56,29 @@ class MateriController extends Controller
         ]);
     }
 
+    public function show(Materi $materi)
+    {
+        $materi->load(['pertemuan.roadmap', 'creator']);
+
+        return Inertia::render('materi/show', [
+            'materi' => [
+                'id' => $materi->id,
+                'judul' => $materi->judul,
+                'deskripsi' => $materi->deskripsi,
+                'thumbnail' => $materi->thumbnail ? Storage::url($materi->thumbnail) : null,
+                'video_url' => $materi->video_url,
+                'video_embed_url' => $this->getYoutubeEmbedUrl($materi->video_url),
+                'pdf_file' => $materi->pdf_file ? Storage::url($materi->pdf_file) : null,
+                'pdf_file_name' => $materi->pdf_file ? basename($materi->pdf_file) : null,
+                'drive_link' => $materi->drive_link,
+                'pertemuan' => $materi->pertemuan?->judul ?? '-',
+                'roadmap' => $materi->pertemuan?->roadmap?->judul ?? '-',
+                'created_by' => $materi->creator?->name ?? '-',
+                'created_at' => $materi->created_at->format('d M Y'),
+            ],
+        ]);
+    }
+
     public function create()
     {
         $pertemuanList = Pertemuan::with('roadmap')
@@ -248,6 +271,63 @@ class MateriController extends Controller
         return Inertia::render('materi/siswa', [
             'roadmaps' => $roadmaps,
             'stats' => $stats,
+        ]);
+    }
+
+    public function showSiswa(Materi $materi, Request $request)
+    {
+        $user = $request->user();
+
+        $materi->load(['pertemuan.roadmap', 'creator', 'tugas.pengumpulan.penilaian', 'progress']);
+
+        $progress = $materi->progress->firstWhere('siswa_id', $user->id);
+
+        $tugasList = $materi->tugas->map(function ($t) use ($user) {
+            $submission = $t->pengumpulan
+                ->where('siswa_id', $user->id)
+                ->sortByDesc('created_at')
+                ->first();
+
+            $penilaian = $submission?->penilaian;
+            $deadlinePassed = $t->deadline && Carbon::parse($t->deadline)->isPast();
+
+            return [
+                'id' => $t->id,
+                'judul' => $t->judul,
+                'deskripsi' => $t->deskripsi,
+                'deadline' => $t->deadline ? Carbon::parse($t->deadline)->format('d M Y H:i') : null,
+                'deadline_passed' => $deadlinePassed,
+                'bobot' => $t->bobot,
+                'max_revisi' => $t->max_revisi,
+                'status' => $submission
+                    ? ($penilaian ? 'dinilai' : 'dikirim')
+                    : ($deadlinePassed ? 'terlewat' : 'tersedia'),
+                'nilai' => $penilaian?->nilai,
+                'feedback' => $penilaian?->feedback,
+                'submitted_at' => $submission?->created_at?->diffForHumans(),
+                'file_tugas' => $submission?->file_tugas ? Storage::url($submission->file_tugas) : null,
+                'revisi_ke' => $submission?->revisi_ke ?? 0,
+            ];
+        });
+
+        return Inertia::render('materi/siswa-detail', [
+            'materi' => [
+                'id' => $materi->id,
+                'judul' => $materi->judul,
+                'deskripsi' => $materi->deskripsi,
+                'thumbnail' => $materi->thumbnail ? Storage::url($materi->thumbnail) : null,
+                'video_url' => $materi->video_url,
+                'video_embed_url' => $this->getYoutubeEmbedUrl($materi->video_url),
+                'pdf_file' => $materi->pdf_file ? Storage::url($materi->pdf_file) : null,
+                'pdf_file_name' => $materi->pdf_file ? basename($materi->pdf_file) : null,
+                'drive_link' => $materi->drive_link,
+                'created_by' => $materi->creator?->name ?? '-',
+                'progress_status' => $progress?->status ?? 'not_started',
+                'completed_at' => $progress?->completed_at,
+                'tugas' => $tugasList,
+            ],
+            'pertemuan' => $materi->pertemuan?->judul ?? '-',
+            'roadmap' => $materi->pertemuan?->roadmap?->judul ?? '-',
         ]);
     }
 

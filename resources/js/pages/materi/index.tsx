@@ -1,8 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     BookOpen,
-    ChevronDown,
-    ChevronRight,
     Download,
     ExternalLink,
     FileText,
@@ -11,6 +9,7 @@ import {
     Plus,
     Trash2,
     Video,
+    Eye,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -49,21 +48,16 @@ export default function MateriIndex({
 }) {
     const { errors } = usePage().props;
     const [deleteId, setDeleteId] = useState<number | null>(null);
-    const [expandedId, setExpandedId] = useState<number | null>(null);
 
     function executeDelete() {
         if (!deleteId) {
-return;
-}
+            return;
+        }
 
         router.delete(`/materi/${deleteId}`, {
             preserveScroll: true,
             onSuccess: () => setDeleteId(null),
         });
-    }
-
-    function toggleExpand(id: number) {
-        setExpandedId((prev) => (prev === id ? null : id));
     }
 
     return (
@@ -128,155 +122,94 @@ return;
                         </div>
                         {materiList.length > 0 ? (
                             <div className="divide-y divide-slate-100">
-                                {materiList.map((materi) => {
-                                    const isOpen = expandedId === materi.id;
-
-                                    return (
-                                        <div key={materi.id}>
-                                            <button
-                                                onClick={() =>
-                                                    toggleExpand(materi.id)
-                                                }
-                                                className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-slate-50"
-                                            >
-                                                <div className="flex shrink-0 items-center gap-2">
-                                                    {isOpen ? (
-                                                        <ChevronDown className="h-4 w-4 text-slate-400" />
-                                                    ) : (
-                                                        <ChevronRight className="h-4 w-4 text-slate-400" />
-                                                    )}
-                                                    {materi.thumbnail ? (
-                                                        <img
-                                                            src={
-                                                                materi.thumbnail
-                                                            }
-                                                            alt=""
-                                                            className="h-10 w-16 rounded-lg object-cover"
-                                                        />
-                                                    ) : (
-                                                        <div className="flex h-10 w-16 items-center justify-center rounded-lg bg-orange-50 text-orange-300">
-                                                            <Image className="h-5 w-5" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="truncate text-sm font-semibold text-slate-900">
-                                                        {materi.judul}
-                                                    </p>
-                                                    <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">
-                                                        {materi.pertemuan} ·{' '}
-                                                        {materi.roadmap} · oleh{' '}
-                                                        {materi.created_by} ·{' '}
-                                                        {materi.created_at}
-                                                    </p>
-                                                </div>
-                                                <div
-                                                    className="flex shrink-0 items-center gap-1.5"
-                                                    onClick={(e) =>
-                                                        e.stopPropagation()
-                                                    }
-                                                >
-                                                    {materi.video_embed_url && (
-                                                        <span className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600">
-                                                            <Video className="h-3.5 w-3.5" />
-                                                        </span>
-                                                    )}
-                                                    {materi.pdf_file && (
-                                                        <a
-                                                            href={
-                                                                materi.pdf_file
-                                                            }
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
-                                                        >
-                                                            <Download className="h-3.5 w-3.5" />
-                                                        </a>
-                                                    )}
-                                                    {materi.drive_link && (
-                                                        <a
-                                                            href={
-                                                                materi.drive_link
-                                                            }
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
-                                                        >
-                                                            <ExternalLink className="h-3.5 w-3.5" />
-                                                        </a>
-                                                    )}
-                                                    <Link
-                                                        href={`/materi/${materi.id}/edit`}
-                                                        className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
-                                                    >
-                                                        <Pencil className="h-3.5 w-3.5" />
-                                                    </Link>
-                                                    <button
-                                                        onClick={() =>
-                                                            setDeleteId(
-                                                                materi.id,
-                                                            )
-                                                        }
-                                                        className="rounded-lg border border-red-200 px-2 py-1.5 text-xs font-bold text-red-600 transition-colors hover:bg-red-50"
-                                                    >
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                    </button>
-                                                </div>
-                                            </button>
-
-                                            {isOpen && (
-                                                <div className="border-t border-slate-100 bg-slate-50 px-5 py-4">
-                                                    {materi.deskripsi && (
-                                                        <p className="mb-3 text-sm text-slate-600">
-                                                            {materi.deskripsi}
-                                                        </p>
-                                                    )}
-                                                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                                                        {materi.video_embed_url && (
-                                                            <div className="overflow-hidden rounded-lg bg-black">
-                                                                <iframe
-                                                                    src={
-                                                                        materi.video_embed_url
-                                                                    }
-                                                                    title={
-                                                                        materi.judul
-                                                                    }
-                                                                    className="aspect-video w-full"
-                                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                                    allowFullScreen
-                                                                />
-                                                            </div>
-                                                        )}
-                                                        {materi.pdf_file && (
-                                                            <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 p-8 text-center">
-                                                                <Download className="h-8 w-8 text-slate-400" />
-                                                                <p className="text-sm font-semibold text-slate-600">
-                                                                    File Materi
-                                                                </p>
-                                                                <p className="text-xs text-slate-400">
-                                                                    {
-                                                                        materi.pdf_file_name
-                                                                    }
-                                                                </p>
-                                                                <a
-                                                                    href={
-                                                                        materi.pdf_file
-                                                                    }
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-orange-700"
-                                                                >
-                                                                    <Download className="h-3.5 w-3.5" />
-                                                                    Download
-                                                                </a>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                {materiList.map((materi) => (
+                                    <div
+                                        key={materi.id}
+                                        className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-slate-50"
+                                    >
+                                        {/* Thumbnail */}
+                                        <div className="shrink-0">
+                                            {materi.thumbnail ? (
+                                                <img
+                                                    src={materi.thumbnail}
+                                                    alt=""
+                                                    className="h-12 w-16 rounded-lg object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex h-12 w-16 items-center justify-center rounded-lg bg-orange-50 text-orange-300">
+                                                    <Image className="h-5 w-5" />
                                                 </div>
                                             )}
                                         </div>
-                                    );
-                                })}
+
+                                        {/* Title & meta */}
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-semibold text-slate-900">
+                                                {materi.judul}
+                                            </p>
+                                            <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">
+                                                {materi.pertemuan} ·{' '}
+                                                {materi.roadmap} · oleh{' '}
+                                                {materi.created_by} ·{' '}
+                                                {materi.created_at}
+                                            </p>
+                                            {materi.deskripsi && (
+                                                <p className="mt-1 line-clamp-1 text-xs text-slate-400">
+                                                    {materi.deskripsi}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex shrink-0 items-center gap-1.5">
+                                            {materi.video_embed_url && (
+                                                <span className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600">
+                                                    <Video className="h-3.5 w-3.5" />
+                                                </span>
+                                            )}
+                                            {materi.pdf_file && (
+                                                <a
+                                                    href={materi.pdf_file}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
+                                                >
+                                                    <Download className="h-3.5 w-3.5" />
+                                                </a>
+                                            )}
+                                            {materi.drive_link && (
+                                                <a
+                                                    href={materi.drive_link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
+                                                >
+                                                    <ExternalLink className="h-3.5 w-3.5" />
+                                                </a>
+                                            )}
+                                            <Link
+                                                href={`/materi/${materi.id}`}
+                                                className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
+                                            >
+                                                <Eye className="h-3.5 w-3.5" />
+                                            </Link>
+                                            <Link
+                                                href={`/materi/${materi.id}/edit`}
+                                                className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
+                                            >
+                                                <Pencil className="h-3.5 w-3.5" />
+                                            </Link>
+                                            <button
+                                                onClick={() =>
+                                                    setDeleteId(materi.id)
+                                                }
+                                                className="rounded-lg border border-red-200 px-2 py-1.5 text-xs font-bold text-red-600 transition-colors hover:bg-red-50"
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : (
                             <div className="flex flex-col items-center gap-2 px-5 py-16 text-center">
@@ -304,8 +237,8 @@ return;
                 open={deleteId !== null}
                 onOpenChange={(o) => {
                     if (!o) {
-setDeleteId(null);
-}
+                        setDeleteId(null);
+                    }
                 }}
             >
                 <DialogContent>

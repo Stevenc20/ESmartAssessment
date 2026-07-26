@@ -32,12 +32,13 @@ Route::middleware(['guest'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::resource('materi', MateriController::class)->except('show');
+    Route::resource('materi', MateriController::class);
 
     Route::get('pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
 
     Route::prefix('materi-saya')->name('materi.siswa.')->group(function () {
         Route::get('/', [MateriController::class, 'siswa'])->name('index');
+        Route::get('/{materi}', [MateriController::class, 'showSiswa'])->name('show');
         Route::post('/{materi}/progress', [MateriController::class, 'updateProgress'])->name('progress');
         Route::post('/tugas/{tugas}/submit', [MateriController::class, 'submitTugas'])->name('tugas.submit');
     });
