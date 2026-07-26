@@ -125,7 +125,7 @@ router.delete(`/admin/kelas/${id}`, { preserveScroll: true });
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {['X', 'XI', 'XII'].map((t) => (
+                                            {['10', '11', '12'].map((t) => (
                                                 <SelectItem key={t} value={t}>
                                                     {t}
                                                 </SelectItem>
