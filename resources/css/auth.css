@@ -1487,6 +1487,10 @@
         display: none;
     }
 
+    .auth-back-link {
+        position: absolute;
+    }
+
     .auth-root {
         height: 100svh;
         min-height: 0;
