@@ -11,7 +11,7 @@ import TargetUsersSection from '@/features/landing/components/target-users-secti
 import { dashboard, login } from '@/routes';
 
 export default function Welcome() {
-    const { auth, recaptcha_site_key } = usePage().props;
+    const { auth } = usePage().props;
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [showBackToTop, setShowBackToTop] = useState(false);
@@ -219,7 +219,7 @@ export default function Welcome() {
                     <CtaSection />
                 </main>
 
-                <Footer recaptcha_site_key={recaptcha_site_key as string | undefined} />
+                <Footer />
 
                 {/* Back to top */}
                 <button
