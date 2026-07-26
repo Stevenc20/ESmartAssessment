@@ -1514,70 +1514,78 @@
         padding: 0.625rem 0.75rem;
     }
 
-    .auth-glass-card {
-        max-height: calc(100svh - 6rem);
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
+    /* Disable heavy animations on mobile to prevent flickering */
+    .auth-root {
+        animation: none !important;
     }
-
-    /* Slow down heavy animations on mobile to prevent flickering */
     .auth-glass-card {
-        animation-duration: 15s !important;
+        animation: none !important;
     }
     .auth-card-shimmer {
-        animation-duration: 10s, 12s !important;
+        animation: none !important;
     }
-    .auth-profile-avatar-ring {
-        animation-duration: 12s !important;
+    .auth-blob-1 {
+        animation: auth-blob-float 28s ease-in-out infinite !important;
     }
+    .auth-blob-2 {
+        animation: auth-blob-float-2 36s ease-in-out infinite !important;
+    }
+    .auth-blob-3 {
+        animation: none !important;
+    }
+
+    /* Keep subtle animations, slowed down */
     .auth-logo-ring {
         animation-duration: 10s !important;
     }
-    .auth-page-icon {
-        animation-duration: 8s, 8s, 15s !important;
+    .auth-profile-avatar-ring {
+        animation-duration: 15s !important;
     }
-    .auth-blob-1 {
-        animation-duration: 28s, 20s !important;
-    }
-    .auth-blob-2 {
-        animation-duration: 36s, 25s !important;
-    }
-    .auth-blob-3 {
-        animation-duration: 44s, 18s !important;
+    .auth-step.active .auth-step-dot {
+        animation-duration: 10s !important;
     }
 
-    /* Slow input animations */
+    /* Disable input animations */
     .auth-glass-card input[type='text'],
     .auth-glass-card input[type='email'],
     .auth-glass-card input[type='password'] {
-        animation-duration: 15s !important;
+        animation: none !important;
+        border-color: rgba(242, 174, 188, 0.4) !important;
+        box-shadow: none !important;
     }
     .auth-glass-card input[type='text']:focus,
     .auth-glass-card input[type='email']:focus,
     .auth-glass-card input[type='password']:focus {
-        animation-duration: 6s !important;
+        animation: none !important;
+        border-color: #436391 !important;
+        box-shadow: 0 0 0 3px rgba(67, 99, 145, 0.15) !important;
     }
     .auth-glass-card [role='combobox'],
     .auth-glass-card button[data-slot='select-trigger'] {
-        animation-duration: 15s !important;
+        animation: none !important;
+        border-color: rgba(242, 174, 188, 0.4) !important;
+        box-shadow: none !important;
     }
     .auth-glass-card [role='combobox']:focus,
     .auth-glass-card button[data-slot='select-trigger']:focus {
-        animation-duration: 6s !important;
+        animation: none !important;
+        border-color: #436391 !important;
+        box-shadow: 0 0 0 3px rgba(67, 99, 145, 0.15) !important;
     }
+
+    /* Disable scan line, label shimmer, button shimmer */
     .auth-glass-card .grid:focus-within::after {
-        animation-duration: 8s !important;
+        animation: none !important;
+        display: none !important;
     }
     .auth-glass-card .grid:focus-within > label,
     .auth-glass-card .grid:focus-within > [class*='label'] {
-        animation-duration: 9s !important;
+        animation: none !important;
     }
     .auth-glass-card button[type='submit']::before,
     .auth-glass-card [data-test]::before {
-        animation-duration: 8s !important;
-    }
-    .auth-step.active .auth-step-dot {
-        animation-duration: 8s !important;
+        animation: none !important;
+        display: none !important;
     }
 }
 
