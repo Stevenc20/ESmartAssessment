@@ -75,7 +75,10 @@ export default function Footer() {
                     &copy; {new Date().getFullYear()} ESmartAssessment. All
                     rights reserved.
                 </p>
-                <p className="lp-footer-made">Created by Steven Christian</p>
+                <div className="lp-footer-bottom-right">
+                    <p className="lp-footer-made">Created by Steven Christian</p>
+                    <a href="/admin/login" className="lp-footer-dot">●</a>
+                </div>
             </div>
         </footer>
     );

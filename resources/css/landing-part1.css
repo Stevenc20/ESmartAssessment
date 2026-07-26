@@ -1280,6 +1280,20 @@
     align-items: center;
     gap: 0.25rem;
 }
+.lp-footer-bottom-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.lp-footer-dot {
+    font-size: 0.65rem;
+    color: rgba(160, 174, 192, 0.3);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+.lp-footer-dot:hover {
+    color: rgba(160, 174, 192, 0.7);
+}
 
 /* =============================================
    RESPONSIVE — Mobile (max-width: 639px)
