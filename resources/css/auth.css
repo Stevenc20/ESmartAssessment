@@ -404,7 +404,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    overflow-x: hidden;
     background: linear-gradient(
         135deg,
         #f2dcdb 0%,
@@ -1488,16 +1488,20 @@
     }
 
     .auth-root {
+        height: 100svh;
+        min-height: 0;
+        flex-direction: column;
         overflow-y: auto;
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
-        align-items: flex-start;
-        padding-top: 3.5rem;
-        padding-bottom: 2rem;
+        align-items: stretch;
+        padding: 0;
     }
 
     .auth-content-wrapper {
+        flex: 0 0 auto;
         margin: 0 auto;
+        padding: 3.5rem 1rem 2rem;
     }
 
     .auth-step-connector {
@@ -1597,7 +1601,7 @@
     }
 
     .auth-content-wrapper {
-        padding: 0.75rem;
+        padding: 3rem 0.75rem 1.5rem;
         gap: 1rem;
     }
 
