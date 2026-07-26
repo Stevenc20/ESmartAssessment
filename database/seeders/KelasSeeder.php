@@ -47,7 +47,11 @@ class KelasSeeder extends Seeder
             ->get();
 
         foreach ($siswa as $s) {
-            $kelas = Kelas::where('tingkat', $s->kelas)->first();
+            $kelas = Kelas::where('tingkat', $s->kelas)
+                ->whereHas('tahunAjaran', function ($q) {
+                    $q->where('status', 'active');
+                })
+                ->first();
             if ($kelas) {
                 DB::table('siswa_kelas')->updateOrInsert(
                     ['siswa_id' => $s->id, 'kelas_id' => $kelas->id],

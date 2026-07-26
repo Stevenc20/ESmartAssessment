@@ -113,7 +113,11 @@ class GoogleController extends Controller
             'status' => 'active',
         ]);
 
-        $kelas = Kelas::where('tingkat', $validated['kelas'])->first();
+        $kelas = Kelas::where('tingkat', $validated['kelas'])
+            ->whereHas('tahunAjaran', function ($q) {
+                $q->where('status', 'active');
+            })
+            ->first();
         if ($kelas) {
             DB::table('siswa_kelas')->insert([
                 'siswa_id' => $user->id,
