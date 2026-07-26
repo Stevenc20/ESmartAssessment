@@ -10,8 +10,13 @@ use App\Http\Controllers\MateriController;
 use App\Http\Controllers\PengumumanController;
 use App\Http\Controllers\PertemuanController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
-Route::inertia('/', 'welcome')->name('home');
+Route::get('/', function () {
+    return Inertia::render('welcome', [
+        'recaptcha_site_key' => config('captcha.sitekey'),
+    ]);
+})->name('home');
 
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::get('google', [GoogleController::class, 'redirect'])->name('google.redirect');
@@ -22,7 +27,9 @@ Route::middleware(['guest'])->group(function () {
     Route::get('register/complete', [GoogleController::class, 'showCompleteForm'])->name('register.complete');
     Route::post('register/complete', [GoogleController::class, 'completeRegistration'])->name('register.complete.store');
 
-    Route::get('admin/login', [AdminLoginController::class, 'showForm'])->name('admin.login');
+    Route::get('admin/login', function () {
+        return redirect('/');
+    })->name('admin.login');
     Route::post('admin/login', [AdminLoginController::class, 'login'])->middleware('throttle:admin-login')->name('admin.login.store');
 });
 
