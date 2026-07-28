@@ -30,8 +30,8 @@ const items: NavItem[] = [
 ];
 
 const kelasLabelMap: Record<string, string> = {
-    '10': 'Kelas 10 Genesis',
-    '11': 'Kelas 11 Ascend',
+    '10': 'Genesis 10',
+    '11': 'Ascend 11',
     '12': 'Kelas 12',
 };
 
@@ -78,7 +78,7 @@ export function AppSidebarSiswa() {
                             className="text-xs font-medium"
                             style={{ color: '#e8889a' }}
                         >
-                            {label ?? 'Siswa'}
+                            {label ? `Siswa | ${label}` : 'Siswa'}
                         </span>
                     </div>
                 </div>
