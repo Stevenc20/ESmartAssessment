@@ -16,6 +16,9 @@ import { Textarea } from '@/components/ui/textarea';
 
 type PertemuanItem = { id: number; judul: string; tingkat: string | null };
 
+const kelasLabel = (p: PertemuanItem | undefined) =>
+    p?.tingkat ? `Genesis ${p.tingkat}` : 'Semua kelas';
+
 export default function MateriCreate({
     pertemuanList,
 }: {
@@ -128,6 +131,7 @@ export default function MateriCreate({
                                 <div>
                                     <Label>Pertemuan (opsional)</Label>
                                     {pertemuanList.length > 0 ? (
+                                        <>
                                         <Select
                                             value={pertemuanId}
                                             onValueChange={(v) =>
@@ -143,11 +147,17 @@ export default function MateriCreate({
                                                         key={p.id}
                                                         value={String(p.id)}
                                                     >
-                                                        {p.judul}{p.tingkat ? ` — Genesis ${p.tingkat}` : ' — Semua kelas'}
+                                                        {p.judul}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        {pertemuanId && (
+                                            <p className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                                                {kelasLabel(pertemuanList.find(p => String(p.id) === pertemuanId))}
+                                            </p>
+                                        )}
+                                        </>
                                     ) : (
                                         <p className="text-sm text-slate-400 italic">
                                             Tidak ada pertemuan tersedia
