@@ -8,7 +8,7 @@ class Materi extends Model
 {
     protected $table = 'materi';
 
-    protected $fillable = ['pertemuan_id', 'judul', 'thumbnail', 'deskripsi', 'video_url', 'pdf_file', 'drive_link', 'created_by'];
+    protected $fillable = ['pertemuan_id', 'judul', 'thumbnail', 'deskripsi', 'video_url', 'pdf_file', 'drive_link', 'created_by', 'tingkat'];
 
     public function pertemuan()
     {

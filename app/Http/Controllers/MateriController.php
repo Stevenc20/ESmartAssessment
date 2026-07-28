@@ -106,8 +106,10 @@ class MateriController extends Controller
             'pdf_file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:102400',
             'video_url' => 'nullable|string|max:255',
             'drive_link' => 'nullable|string|max:255',
+            'tingkat' => 'nullable|string|in:10,11',
         ]);
 
+        $data['tingkat'] = $data['tingkat'] ?: null;
         if (empty($data['pertemuan_id'])) {
             $data['pertemuan_id'] = null;
         }
@@ -150,6 +152,7 @@ class MateriController extends Controller
                 'pdf_file' => $materi->pdf_file ? Storage::url($materi->pdf_file) : null,
                 'pdf_file_name' => $materi->pdf_file ? basename($materi->pdf_file) : null,
                 'drive_link' => $materi->drive_link,
+                'tingkat' => $materi->tingkat,
             ],
             'pertemuanList' => $pertemuanList,
         ]);
@@ -165,8 +168,10 @@ class MateriController extends Controller
             'pdf_file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:102400',
             'video_url' => 'nullable|string|max:255',
             'drive_link' => 'nullable|string|max:255',
+            'tingkat' => 'nullable|string|in:10,11',
         ]);
 
+        $data['tingkat'] = $data['tingkat'] ?: null;
         if (empty($data['pertemuan_id'])) {
             $data['pertemuan_id'] = null;
         }
@@ -206,6 +211,10 @@ class MateriController extends Controller
 
         $roadmaps = Roadmap::with(['pertemuan' => function ($query) {
             $query->where('status', 'published')->orderBy('urutan');
+        }, 'pertemuan.materi' => function ($query) use ($tingkat) {
+            if ($tingkat) {
+                $query->where('tingkat', $tingkat)->orWhereNull('tingkat');
+            }
         }, 'pertemuan.materi.tugas.pengumpulan' => function ($q) use ($user) {
             $q->where('siswa_id', $user->id);
         }, 'pertemuan.materi.tugas.pengumpulan.penilaian'])
@@ -282,7 +291,13 @@ class MateriController extends Controller
         })->pluck('id');
 
         $pertemuanIds = Pertemuan::whereIn('roadmap_id', $tingkatRoadmapIds)->pluck('id');
-        $materiIdsByTingkat = Materi::whereIn('pertemuan_id', $pertemuanIds)->pluck('id');
+        $materiIdsByTingkat = Materi::whereIn('pertemuan_id', $pertemuanIds)
+            ->where(function ($q) use ($tingkat) {
+                if ($tingkat) {
+                    $q->where('tingkat', $tingkat)->orWhereNull('tingkat');
+                }
+            })
+            ->pluck('id');
 
         $stats = [
             'total' => $materiIdsByTingkat->count(),

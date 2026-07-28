@@ -16,9 +16,6 @@ import { Textarea } from '@/components/ui/textarea';
 
 type PertemuanItem = { id: number; judul: string; tingkat: string | null };
 
-const kelasLabel = (p: PertemuanItem | undefined) =>
-    p?.tingkat ? `Genesis ${p.tingkat}` : 'Semua kelas';
-
 export default function MateriCreate({
     pertemuanList,
 }: {
@@ -30,18 +27,18 @@ export default function MateriCreate({
     const [judul, setJudul] = useState('');
     const [deskripsi, setDeskripsi] = useState('');
     const [pertemuanId, setPertemuanId] = useState('');
-    const [filterTingkat, setFilterTingkat] = useState('');
+    const [tingkat, setTingkat] = useState('');
     const [videoUrl, setVideoUrl] = useState('');
     const [driveLink, setDriveLink] = useState('');
     const [processing, setProcessing] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
 
-    const filteredPertemuan = filterTingkat
-        ? pertemuanList.filter(p => p.tingkat === filterTingkat || p.tingkat === null)
+    const filteredPertemuan = tingkat
+        ? pertemuanList.filter(p => p.tingkat === tingkat || p.tingkat === null)
         : pertemuanList;
 
     function handleTingkatChange(v: string) {
-        setFilterTingkat(v);
+        setTingkat(v);
         if (pertemuanId) {
             const stillValid = v
                 ? pertemuanList.some(p => String(p.id) === pertemuanId && (p.tingkat === v || p.tingkat === null))
@@ -59,6 +56,7 @@ export default function MateriCreate({
         form.append('pertemuan_id', pertemuanId);
         form.append('judul', judul);
         form.append('deskripsi', deskripsi);
+        form.append('tingkat', tingkat);
 
         if (thumbRef.current?.files?.[0]) {
             form.append('thumbnail', thumbRef.current.files[0]);
@@ -146,7 +144,7 @@ export default function MateriCreate({
                                 <div>
                                     <Label>Kelas</Label>
                                     <Select
-                                        value={filterTingkat}
+                                        value={tingkat}
                                         onValueChange={handleTingkatChange}
                                     >
                                         <SelectTrigger className="w-full">
@@ -171,11 +169,6 @@ export default function MateriCreate({
                                         >
                                             <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Pilih pertemuan" />
-                                                {pertemuanId && (
-                                                    <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                                        {kelasLabel(pertemuanList.find(p => String(p.id) === pertemuanId))}
-                                                    </span>
-                                                )}
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {filteredPertemuan.map((p) => (

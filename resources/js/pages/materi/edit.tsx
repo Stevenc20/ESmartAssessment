@@ -15,9 +15,6 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 
 type PertemuanItem = { id: number; judul: string; tingkat: string | null };
-
-const kelasLabel = (p: PertemuanItem | undefined) =>
-    p?.tingkat ? `Genesis ${p.tingkat}` : 'Semua kelas';
 type MateriItem = {
     id: number;
     pertemuan_id: number | null;
@@ -28,6 +25,7 @@ type MateriItem = {
     pdf_file: string | null;
     pdf_file_name: string | null;
     drive_link: string | null;
+    tingkat: string | null;
 };
 
 export default function MateriEdit({
@@ -45,32 +43,27 @@ export default function MateriEdit({
     const [pertemuanId, setPertemuanId] = useState(
         materi.pertemuan_id ? String(materi.pertemuan_id) : '',
     );
-    const [filterTingkat, setFilterTingkat] = useState('');
+    const [tingkat, setTingkat] = useState(materi.tingkat ?? '');
     const [videoUrl, setVideoUrl] = useState(materi.video_url ?? '');
     const [driveLink, setDriveLink] = useState(materi.drive_link ?? '');
     const [processing, setProcessing] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
 
-    const filteredPertemuan = filterTingkat
-        ? pertemuanList.filter(p => p.tingkat === filterTingkat || p.tingkat === null)
+    const filteredPertemuan = tingkat
+        ? pertemuanList.filter(p => p.tingkat === tingkat || p.tingkat === null)
         : pertemuanList;
 
-    function handleTingkatChange(v: string) {
-        setFilterTingkat(v);
+    useEffect(() => {
+        if (tingkat && !pertemuanId) {
+            return;
+        }
         if (pertemuanId) {
-            const stillValid = v
-                ? pertemuanList.some(p => String(p.id) === pertemuanId && (p.tingkat === v || p.tingkat === null))
+            const stillValid = tingkat
+                ? pertemuanList.some(p => String(p.id) === pertemuanId && (p.tingkat === tingkat || p.tingkat === null))
                 : true;
             if (!stillValid) setPertemuanId('');
         }
-    }
-
-    useEffect(() => {
-        if (pertemuanId) {
-            const p = pertemuanList.find(p => String(p.id) === pertemuanId);
-            if (p?.tingkat) setFilterTingkat(p.tingkat);
-        }
-    }, []);
+    }, [tingkat]);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -82,6 +75,7 @@ export default function MateriEdit({
         form.append('pertemuan_id', pertemuanId);
         form.append('judul', judul);
         form.append('deskripsi', deskripsi);
+        form.append('tingkat', tingkat);
 
         if (thumbRef.current?.files?.[0]) {
             form.append('thumbnail', thumbRef.current.files[0]);
@@ -169,8 +163,8 @@ export default function MateriEdit({
                                 <div>
                                     <Label>Kelas</Label>
                                     <Select
-                                        value={filterTingkat}
-                                        onValueChange={handleTingkatChange}
+                                        value={tingkat}
+                                        onValueChange={setTingkat}
                                     >
                                         <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Semua kelas" />
@@ -194,11 +188,6 @@ export default function MateriEdit({
                                         >
                                             <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Pilih pertemuan" />
-                                                {pertemuanId && (
-                                                    <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                                        {kelasLabel(pertemuanList.find(p => String(p.id) === pertemuanId))}
-                                                    </span>
-                                                )}
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {filteredPertemuan.map((p) => (
