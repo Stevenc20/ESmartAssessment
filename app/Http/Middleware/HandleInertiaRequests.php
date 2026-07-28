@@ -21,6 +21,7 @@ class HandleInertiaRequests extends Middleware
     {
         $features = [];
         $announcements = [];
+        $kelasSiswa = null;
         $user = null;
 
         if ($request->user()) {
@@ -32,7 +33,6 @@ class HandleInertiaRequests extends Middleware
 
             $roleName = $user->role?->role_name;
 
-            $kelasSiswa = null;
             if ($roleName === 'siswa') {
                 $kelas = $user->kelas()
                     ->whereNull('siswa_kelas.tanggal_keluar')
