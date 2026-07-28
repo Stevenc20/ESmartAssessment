@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     GraduationCap,
     LayoutGrid,
@@ -29,7 +29,20 @@ const items: NavItem[] = [
     { title: 'Assessment', href: '/assessment', icon: GraduationCap },
 ];
 
+const kelasLabelMap: Record<string, string> = {
+    '10': 'Kelas 10 Genesis',
+    '11': 'Kelas 11 Ascend',
+    '12': 'Kelas 12',
+};
+
+type KelasSiswa = { id: number; nama_kelas: string; tingkat: string } | null;
+
 export function AppSidebarSiswa() {
+    const { kelasSiswa } = usePage<{ kelasSiswa: KelasSiswa }>().props;
+    const label = kelasSiswa
+        ? kelasLabelMap[kelasSiswa.tingkat] ?? kelasSiswa.nama_kelas
+        : null;
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader className="px-4 py-4 transition-all duration-200 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-1">
@@ -65,7 +78,7 @@ export function AppSidebarSiswa() {
                             className="text-xs font-medium"
                             style={{ color: '#e8889a' }}
                         >
-                            Siswa
+                            {label ?? 'Siswa'}
                         </span>
                     </div>
                 </div>

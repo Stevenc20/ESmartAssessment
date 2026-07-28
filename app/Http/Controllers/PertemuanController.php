@@ -20,6 +20,7 @@ class PertemuanController extends Controller
                 'judul' => $r->judul,
                 'bulan' => $r->bulan,
                 'tahun' => $r->tahun,
+                'tingkat' => $r->tingkat,
                 'bulan_nama' => $this->bulanNama($r->bulan),
                 'pertemuan' => $r->pertemuan->map(fn ($p) => [
                     'id' => $p->id,
@@ -41,12 +42,14 @@ class PertemuanController extends Controller
             'judul' => 'nullable|string|max:255',
             'bulan' => 'required|integer|between:1,12',
             'tahun' => 'required|integer|min:2020|max:2099',
+            'tingkat' => 'nullable|string|in:10,11,12',
         ]);
 
         $roadmap = Roadmap::create([
             'judul' => $data['judul'] ?? $this->bulanNama($data['bulan']).' '.$data['tahun'],
             'bulan' => $data['bulan'],
             'tahun' => $data['tahun'],
+            'tingkat' => $data['tingkat'] ?? null,
             'created_by' => $request->user()->id,
         ]);
 
@@ -97,6 +100,19 @@ class PertemuanController extends Controller
 
         return redirect()->route('pertemuan.index')
             ->with('success', 'Pertemuan berhasil diperbarui.');
+    }
+
+    public function updateRoadmap(Request $request, Roadmap $roadmap)
+    {
+        $data = $request->validate([
+            'judul' => 'nullable|string|max:255',
+            'tingkat' => 'nullable|string|in:10,11,12',
+        ]);
+
+        $roadmap->update($data);
+
+        return redirect()->back()
+            ->with('success', 'Roadmap berhasil diperbarui.');
     }
 
     private function bulanNama(int $bulan): string

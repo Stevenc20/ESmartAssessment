@@ -57,6 +57,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('pertemuan')->name('pertemuan.')->group(function () {
         Route::get('/', [PertemuanController::class, 'index'])->name('index');
         Route::post('/roadmap', [PertemuanController::class, 'storeRoadmap'])->name('roadmap.store');
+        Route::put('/roadmap/{roadmap}', [PertemuanController::class, 'updateRoadmap'])->name('roadmap.update');
         Route::post('/generate/{roadmap}', [PertemuanController::class, 'generate'])->name('generate');
         Route::put('/{pertemuan}', [PertemuanController::class, 'update'])->name('update');
         Route::post('/{pertemuan}/absen/buka', [AbsenController::class, 'buka'])->name('absen.buka');

@@ -8,6 +8,7 @@ use App\Models\Pertemuan;
 use App\Models\ProgressMateri;
 use App\Models\Roadmap;
 use App\Models\Tugas;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -196,11 +197,21 @@ class MateriController extends Controller
     {
         $user = $request->user();
 
+        $tingkat = $user->kelas()
+            ->whereNull('siswa_kelas.tanggal_keluar')
+            ->first()?->tingkat
+            ?? $user->kelas()->first()?->tingkat;
+
         $roadmaps = Roadmap::with(['pertemuan' => function ($query) {
             $query->where('status', 'published')->orderBy('urutan');
         }, 'pertemuan.materi.tugas.pengumpulan' => function ($q) use ($user) {
             $q->where('siswa_id', $user->id);
         }, 'pertemuan.materi.tugas.pengumpulan.penilaian'])
+            ->where(function ($q) use ($tingkat) {
+                if ($tingkat) {
+                    $q->where('tingkat', $tingkat)->orWhereNull('tingkat');
+                }
+            })
             ->orderBy('tahun', 'desc')
             ->orderBy('bulan', 'desc')
             ->get()
@@ -262,10 +273,25 @@ class MateriController extends Controller
                 ]),
             ]);
 
+        $tingkatRoadmapIds = Roadmap::where(function ($q) use ($tingkat) {
+            if ($tingkat) {
+                $q->where('tingkat', $tingkat)->orWhereNull('tingkat');
+            }
+        })->pluck('id');
+
+        $pertemuanIds = Pertemuan::whereIn('roadmap_id', $tingkatRoadmapIds)->pluck('id');
+        $materiIdsByTingkat = Materi::whereIn('pertemuan_id', $pertemuanIds)->pluck('id');
+
         $stats = [
-            'total' => Materi::count(),
-            'completed' => ProgressMateri::where('siswa_id', $user->id)->where('status', 'completed')->count(),
-            'in_progress' => ProgressMateri::where('siswa_id', $user->id)->where('status', 'in_progress')->count(),
+            'total' => $materiIdsByTingkat->count(),
+            'completed' => ProgressMateri::where('siswa_id', $user->id)
+                ->where('status', 'completed')
+                ->whereIn('materi_id', $materiIdsByTingkat)
+                ->count(),
+            'in_progress' => ProgressMateri::where('siswa_id', $user->id)
+                ->where('status', 'in_progress')
+                ->whereIn('materi_id', $materiIdsByTingkat)
+                ->count(),
         ];
 
         return Inertia::render('materi/siswa', [

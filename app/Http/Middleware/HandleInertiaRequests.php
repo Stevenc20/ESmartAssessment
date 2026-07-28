@@ -32,6 +32,24 @@ class HandleInertiaRequests extends Middleware
 
             $roleName = $user->role?->role_name;
 
+            $kelasSiswa = null;
+            if ($roleName === 'siswa') {
+                $kelas = $user->kelas()
+                    ->whereNull('siswa_kelas.tanggal_keluar')
+                    ->first()
+                    ?? $user->kelas()->latest('siswa_kelas.tanggal_masuk')->first();
+                if (! $kelas) {
+                    $kelas = $user->kelas()->first();
+                }
+                if ($kelas) {
+                    $kelasSiswa = [
+                        'id' => $kelas->id,
+                        'nama_kelas' => $kelas->nama_kelas,
+                        'tingkat' => $kelas->tingkat,
+                    ];
+                }
+            }
+
             $regular = Announcement::where(function ($q) use ($roleName) {
                 $q->whereNull('target_role')
                     ->orWhere('target_role', '')
@@ -86,6 +104,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'features' => $features,
             'announcements' => $announcements,
+            'kelasSiswa' => $kelasSiswa,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

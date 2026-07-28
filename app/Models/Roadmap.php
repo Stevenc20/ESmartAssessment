@@ -8,7 +8,7 @@ class Roadmap extends Model
 {
     protected $table = 'roadmaps';
 
-    protected $fillable = ['judul', 'bulan', 'tahun', 'deskripsi', 'created_by'];
+    protected $fillable = ['judul', 'bulan', 'tahun', 'tingkat', 'deskripsi', 'created_by'];
 
     public function pertemuan()
     {

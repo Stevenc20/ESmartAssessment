@@ -47,6 +47,7 @@ type RoadmapItem = {
     judul: string;
     bulan: number;
     tahun: number;
+    tingkat: string | null;
     bulan_nama: string;
     pertemuan: PertemuanItem[];
 };
@@ -72,6 +73,12 @@ type QrSessionData = {
     qrDataUrl: string;
     attendees: QrAttendee[];
     total_scanned: number;
+};
+
+const kelasLabelMap: Record<string, string> = {
+    '10': 'Kelas 10 Genesis',
+    '11': 'Kelas 11 Ascend',
+    '12': 'Kelas 12',
 };
 
 const statusConfig: Record<
@@ -115,6 +122,7 @@ export default function PertemuanIndex({
         judul: '',
         bulan: '',
         tahun: String(new Date().getFullYear()),
+        tingkat: '',
     });
 
     const groupedByYear = roadmaps.reduce<Record<number, RoadmapItem[]>>(
@@ -148,6 +156,7 @@ acc[r.tahun] = [];
                     judul: '',
                     bulan: '',
                     tahun: String(new Date().getFullYear()),
+                    tingkat: '',
                 });
             },
         });
@@ -434,16 +443,36 @@ return null;
                                                             {roadmap.bulan_nama}{' '}
                                                             {roadmap.tahun}
                                                         </h3>
-                                                        {roadmap.judul &&
-                                                            roadmap.judul !==
-                                                                `${roadmap.bulan_nama} ${roadmap.tahun}` && (
-                                                                <p className="text-xs text-slate-500">
-                                                                    {
-                                                                        roadmap.judul
-                                                                    }
-                                                                </p>
-                                                            )}
+                                                        <div className="mt-1 flex items-center gap-2">
+                                                            {roadmap.judul &&
+                                                                roadmap.judul !==
+                                                                    `${roadmap.bulan_nama} ${roadmap.tahun}` && (
+                                                                    <p className="text-xs text-slate-500">
+                                                                        {
+                                                                            roadmap.judul
+                                                                        }
+                                                                    </p>
+                                                                )}
+                                                        </div>
                                                     </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Select
+                                                            value={roadmap.tingkat ?? ''}
+                                                            onValueChange={(v) => {
+                                                                router.put(`/pertemuan/roadmap/${roadmap.id}`, {
+                                                                    tingkat: v || null,
+                                                                }, { preserveScroll: true });
+                                                            }}
+                                                        >
+                                                            <SelectTrigger className="h-7 min-w-[130px] rounded-full border-sky-200 bg-sky-50 px-3 text-[10px] font-semibold text-sky-600">
+                                                                <SelectValue placeholder="Semua kelas" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="">Semua kelas</SelectItem>
+                                                                <SelectItem value="10">Kelas 10 Genesis</SelectItem>
+                                                                <SelectItem value="11">Kelas 11 Ascend</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
                                                     {roadmap.pertemuan
                                                         .length === 0 && (
                                                         <Button
@@ -459,9 +488,8 @@ return null;
                                                         </Button>
                                                     )}
                                                 </div>
-
-                                                {roadmap.pertemuan.length >
-                                                0 ? (
+                                            </div>
+                                            {roadmap.pertemuan.length > 0 ? (
                                                     <div className="grid gap-2.5">
                                                         {roadmap.pertemuan.map(
                                                             (p) => (
@@ -655,7 +683,7 @@ setShowAddDialog(false);
                                 placeholder="Misal: Semester 1 - Bulan 1"
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-3 gap-3">
                             <div>
                                 <Label>Bulan</Label>
                                 <Select
@@ -711,6 +739,21 @@ setShowAddDialog(false);
                                         {errors.tahun}
                                     </p>
                                 )}
+                            </div>
+                            <div>
+                                <Label>Kelas</Label>
+                                <Select
+                                    value={data.tingkat}
+                                    onValueChange={(v) => setData('tingkat', v)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Semua kelas" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="10">Kelas 10 Genesis</SelectItem>
+                                        <SelectItem value="11">Kelas 11 Ascend</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                         <div className="flex justify-end gap-2">
