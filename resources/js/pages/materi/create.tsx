@@ -131,7 +131,6 @@ export default function MateriCreate({
                                 <div>
                                     <Label>Pertemuan (opsional)</Label>
                                     {pertemuanList.length > 0 ? (
-                                        <>
                                         <Select
                                             value={pertemuanId}
                                             onValueChange={(v) =>
@@ -140,6 +139,11 @@ export default function MateriCreate({
                                         >
                                             <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Pilih pertemuan" />
+                                                {pertemuanId && (
+                                                    <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                        {kelasLabel(pertemuanList.find(p => String(p.id) === pertemuanId))}
+                                                    </span>
+                                                )}
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {pertemuanList.map((p) => (
@@ -152,12 +156,6 @@ export default function MateriCreate({
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        {pertemuanId && (
-                                            <p className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                                                {kelasLabel(pertemuanList.find(p => String(p.id) === pertemuanId))}
-                                            </p>
-                                        )}
-                                        </>
                                     ) : (
                                         <p className="text-sm text-slate-400 italic">
                                             Tidak ada pertemuan tersedia
