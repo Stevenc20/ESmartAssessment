@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
-type PertemuanItem = { id: number; judul: string };
+type PertemuanItem = { id: number; judul: string; tingkat: string | null };
 type MateriItem = {
     id: number;
     pertemuan_id: number | null;
@@ -159,7 +159,12 @@ export default function MateriEdit({
                                                         key={p.id}
                                                         value={String(p.id)}
                                                     >
-                                                        {p.judul}
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <span>{p.judul}</span>
+                                                            <span className="text-[10px] font-bold uppercase text-slate-400">
+                                                                {p.tingkat ? `Genesis ${p.tingkat}` : 'Semua kelas'}
+                                                            </span>
+                                                        </div>
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>

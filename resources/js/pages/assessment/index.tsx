@@ -30,7 +30,7 @@ const statusConfig: Record<
 > = {
     tersedia: {
         icon: Clock,
-        label: 'Tersedia',
+        label: 'Belum Dikerjakan',
         color: '#436391',
         bg: 'bg-blue-50',
     },
@@ -91,7 +91,7 @@ export default function AssessmentIndex({
                         {[
                             { label: 'Total', value: total, color: '#436391' },
                             {
-                                label: 'Tersedia',
+                                label: 'Belum Dikerjakan',
                                 value: tersedia,
                                 color: '#436391',
                             },

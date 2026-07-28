@@ -88,6 +88,7 @@ class MateriController extends Controller
             ->map(fn ($p) => [
                 'id' => $p->id,
                 'judul' => $p->judul.($p->roadmap ? ' ('.$p->roadmap->judul.')' : ''),
+                'tingkat' => $p->roadmap?->tingkat,
             ]);
 
         return Inertia::render('materi/create', [
@@ -135,6 +136,7 @@ class MateriController extends Controller
             ->map(fn ($p) => [
                 'id' => $p->id,
                 'judul' => $p->judul.($p->roadmap ? ' ('.$p->roadmap->judul.')' : ''),
+                'tingkat' => $p->roadmap?->tingkat,
             ]);
 
         return Inertia::render('materi/edit', [

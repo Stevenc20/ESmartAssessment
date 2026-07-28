@@ -29,7 +29,17 @@ class AssessmentController extends Controller
     {
         $user = $request->user();
 
+        $tingkat = $user->kelas()
+            ->whereNull('siswa_kelas.tanggal_keluar')
+            ->first()?->tingkat
+            ?? $user->kelas()->first()?->tingkat;
+
         $tugasList = Tugas::with('materi')
+            ->whereHas('materi.pertemuan.roadmap', function ($q) use ($tingkat) {
+                if ($tingkat) {
+                    $q->where('tingkat', $tingkat)->orWhereNull('tingkat');
+                }
+            })
             ->latest()
             ->get()
             ->map(function ($tugas) use ($user) {
