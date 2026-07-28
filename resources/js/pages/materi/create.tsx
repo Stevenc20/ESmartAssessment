@@ -30,10 +30,25 @@ export default function MateriCreate({
     const [judul, setJudul] = useState('');
     const [deskripsi, setDeskripsi] = useState('');
     const [pertemuanId, setPertemuanId] = useState('');
+    const [filterTingkat, setFilterTingkat] = useState('');
     const [videoUrl, setVideoUrl] = useState('');
     const [driveLink, setDriveLink] = useState('');
     const [processing, setProcessing] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+
+    const filteredPertemuan = filterTingkat
+        ? pertemuanList.filter(p => p.tingkat === filterTingkat || p.tingkat === null)
+        : pertemuanList;
+
+    function handleTingkatChange(v: string) {
+        setFilterTingkat(v);
+        if (pertemuanId) {
+            const stillValid = v
+                ? pertemuanList.some(p => String(p.id) === pertemuanId && (p.tingkat === v || p.tingkat === null))
+                : true;
+            if (!stillValid) setPertemuanId('');
+        }
+    }
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -129,8 +144,25 @@ export default function MateriCreate({
                                 </div>
 
                                 <div>
+                                    <Label>Kelas</Label>
+                                    <Select
+                                        value={filterTingkat}
+                                        onValueChange={handleTingkatChange}
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Semua kelas" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="">Semua kelas</SelectItem>
+                                            <SelectItem value="10">Genesis 10</SelectItem>
+                                            <SelectItem value="11">Ascend 11</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div>
                                     <Label>Pertemuan (opsional)</Label>
-                                    {pertemuanList.length > 0 ? (
+                                    {filteredPertemuan.length > 0 ? (
                                         <Select
                                             value={pertemuanId}
                                             onValueChange={(v) =>
@@ -146,7 +178,7 @@ export default function MateriCreate({
                                                 )}
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {pertemuanList.map((p) => (
+                                                {filteredPertemuan.map((p) => (
                                                     <SelectItem
                                                         key={p.id}
                                                         value={String(p.id)}

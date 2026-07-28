@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { BookOpen } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -45,10 +45,32 @@ export default function MateriEdit({
     const [pertemuanId, setPertemuanId] = useState(
         materi.pertemuan_id ? String(materi.pertemuan_id) : '',
     );
+    const [filterTingkat, setFilterTingkat] = useState('');
     const [videoUrl, setVideoUrl] = useState(materi.video_url ?? '');
     const [driveLink, setDriveLink] = useState(materi.drive_link ?? '');
     const [processing, setProcessing] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+
+    const filteredPertemuan = filterTingkat
+        ? pertemuanList.filter(p => p.tingkat === filterTingkat || p.tingkat === null)
+        : pertemuanList;
+
+    function handleTingkatChange(v: string) {
+        setFilterTingkat(v);
+        if (pertemuanId) {
+            const stillValid = v
+                ? pertemuanList.some(p => String(p.id) === pertemuanId && (p.tingkat === v || p.tingkat === null))
+                : true;
+            if (!stillValid) setPertemuanId('');
+        }
+    }
+
+    useEffect(() => {
+        if (pertemuanId) {
+            const p = pertemuanList.find(p => String(p.id) === pertemuanId);
+            if (p?.tingkat) setFilterTingkat(p.tingkat);
+        }
+    }, []);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -145,8 +167,25 @@ export default function MateriEdit({
                                 </div>
 
                                 <div>
+                                    <Label>Kelas</Label>
+                                    <Select
+                                        value={filterTingkat}
+                                        onValueChange={handleTingkatChange}
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Semua kelas" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="">Semua kelas</SelectItem>
+                                            <SelectItem value="10">Genesis 10</SelectItem>
+                                            <SelectItem value="11">Ascend 11</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div>
                                     <Label>Pertemuan (opsional)</Label>
-                                    {pertemuanList.length > 0 ? (
+                                    {filteredPertemuan.length > 0 ? (
                                         <Select
                                             value={pertemuanId}
                                             onValueChange={(v) =>
@@ -162,7 +201,7 @@ export default function MateriEdit({
                                                 )}
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {pertemuanList.map((p) => (
+                                                {filteredPertemuan.map((p) => (
                                                     <SelectItem
                                                         key={p.id}
                                                         value={String(p.id)}
