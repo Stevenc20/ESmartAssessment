@@ -150,7 +150,7 @@ export default function MateriEdit({
                                                 setPertemuanId(v)
                                             }
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Pilih pertemuan" />
                                             </SelectTrigger>
                                             <SelectContent>

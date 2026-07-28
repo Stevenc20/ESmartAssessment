@@ -134,7 +134,7 @@ export default function MateriCreate({
                                                 setPertemuanId(v)
                                             }
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Pilih pertemuan" />
                                             </SelectTrigger>
                                             <SelectContent>
