@@ -143,12 +143,7 @@ export default function MateriCreate({
                                                         key={p.id}
                                                         value={String(p.id)}
                                                     >
-                                                        <div className="flex items-center justify-between gap-2">
-                                                            <span>{p.judul}</span>
-                                                            <span className="text-[10px] font-bold uppercase text-slate-400">
-                                                                {p.tingkat ? `Genesis ${p.tingkat}` : 'Semua kelas'}
-                                                            </span>
-                                                        </div>
+                                                        {p.judul}{p.tingkat ? ` — Genesis ${p.tingkat}` : ' — Semua kelas'}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
