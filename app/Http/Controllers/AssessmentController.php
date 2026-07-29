@@ -35,10 +35,16 @@ class AssessmentController extends Controller
             ?? $user->kelas()->first()?->tingkat;
 
         $tugasList = Tugas::with('materi')
-            ->whereHas('materi.pertemuan.roadmap', function ($q) use ($tingkat) {
-                if ($tingkat) {
-                    $q->where('tingkat', $tingkat)->orWhereNull('tingkat');
-                }
+            ->where(function ($q) use ($tingkat) {
+                $q->whereHas('materi', function ($mq) use ($tingkat) {
+                    if ($tingkat) {
+                        $mq->where('tingkat', $tingkat)->orWhereNull('tingkat');
+                    }
+                })->orWhereHas('materi.pertemuan.roadmap', function ($rq) use ($tingkat) {
+                    if ($tingkat) {
+                        $rq->where('tingkat', $tingkat)->orWhereNull('tingkat');
+                    }
+                });
             })
             ->latest()
             ->get()
