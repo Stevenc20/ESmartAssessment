@@ -10,6 +10,7 @@ use App\Models\Kelas;
 use App\Models\Materi;
 use App\Models\PengumpulanTugas;
 use App\Models\Portfolio;
+use App\Models\StudentBadge;
 use App\Models\ProgressMateri;
 use App\Models\StudentPoint;
 use App\Models\Tugas;
@@ -162,7 +163,7 @@ class DashboardController extends Controller
 
             $rataNilai = $rataNilai ? round($rataNilai, 2) : null;
 
-            $badgeCount = DB::table('badges')->count();
+            $badgeCount = StudentBadge::where('siswa_id', $siswaId)->count();
 
             $totalPoints = StudentPoint::where('siswa_id', $siswaId)->sum('point');
 

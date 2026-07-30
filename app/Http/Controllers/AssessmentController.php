@@ -7,6 +7,7 @@ use App\Models\NotificationRead;
 use App\Models\PengumpulanTugas;
 use App\Models\PenilaianTugas;
 use App\Models\Tugas;
+use App\Services\BadgeService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -258,6 +259,8 @@ class AssessmentController extends Controller
             'feedback' => 'nullable|string',
         ]);
 
+        $siswa = $submission->siswa;
+
         PenilaianTugas::updateOrCreate(
             ['pengumpulan_id' => $submission->id],
             [
@@ -266,6 +269,10 @@ class AssessmentController extends Controller
                 'feedback' => $data['feedback'] ?? null,
             ]
         );
+
+        if ($siswa) {
+            app(BadgeService::class)->evaluateForStudent($siswa);
+        }
 
         return redirect()->route('assessment.submissions', $assessment->id)
             ->with('success', 'Nilai berhasil disimpan.');

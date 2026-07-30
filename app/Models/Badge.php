@@ -9,7 +9,14 @@ class Badge extends Model
 {
     protected $table = 'badges';
 
-    protected $fillable = ['badge_name', 'icon', 'description'];
+    protected $fillable = ['badge_name', 'icon', 'description', 'conditions'];
+
+    protected function casts(): array
+    {
+        return [
+            'conditions' => 'array',
+        ];
+    }
 
     public function siswa(): BelongsToMany
     {

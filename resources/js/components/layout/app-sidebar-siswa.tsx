@@ -4,6 +4,7 @@ import {
     LayoutGrid,
     Library,
     Megaphone,
+    Medal,
     QrCode,
 } from 'lucide-react';
 import AppLogo from '@/components/layout/app-logo';
@@ -46,6 +47,7 @@ export function AppSidebarSiswa() {
         { title: 'Materi', href: '/materi-saya', icon: Library, badge: unreadCounts.materi },
         { title: 'Absensi', href: '/absen', icon: QrCode },
         { title: 'Assessment', href: '/assessment', icon: GraduationCap, badge: unreadCounts.assessment },
+        { title: 'Badge', href: '/badge', icon: Medal },
     ];
 
     return (

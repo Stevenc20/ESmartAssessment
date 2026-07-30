@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\MateriController;
+use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\PengumumanController;
 use App\Http\Controllers\PertemuanController;
 use Illuminate\Support\Facades\Route;
@@ -70,6 +71,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/absen/{token}', [AbsenController::class, 'scan'])->name('absen.scan');
 
     Route::get('/laporan/absensi', [LaporanController::class, 'absensi'])->name('laporan.absensi');
+
+    Route::get('/badge', [BadgeController::class, 'index'])->name('badge.index');
 });
 
 require __DIR__.'/settings.php';

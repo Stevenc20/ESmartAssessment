@@ -1,5 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { BookOpen, Layers, Medal, Plus } from 'lucide-react';
+import { BookOpen, Layers, Medal, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,13 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 type BadgeItem = {
@@ -21,6 +28,7 @@ type BadgeItem = {
     badge_name: string;
     icon: string | null;
     description: string | null;
+    conditions: { type: string; operator: string; value: number | boolean } | null;
     total_penerima: number;
     created_at: string;
 };
@@ -67,6 +75,7 @@ export default function ContentManagementIndex({
         badge_name: '',
         icon: '',
         description: '',
+        conditions: null as { type: string; operator: string; value: number } | null,
     });
 
     function openCreateBadge() {
@@ -81,6 +90,7 @@ export default function ContentManagementIndex({
             badge_name: item.badge_name,
             icon: item.icon ?? '',
             description: item.description ?? '',
+            conditions: item.conditions ?? null,
         });
         setOpenBadge(true);
     }
@@ -253,6 +263,164 @@ router.delete(`/admin/content-management/badges/${id}`, {
                                             placeholder="Minimal: Nilai 85 & Portfolio 10"
                                         />
                                     </div>
+                                    <div className="border-t border-slate-100 pt-3">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-sm font-semibold text-slate-900">
+                                                Kondisi Badge (otomatis)
+                                            </Label>
+                                            {data.conditions && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setData(
+                                                            'conditions',
+                                                            null,
+                                                        )
+                                                    }
+                                                    className="text-xs text-red-500 hover:text-red-600"
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </button>
+                                            )}
+                                        </div>
+                                        {data.conditions ? (
+                                            <div className="mt-2 grid grid-cols-3 gap-2">
+                                                <Select
+                                                    value={
+                                                        data.conditions.type
+                                                    }
+                                                    onValueChange={(v) =>
+                                                        setData('conditions', {
+                                                            ...data.conditions!,
+                                                            type: v,
+                                                            value:
+                                                                v ===
+                                                                'assessment_perfect'
+                                                                    ? 1
+                                                                    : data
+                                                                          .conditions!
+                                                                          .value,
+                                                            operator:
+                                                                v ===
+                                                                'assessment_perfect'
+                                                                    ? '=='
+                                                                    : data
+                                                                          .conditions!
+                                                                          .operator ||
+                                                                      '>=',
+                                                        })
+                                                    }
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Jenis" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="assessment_count">
+                                                            Jumlah Assessment
+                                                        </SelectItem>
+                                                        <SelectItem value="assessment_avg_score">
+                                                            Rata-rata Nilai
+                                                        </SelectItem>
+                                                        <SelectItem value="assessment_perfect">
+                                                            Nilai Sempurna
+                                                        </SelectItem>
+                                                        <SelectItem value="points_earned">
+                                                            Total Poin
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                {data.conditions.type !==
+                                                    'assessment_perfect' && (
+                                                    <Select
+                                                        value={
+                                                            data.conditions
+                                                                .operator
+                                                        }
+                                                        onValueChange={(v) =>
+                                                            setData(
+                                                                'conditions',
+                                                                {
+                                                                    ...data
+                                                                        .conditions!,
+                                                                    operator: v,
+                                                                },
+                                                            )
+                                                        }
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Operator" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value=">=">
+                                                                ≥
+                                                            </SelectItem>
+                                                            <SelectItem value=">">
+                                                                &gt;
+                                                            </SelectItem>
+                                                            <SelectItem value="<">
+                                                                &lt;
+                                                            </SelectItem>
+                                                            <SelectItem value="<=">
+                                                                ≤
+                                                            </SelectItem>
+                                                            <SelectItem value="==">
+                                                                =
+                                                            </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                                {data.conditions.type !==
+                                                    'assessment_perfect' && (
+                                                    <Input
+                                                        type="number"
+                                                        value={
+                                                            data.conditions
+                                                                .value as number
+                                                        }
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                'conditions',
+                                                                {
+                                                                    ...data
+                                                                        .conditions!,
+                                                                    value: parseInt(
+                                                                        e
+                                                                            .target
+                                                                            .value,
+                                                                        10,
+                                                                    ) || 0,
+                                                                },
+                                                            )
+                                                        }
+                                                        placeholder="Nilai"
+                                                    />
+                                                )}
+                                                {data.conditions.type ===
+                                                    'assessment_perfect' && (
+                                                    <div className="flex items-center text-xs text-muted-foreground col-span-2">
+                                                        Pernah mendapat nilai
+                                                        100
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="mt-2"
+                                                onClick={() =>
+                                                    setData('conditions', {
+                                                        type: 'assessment_count',
+                                                        operator: '>=',
+                                                        value: 5,
+                                                    })
+                                                }
+                                            >
+                                                + Tambah Kondisi
+                                            </Button>
+                                        )}
+                                    </div>
                                     <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
                                         <Button
                                             type="button"
@@ -295,13 +463,24 @@ router.delete(`/admin/content-management/badges/${id}`, {
                                             <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">
                                                 {b.description || '-'}
                                             </p>
-                                            <div className="mt-2 flex items-center gap-2">
+                                            <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                                 <Badge
                                                     variant="secondary"
                                                     className="bg-slate-100 text-[10px] text-slate-700 hover:bg-slate-100"
                                                 >
                                                     {b.total_penerima} penerima
                                                 </Badge>
+                                                {b.conditions?.type && (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="text-[10px] text-amber-700 border-amber-200 bg-amber-50"
+                                                    >
+                                                        {b.conditions.type === 'assessment_count' && '📊 Assessment'}
+                                                        {b.conditions.type === 'assessment_avg_score' && '📈 Rata-rata'}
+                                                        {b.conditions.type === 'assessment_perfect' && '💯 Sempurna'}
+                                                        {b.conditions.type === 'points_earned' && '⭐ Poin'}
+                                                    </Badge>
+                                                )}
                                                 <button
                                                     onClick={() =>
                                                         openEditBadge(b)
