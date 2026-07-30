@@ -30,15 +30,34 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $validated = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($request->hasFile('foto')) {
+            $request->validate([
+                'foto' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+            ]);
+
+            if ($user->foto && ! str_starts_with($user->foto, 'http') && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->foto)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->foto);
+            }
+
+            $user->foto = $request->file('foto')->store('profile-photos', 'public');
         }
 
-        $request->user()->save();
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        if (array_key_exists('no_hp', $validated)) {
+            $user->no_hp = $validated['no_hp'];
+        }
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated successfully.')]);
 
         return to_route('profile.edit');
     }

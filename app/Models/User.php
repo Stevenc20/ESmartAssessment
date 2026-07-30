@@ -24,6 +24,21 @@ class User extends Authenticatable implements PasskeyUser
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
+    protected $appends = ['avatar'];
+
+    public function getAvatarAttribute(): ?string
+    {
+        if (! empty($this->foto)) {
+            if (str_starts_with($this->foto, 'http://') || str_starts_with($this->foto, 'https://')) {
+                return $this->foto;
+            }
+
+            return asset('storage/'.ltrim($this->foto, '/'));
+        }
+
+        return null;
+    }
+
     protected function casts(): array
     {
         return [
