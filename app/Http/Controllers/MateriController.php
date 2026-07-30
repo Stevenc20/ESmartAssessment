@@ -128,7 +128,25 @@ class MateriController extends Controller
 
         $data['created_by'] = $request->user()->id;
 
-        Materi::create($data);
+        $materi = Materi::create($data);
+
+        if ($request->filled('poll_pertanyaan') && is_array($request->input('poll_opsi'))) {
+            $poll = \App\Models\MateriPoll::create([
+                'materi_id' => $materi->id,
+                'pertanyaan' => $request->input('poll_pertanyaan'),
+                'is_active' => true,
+            ]);
+
+            foreach ($request->input('poll_opsi') as $idx => $opsiText) {
+                if (! empty(trim($opsiText))) {
+                    \App\Models\MateriPollOption::create([
+                        'poll_id' => $poll->id,
+                        'opsi_text' => trim($opsiText),
+                        'urutan' => $idx + 1,
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('materi.index')
             ->with('success', 'Materi berhasil dibuat.');
@@ -136,6 +154,8 @@ class MateriController extends Controller
 
     public function edit(Materi $materi)
     {
+        $materi->load('poll.options');
+
         $pertemuanList = Pertemuan::with('roadmap')
             ->orderBy('judul')
             ->get()
@@ -166,6 +186,8 @@ class MateriController extends Controller
                 'pdf_file_name' => $materi->pdf_file ? basename($materi->pdf_file) : null,
                 'drive_link' => $materi->drive_link,
                 'tingkat' => $materi->tingkat,
+                'poll_pertanyaan' => $materi->poll?->pertanyaan ?? '',
+                'poll_opsi' => $materi->poll ? $materi->poll->options->pluck('opsi_text')->toArray() : ['', ''],
             ],
             'pertemuanList' => $pertemuanList,
             'quiz' => $quiz,
@@ -214,6 +236,24 @@ class MateriController extends Controller
         }
 
         $materi->update($data);
+
+        if ($request->filled('poll_pertanyaan') && is_array($request->input('poll_opsi'))) {
+            $poll = \App\Models\MateriPoll::updateOrCreate(
+                ['materi_id' => $materi->id],
+                ['pertanyaan' => $request->input('poll_pertanyaan'), 'is_active' => true]
+            );
+
+            $poll->options()->delete();
+            foreach ($request->input('poll_opsi') as $idx => $opsiText) {
+                if (! empty(trim($opsiText))) {
+                    \App\Models\MateriPollOption::create([
+                        'poll_id' => $poll->id,
+                        'opsi_text' => trim($opsiText),
+                        'urutan' => $idx + 1,
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('materi.index')
             ->with('success', 'Materi berhasil diperbarui.');
@@ -438,6 +478,59 @@ class MateriController extends Controller
             ['read_at' => now()]
         );
 
+        $materi->load(['poll.options.votes', 'discussions.user', 'discussions.replies.user']);
+
+        $pollData = null;
+        if ($materi->poll) {
+            $poll = $materi->poll;
+            $totalVotes = $poll->votes()->count();
+            $myVoteOptionId = $poll->votes()->where('siswa_id', $user->id)->first()?->option_id;
+
+            $optionsData = $poll->options->map(function ($opt) use ($totalVotes) {
+                $count = $opt->votes->count();
+                $percentage = $totalVotes > 0 ? round(($count / $totalVotes) * 100, 1) : 0;
+
+                return [
+                    'id' => $opt->id,
+                    'opsi_text' => $opt->opsi_text,
+                    'vote_count' => $count,
+                    'percentage' => $percentage,
+                ];
+            });
+
+            $pollData = [
+                'id' => $poll->id,
+                'pertanyaan' => $poll->pertanyaan,
+                'is_active' => (bool) $poll->is_active,
+                'options' => $optionsData,
+                'total_votes' => $totalVotes,
+                'my_vote_option_id' => $myVoteOptionId,
+            ];
+        }
+
+        $discussionsData = $materi->discussions->map(function ($d) use ($user) {
+            return [
+                'id' => $d->id,
+                'user_id' => $d->user_id,
+                'user_name' => $d->user?->name ?? 'User',
+                'user_role' => $d->user?->role?->role_name ?? 'siswa',
+                'user_avatar' => $d->user?->avatar,
+                'pesan' => $d->pesan,
+                'created_at' => $d->created_at->diffForHumans(),
+                'is_mine' => $d->user_id === $user->id,
+                'replies' => $d->replies->map(fn ($r) => [
+                    'id' => $r->id,
+                    'user_id' => $r->user_id,
+                    'user_name' => $r->user?->name ?? 'User',
+                    'user_role' => $r->user?->role?->role_name ?? 'siswa',
+                    'user_avatar' => $r->user?->avatar,
+                    'pesan' => $r->pesan,
+                    'created_at' => $r->created_at->diffForHumans(),
+                    'is_mine' => $r->user_id === $user->id,
+                ]),
+            ];
+        });
+
         return Inertia::render('materi/siswa-detail', [
             'materi' => [
                 'id' => $materi->id,
@@ -457,10 +550,65 @@ class MateriController extends Controller
                 'quiz_attempts' => $progress?->quiz_attempts ?? 0,
                 'tugas' => $tugasList,
                 'quiz' => $quizList,
+                'poll' => $pollData,
+                'discussions' => $discussionsData,
             ],
             'pertemuan' => $materi->pertemuan?->judul ?? '-',
             'roadmap' => $materi->pertemuan?->roadmap?->judul ?? '-',
         ]);
+    }
+
+    public function votePoll(Request $request, Materi $materi)
+    {
+        $user = $request->user();
+        $poll = $materi->poll;
+
+        if (! $poll || ! $poll->is_active) {
+            return back()->with('error', 'Polling tidak aktif.');
+        }
+
+        $validated = $request->validate([
+            'option_id' => 'required|exists:materi_poll_options,id',
+        ]);
+
+        \App\Models\MateriPollVote::updateOrCreate(
+            ['poll_id' => $poll->id, 'siswa_id' => $user->id],
+            ['option_id' => $validated['option_id']]
+        );
+
+        return back()->with('success', 'Vote Anda berhasil dikirim.');
+    }
+
+    public function storeDiscussion(Request $request, Materi $materi)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'pesan' => 'required|string|max:1000',
+            'parent_id' => 'nullable|exists:materi_discussions,id',
+        ]);
+
+        \App\Models\MateriDiscussion::create([
+            'materi_id' => $materi->id,
+            'user_id' => $user->id,
+            'parent_id' => $validated['parent_id'] ?? null,
+            'pesan' => $validated['pesan'],
+        ]);
+
+        return back()->with('success', 'Pesan diskusi berhasil dikirim.');
+    }
+
+    public function deleteDiscussion(\App\Models\MateriDiscussion $discussion)
+    {
+        $user = auth()->user();
+
+        if ($discussion->user_id !== $user->id && $user->role?->role_name === 'siswa') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $discussion->delete();
+
+        return back()->with('success', 'Pesan diskusi berhasil dihapus.');
     }
 
     public function quizSubmit(Request $request, Materi $materi)

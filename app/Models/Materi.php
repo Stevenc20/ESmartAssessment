@@ -30,6 +30,16 @@ class Materi extends Model
         return $this->hasMany(MateriQuiz::class)->orderBy('urutan');
     }
 
+    public function poll()
+    {
+        return $this->hasOne(MateriPoll::class, 'materi_id');
+    }
+
+    public function discussions()
+    {
+        return $this->hasMany(MateriDiscussion::class, 'materi_id')->whereNull('parent_id')->with(['user', 'replies.user'])->latest();
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

@@ -30,8 +30,18 @@ export default function MateriCreate({
     const [tingkat, setTingkat] = useState('');
     const [videoUrl, setVideoUrl] = useState('');
     const [driveLink, setDriveLink] = useState('');
+    const [pollPertanyaan, setPollPertanyaan] = useState('');
+    const [pollOpsi, setPollOpsi] = useState<string[]>(['', '']);
     const [processing, setProcessing] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+
+    const addOpsi = () => setPollOpsi([...pollOpsi, '']);
+    const removeOpsi = (idx: number) => setPollOpsi(pollOpsi.filter((_, i) => i !== idx));
+    const updateOpsi = (idx: number, val: string) => {
+        const next = [...pollOpsi];
+        next[idx] = val;
+        setPollOpsi(next);
+    };
 
     const filteredPertemuan = tingkat
         ? pertemuanList.filter(p => p.tingkat === tingkat || p.tingkat === null)
@@ -68,6 +78,15 @@ export default function MateriCreate({
 
         form.append('video_url', videoUrl);
         form.append('drive_link', driveLink);
+
+        if (pollPertanyaan.trim()) {
+            form.append('poll_pertanyaan', pollPertanyaan.trim());
+            pollOpsi.forEach((opsi, idx) => {
+                if (opsi.trim()) {
+                    form.append(`poll_opsi[${idx}]`, opsi.trim());
+                }
+            });
+        }
 
         router.post('/materi', form, {
             preserveScroll: true,
@@ -248,6 +267,65 @@ export default function MateriCreate({
                                             {errors.drive_link}
                                         </p>
                                     )}
+                                </div>
+
+                                {/* Polling / Voting Section */}
+                                <div className="col-span-2 rounded-xl border border-indigo-100 bg-indigo-50/40 p-4 space-y-3">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-indigo-900">
+                                            Tambah Polling / Voting (Opsional)
+                                        </h3>
+                                        <p className="text-xs text-indigo-700">
+                                            Buat pertanyaan polling untuk dijawab oleh siswa di dalam materi
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <Label className="text-xs">Pertanyaan Polling</Label>
+                                        <Input
+                                            value={pollPertanyaan}
+                                            onChange={(e) => setPollPertanyaan(e.target.value)}
+                                            placeholder="Contoh: Manakah dari algoritma berikut yang memiliki kompleksitas O(1)?"
+                                            className="bg-white text-xs"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2 pt-1">
+                                        <Label className="text-xs">Pilihan Jawaban (Opsi)</Label>
+                                        {pollOpsi.map((opsi, idx) => (
+                                            <div key={idx} className="flex items-center gap-2">
+                                                <span className="text-xs font-bold text-indigo-700 w-5">
+                                                    {String.fromCharCode(65 + idx)}.
+                                                </span>
+                                                <Input
+                                                    value={opsi}
+                                                    onChange={(e) => updateOpsi(idx, e.target.value)}
+                                                    placeholder={`Opsi ${idx + 1}`}
+                                                    className="bg-white text-xs flex-1"
+                                                />
+                                                {pollOpsi.length > 2 && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => removeOpsi(idx)}
+                                                        className="text-red-500 hover:bg-red-50 text-xs px-2"
+                                                    >
+                                                        Hapus
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={addOpsi}
+                                            className="text-xs font-semibold mt-1"
+                                        >
+                                            + Tambah Opsi Jawaban
+                                        </Button>
+                                    </div>
                                 </div>
 
                                 <div className="col-span-2 flex justify-end gap-2">

@@ -15,6 +15,9 @@ import {
 } from 'lucide-react';
 import { useRef, useState } from 'react';
 
+import MateriForumChat, { type DiscussionItem } from '@/components/materi/materi-forum-chat';
+import MateriPollWidget, { type PollData } from '@/components/materi/materi-poll-widget';
+
 /* ── Types ── */
 type QuizItem = {
     id: number;
@@ -75,6 +78,8 @@ type MateriDetail = {
     quiz_attempts: number;
     quiz: QuizItem[];
     tugas: TugasItem[];
+    poll: PollData | null;
+    discussions: DiscussionItem[];
 };
 
 /* ── Config ── */
@@ -787,8 +792,13 @@ export default function MateriSiswaDetail({
                                     <TugasCard key={tugas.id} tugas={tugas} />
                                 ))}
                             </div>
-                        </div>
+                    {/* Polling & Voting Section */}
+                    {materi.poll && (
+                        <MateriPollWidget materiId={materi.id} poll={materi.poll} />
                     )}
+
+                    {/* Forum Diskusi Terbuka Section */}
+                    <MateriForumChat materiId={materi.id} discussions={materi.discussions ?? []} />
                 </div>
             </div>
         </>
