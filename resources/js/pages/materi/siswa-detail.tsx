@@ -307,6 +307,7 @@ export default function MateriSiswaDetail({
     const [quizAnswers, setQuizAnswers] = useState<Record<number, string>>({});
     const [submittingQuiz, setSubmittingQuiz] = useState(false);
     const [startQuiz, setStartQuiz] = useState(false);
+    const [confirmRetake, setConfirmRetake] = useState(false);
 
     const cfg = progressConfig[materi.progress_status];
     const StatusIcon = cfg.icon;
@@ -557,194 +558,214 @@ export default function MateriSiswaDetail({
                                 </div>
                             </div>
                             <div className="space-y-4 p-5">
-                                {/* Quiz Results */}
+                                {/* Quiz Results (Just submitted) */}
                                 {results && (
                                     <div
-                                        className={`rounded-lg border p-4 ${
+                                        className={`rounded-xl border p-5 ${
                                             results.score >= 70
                                                 ? 'border-emerald-200 bg-emerald-50'
-                                                : 'border-red-200 bg-red-50'
+                                                : 'border-amber-200 bg-amber-50'
                                         }`}
                                     >
                                         <p
                                             className={`text-lg font-bold ${
                                                 results.score >= 70
-                                                    ? 'text-emerald-700'
-                                                    : 'text-red-700'
+                                                    ? 'text-emerald-800'
+                                                    : 'text-amber-800'
                                             }`}
                                         >
                                             {results.score >= 70
-                                                ? 'Selamat!'
-                                                : 'Belum lulus'}
+                                                ? 'Selamat! Quiz Selesai'
+                                                : 'Quiz Selesai'}
                                         </p>
-                                        <p className="mt-1 text-sm text-slate-600">
-                                            Nilai:{' '}
-                                            <span className="font-bold">
-                                                {results.score}
-                                            </span>{' '}
-                                            ({results.correct}/{results.total}{' '}
-                                            benar)
+                                        <p className="mt-1 text-sm text-slate-700">
+                                            Nilai Percobaan Ini:{' '}
+                                            <span className="font-bold">{results.score}</span> ({results.correct}/{results.total} benar)
                                         </p>
-                                        <p className="text-xs text-slate-500">
-                                            Percobaan ke-{results.attempts}/
-                                            {results.max_attempts}
+                                        <p className="mt-0.5 text-xs text-slate-500">
+                                            Percobaan ke-{results.attempts}/{results.max_attempts} • Nilai Akhir (Tertinggi):{' '}
+                                            <span className="font-bold text-slate-800">{materi.quiz_score ?? results.score}</span>
                                         </p>
-                                        {results.details && (
-                                            <div className="mt-3 space-y-2 border-t border-slate-200 pt-3">
-                                                {results.details.map((d) => (
-                                                    <div
-                                                        key={d.id}
-                                                        className={`rounded-lg px-3 py-2 text-xs ${
-                                                            d.benar
-                                                                ? 'bg-emerald-50 text-emerald-700'
-                                                                : 'bg-red-50 text-red-700'
-                                                        }`}
+                                    </div>
+                                )}
+
+                                {/* Previous Score Summary (on reload or completed) */}
+                                {!results && (quizMaxed || materi.quiz_attempts > 0) && !startQuiz && (
+                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-900">
+                                                    Hasil Quiz Anda
+                                                </p>
+                                                <p className="text-xs text-slate-500">
+                                                    Percobaan: {materi.quiz_attempts}/2 kali
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-2xl font-black text-blue-600">
+                                                    {materi.quiz_score ?? 0}
+                                                </span>
+                                                <p className="text-[10px] text-slate-400 font-semibold uppercase">Nilai Tertinggi</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Retake Option Prompt */}
+                                {materi.quiz_attempts === 1 && !startQuiz && (
+                                    <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+                                        {!confirmRetake ? (
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                                <div>
+                                                    <p className="text-xs font-semibold text-slate-700">
+                                                        Masih ada sisa 1x kesempatan pengerjaan.
+                                                    </p>
+                                                    <p className="text-[11px] text-slate-500">
+                                                        Nilai tertinggi dari 2x percobaan akan diambil sebagai nilai akhir.
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setConfirmRetake(true)}
+                                                    className="shrink-0 rounded-lg bg-orange-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-orange-700 shadow-sm"
+                                                >
+                                                    Mengulang Quiz (Sisa 1x)
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs">
+                                                <p className="font-bold text-amber-900 text-sm">
+                                                    Yakin ingin mengulang quiz sekarang?
+                                                </p>
+                                                <p className="text-amber-800 leading-relaxed">
+                                                    Ini adalah **percobaan ke-2 (terakhir)** Anda. Nilai yang tersimpan di sistem adalah **nilai tertinggi** di antara kedua percobaan.
+                                                </p>
+                                                <div className="flex gap-2 pt-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setConfirmRetake(false);
+                                                            setQuizAnswers({});
+                                                            setStartQuiz(true);
+                                                        }}
+                                                        className="rounded-lg bg-amber-600 px-4 py-2 font-bold text-white transition-colors hover:bg-amber-700 shadow-sm"
                                                     >
-                                                        <p className="font-semibold">
-                                                            {d.soal}
-                                                        </p>
-                                                        <p>
-                                                            Jawabanmu:{' '}
-                                                            <span
-                                                                className={
-                                                                    d.benar
-                                                                        ? 'text-emerald-600'
-                                                                        : 'text-red-600'
-                                                                }
-                                                            >
-                                                                {d.jawaban_user ||
-                                                                    '(kosong)'}
-                                                            </span>
-                                                        </p>
-                                                        {!d.benar && (
-                                                            <p>
-                                                                Jawaban benar:{' '}
-                                                                <span className="text-emerald-600">
-                                                                    {
-                                                                        d.jawaban_benar
-                                                                    }
-                                                                </span>
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                ))}
+                                                        Ya, Mulai Percobaan 2
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setConfirmRetake(false)}
+                                                        className="rounded-lg border border-amber-300 bg-white px-4 py-2 font-semibold text-amber-800 hover:bg-amber-100"
+                                                    >
+                                                        Batal
+                                                    </button>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
                                 )}
 
-                                {/* Previous Score (when page reloads without flash) */}
-                                {!results && quizMaxed && (
-                                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                                        <p className="text-sm font-semibold text-slate-700">
-                                            Quiz selesai
-                                        </p>
-                                        <p className="mt-1 text-xs text-slate-500">
-                                            Nilai akhir: {materi.quiz_score} —
-                                            Percobaan: {materi.quiz_attempts}/2
-                                        </p>
+                                {/* Initial Quiz Confirmation (Before any attempt) */}
+                                {materi.quiz_attempts === 0 && !startQuiz && (
+                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center space-y-4">
+                                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                                            <HelpCircle className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-base font-bold text-slate-900">Yakin ingin mengerjakan quiz sekarang?</h3>
+                                            <p className="mt-1 text-xs text-slate-500 max-w-md mx-auto">
+                                                Quiz ini terdiri dari <span className="font-semibold text-slate-700">{materi.quiz.length} soal</span>.
+                                                Anda memiliki <span className="font-semibold text-slate-700">2 kali kesempatan</span> pengerjaan (nilai tertinggi akan diambil).
+                                            </p>
+                                        </div>
+                                        <div className="pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setStartQuiz(true)}
+                                                className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-700 shadow-sm hover:shadow"
+                                            >
+                                                Mulai Kerjakan Quiz
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
 
-                                {/* Quiz Form / Confirmation */}
-                                {!quizMaxed && !results && (
-                                    !startQuiz ? (
-                                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center space-y-4">
-                                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                                                <HelpCircle className="h-6 w-6" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-base font-bold text-slate-900">Yakin ingin mengerjakan quiz sekarang?</h3>
-                                                <p className="mt-1 text-xs text-slate-500 max-w-md mx-auto">
-                                                    Quiz ini terdiri dari <span className="font-semibold text-slate-700">{materi.quiz.length} soal</span>.
-                                                    Kesempatan pengerjaan tersisa <span className="font-semibold text-slate-700">{2 - materi.quiz_attempts}x</span>.
+                                {/* Active Quiz Form */}
+                                {!quizMaxed && startQuiz && (
+                                    <form
+                                        onSubmit={submitQuiz}
+                                        className="space-y-4"
+                                    >
+                                        {materi.quiz.map((q, idx) => (
+                                            <div
+                                                key={q.id}
+                                                className="rounded-lg border border-slate-200 p-4"
+                                            >
+                                                <p className="mb-3 text-sm font-semibold text-slate-900">
+                                                    <span className="text-slate-400">
+                                                        {idx + 1}.
+                                                    </span>{' '}
+                                                    {q.soal}
                                                 </p>
-                                            </div>
-                                            <div className="pt-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setStartQuiz(true)}
-                                                    className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-700 shadow-sm hover:shadow"
-                                                >
-                                                    Mulai Kerjakan Quiz
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <form
-                                            onSubmit={submitQuiz}
-                                            className="space-y-4"
-                                        >
-                                            {materi.quiz.map((q, idx) => (
-                                                <div
-                                                    key={q.id}
-                                                    className="rounded-lg border border-slate-200 p-4"
-                                                >
-                                                    <p className="mb-3 text-sm font-semibold text-slate-900">
-                                                        <span className="text-slate-400">
-                                                            {idx + 1}.
-                                                        </span>{' '}
-                                                        {q.soal}
-                                                    </p>
-                                                    <div className="space-y-2">
-                                                        {q.opsi.map((o, i) => (
-                                                            <label
-                                                                key={i}
-                                                                className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors ${
+                                                <div className="space-y-2">
+                                                    {q.opsi.map((o, i) => (
+                                                        <label
+                                                            key={i}
+                                                            className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors ${
+                                                                quizAnswers[
+                                                                    q.id
+                                                                ] === o
+                                                                    ? 'border-blue-300 bg-blue-50 text-blue-700 font-semibold'
+                                                                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                                                            }`}
+                                                        >
+                                                            <input
+                                                                type="radio"
+                                                                name={`quiz_${q.id}`}
+                                                                value={o}
+                                                                disabled={submittingQuiz}
+                                                                checked={
                                                                     quizAnswers[
                                                                         q.id
                                                                     ] === o
-                                                                        ? 'border-blue-300 bg-blue-50 text-blue-700'
-                                                                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                                                                }`}
-                                                            >
-                                                                <input
-                                                                    type="radio"
-                                                                    name={`quiz_${q.id}`}
-                                                                    value={o}
-                                                                    checked={
-                                                                        quizAnswers[
-                                                                            q.id
-                                                                        ] === o
-                                                                    }
-                                                                    onChange={() =>
-                                                                        setAnswer(
-                                                                            q.id,
-                                                                            o,
-                                                                        )
-                                                                    }
-                                                                    className="h-4 w-4 text-blue-600"
-                                                                />
-                                                                <span>
-                                                                    {String.fromCharCode(
-                                                                        65 + i,
-                                                                    )}. {o}
-                                                                </span>
-                                                            </label>
-                                                        ))}
-                                                    </div>
+                                                                }
+                                                                onChange={() =>
+                                                                    setAnswer(
+                                                                        q.id,
+                                                                        o,
+                                                                    )
+                                                                }
+                                                                className="h-4 w-4 text-blue-600"
+                                                            />
+                                                            <span>
+                                                                {String.fromCharCode(
+                                                                    65 + i,
+                                                                )}. {o}
+                                                            </span>
+                                                        </label>
+                                                    ))}
                                                 </div>
-                                            ))}
+                                            </div>
+                                        ))}
 
-                                            {errors.quiz && (
-                                                <p className="text-sm text-red-500">
-                                                    {errors.quiz}
-                                                </p>
-                                            )}
+                                        {errors.quiz && (
+                                            <p className="text-sm text-red-500">
+                                                {errors.quiz}
+                                            </p>
+                                        )}
 
-                                            <button
-                                                type="submit"
-                                                disabled={
-                                                    !allAnswered || submittingQuiz
-                                                }
-                                                className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-                                            >
-                                                {submittingQuiz
-                                                    ? 'Mengirim...'
-                                                    : 'Kumpulkan Quiz'}
-                                            </button>
-                                        </form>
-                                    )
+                                        <button
+                                            type="submit"
+                                            disabled={
+                                                !allAnswered || submittingQuiz
+                                            }
+                                            className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {submittingQuiz
+                                                ? 'Mengirim Jawaban...'
+                                                : 'Kumpulkan Quiz'}
+                                        </button>
+                                    </form>
                                 )}
                             </div>
                         </div>

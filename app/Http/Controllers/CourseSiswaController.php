@@ -204,7 +204,7 @@ class CourseSiswaController extends Controller
         $score = $total > 0 ? round(($correct / $total) * 100, 2) : 0;
 
         $progress->quiz_attempts += 1;
-        $progress->quiz_score = $score;
+        $progress->quiz_score = max($progress->quiz_score ?? 0, $score);
         $progress->save();
 
         return back()->with([

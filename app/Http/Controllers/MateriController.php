@@ -506,19 +506,19 @@ class MateriController extends Controller
         $score = $total > 0 ? round(($correct / $total) * 100, 2) : 0;
 
         $progress->quiz_attempts += 1;
-        $progress->quiz_score = $score;
+        $progress->quiz_score = max($progress->quiz_score ?? 0, $score);
         $progress->save();
 
         return back()->with([
             'quiz_results' => [
                 'score' => $score,
+                'highest_score' => $progress->quiz_score,
                 'correct' => $correct,
                 'total' => $total,
                 'attempts' => $progress->quiz_attempts,
                 'max_attempts' => 2,
-                'details' => $results,
             ],
-            'success' => 'Quiz selesai! Nilai: ' . $score,
+            'success' => 'Quiz selesai! Nilai pengerjaan ini: ' . $score . ' (Nilai Tertinggi: ' . $progress->quiz_score . ')',
         ]);
     }
 
