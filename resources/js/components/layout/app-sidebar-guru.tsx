@@ -30,7 +30,6 @@ export function AppSidebarGuru() {
     const items: NavItem[] = [
         { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
         { title: 'Pengumuman', href: '/pengumuman', icon: Megaphone, badge: unreadCounts.pengumuman },
-        { title: 'Atur Pengumuman', href: '/admin/announcements', icon: Megaphone },
         { title: 'Pertemuan', href: '/pertemuan', icon: Calendar },
         { title: 'Laporan Absensi', href: '/laporan/absensi', icon: BarChart3 },
         { title: 'Materi Pembelajaran', href: '/materi', icon: BookOpen },

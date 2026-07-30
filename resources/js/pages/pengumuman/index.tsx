@@ -1,5 +1,6 @@
-import { Head } from '@inertiajs/react';
-import { AlertTriangle, Info, Megaphone, Wrench } from 'lucide-react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { AlertTriangle, Info, Megaphone, Settings, Wrench } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 type AnnouncementItem = {
     id: string;
@@ -48,6 +49,9 @@ export default function PengumumanIndex({
 }: {
     list: AnnouncementItem[];
 }) {
+    const { auth } = usePage<{ auth: { user?: { role?: { role_name: string } } } }>().props;
+    const canManage = auth.user?.role?.role_name === 'super_admin' || auth.user?.role?.role_name === 'guru';
+
     return (
         <>
             <Head title="Pengumuman" />
@@ -55,18 +59,28 @@ export default function PengumumanIndex({
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6 lg:p-8">
                 <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
                     {/* Header */}
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700">
-                            <Megaphone className="h-5 w-5" />
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700">
+                                <Megaphone className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold text-slate-900">
+                                    Pengumuman
+                                </h1>
+                                <p className="text-sm text-slate-500">
+                                    Informasi dan pengumuman terbaru
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-xl font-bold text-slate-900">
-                                Pengumuman
-                            </h1>
-                            <p className="text-sm text-slate-500">
-                                Informasi dan pengumuman terbaru
-                            </p>
-                        </div>
+                        {canManage && (
+                            <Link href="/admin/announcements">
+                                <Button variant="outline" size="sm">
+                                    <Settings className="mr-1 h-4 w-4" />
+                                    Atur Pengumuman
+                                </Button>
+                            </Link>
+                        )}
                     </div>
 
                     {/* List */}
