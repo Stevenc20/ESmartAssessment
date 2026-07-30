@@ -259,7 +259,6 @@ export default function MateriEdit({
                                     <Label>Konten</Label>
                                     <TiptapEditor
                                         key={materi.id}
-                                        materiId={materi.id}
                                         initialContent={materi.konten ?? ''}
                                         onChange={setKonten}
                                         placeholder="Tulis konten materi di sini..."

@@ -31,7 +31,6 @@ type TiptapEditorProps = {
     onChange: (html: string) => void;
     placeholder?: string;
     editable?: boolean;
-    materiId?: number;
 };
 
 export default function TiptapEditor({
@@ -39,10 +38,11 @@ export default function TiptapEditor({
     onChange,
     placeholder = 'Tulis konten di sini...',
     editable = true,
-    materiId,
 }: TiptapEditorProps) {
     const fileRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
+
+    const materiId = Number(window.location.pathname.match(/\/materi\/(\d+)/)?.[1]);
 
     const editor = useEditor({
         extensions: [
