@@ -792,6 +792,9 @@ export default function MateriSiswaDetail({
                                     <TugasCard key={tugas.id} tugas={tugas} />
                                 ))}
                             </div>
+                        </div>
+                    )}
+
                     {/* Polling & Voting Section */}
                     {materi.poll && (
                         <MateriPollWidget materiId={materi.id} poll={materi.poll} />
