@@ -588,8 +588,9 @@ class MateriController extends Controller
             ->orderBy('urutan')
             ->get();
 
-        $query = \App\Models\User::role('siswa')
-            ->with(['kelas', 'progressMateri', 'pengumpulanTugas.penilaian']);
+        $query = \App\Models\User::whereHas('role', function ($q) {
+            $q->where('role_name', 'siswa');
+        })->with(['kelas', 'progressMateri', 'pengumpulanTugas.penilaian']);
 
         if ($request->filled('kelas_id')) {
             $query->whereHas('kelas', function ($q) use ($request) {
@@ -692,8 +693,9 @@ class MateriController extends Controller
     {
         $pertemuanList = Pertemuan::with('materi.tugas')->orderBy('urutan')->get();
 
-        $query = \App\Models\User::role('siswa')
-            ->with(['kelas', 'progressMateri', 'pengumpulanTugas.penilaian']);
+        $query = \App\Models\User::whereHas('role', function ($q) {
+            $q->where('role_name', 'siswa');
+        })->with(['kelas', 'progressMateri', 'pengumpulanTugas.penilaian']);
 
         if ($request->filled('kelas_id')) {
             $query->whereHas('kelas', function ($q) use ($request) {

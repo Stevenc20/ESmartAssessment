@@ -3,6 +3,7 @@ import {
     BarChart3,
     BookOpen,
     Calendar,
+    FileSpreadsheet,
     GraduationCap,
     LayoutGrid,
     Megaphone,
@@ -33,6 +34,7 @@ export function AppSidebarGuru() {
         { title: 'Pertemuan', href: '/pertemuan', icon: Calendar },
         { title: 'Laporan Absensi', href: '/laporan/absensi', icon: BarChart3 },
         { title: 'Materi Pembelajaran', href: '/materi', icon: BookOpen },
+        { title: 'Rekap Penilaian Siswa', href: '/penilaian-materi', icon: FileSpreadsheet },
         { title: 'Assessment', href: '/assessment', icon: GraduationCap },
     ];
     return (
