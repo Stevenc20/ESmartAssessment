@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     Activity,
     Archive,
@@ -29,79 +29,47 @@ import {
 } from '@/components/ui/sidebar';
 import type { NavItem } from '@/types';
 
-const sections: { label: string; items: NavItem[] }[] = [
-    {
-        label: 'Overview',
-        items: [{ title: 'Dashboard', href: '/admin/dashboard', icon: LayoutGrid }],
-    },
-    {
-        label: 'Management',
-        items: [
-            { title: 'User Management', href: '/admin/users', icon: Users },
-            { title: 'Role & Permission', href: '/admin/roles', icon: Shield },
-            {
-                title: 'Feature Management',
-                href: '/admin/features',
-                icon: ToggleLeft,
-            },
-            {
-                title: 'Academic Management',
-                href: '/admin/tahun-ajaran',
-                icon: Calendar,
-            },
-            { title: 'Management Kelas', href: '/admin/kelas', icon: BookOpen },
-            {
-                title: 'Content Management',
-                href: '/admin/content-management',
-                icon: BookOpen,
-            },
-        ],
-    },
-    {
-        label: 'Monitoring',
-        items: [
-            {
-                title: 'Monitoring Center',
-                href: '/admin/monitoring',
-                icon: Monitor,
-            },
-            {
-                title: 'Audit Log',
-                href: '/admin/audit-logs',
-                icon: ClipboardList,
-            },
-            { title: 'Log Aktivitas', href: '/admin/logs', icon: Activity },
-        ],
-    },
-    {
-        label: 'Tools',
-        items: [
-            {
-                title: 'Sertifikat',
-                href: '/admin/certificate-templates',
-                icon: Award,
-            },
-            {
-                title: 'Pengumuman Global',
-                href: '/admin/global-announcements',
-                icon: Megaphone,
-            },
-            {
-                title: 'Arsip Siswa',
-                href: '/admin/inactive-students',
-                icon: Archive,
-            },
-            {
-                title: 'Backup & Recovery',
-                href: '/admin/backup',
-                icon: Database,
-            },
-            { title: 'Pengaturan', href: '/admin/settings', icon: Settings },
-        ],
-    },
-];
+type UnreadCounts = { pengumuman: number; materi: number; assessment: number };
 
 export function AppSidebarSuperadmin() {
+    const { unreadCounts } = usePage<{ unreadCounts: UnreadCounts }>().props;
+
+    const sections: { label: string; items: NavItem[] }[] = [
+        {
+            label: 'Overview',
+            items: [{ title: 'Dashboard', href: '/admin/dashboard', icon: LayoutGrid }],
+        },
+        {
+            label: 'Management',
+            items: [
+                { title: 'User Management', href: '/admin/users', icon: Users },
+                { title: 'Role & Permission', href: '/admin/roles', icon: Shield },
+                { title: 'Feature Management', href: '/admin/features', icon: ToggleLeft },
+                { title: 'Academic Management', href: '/admin/tahun-ajaran', icon: Calendar },
+                { title: 'Management Kelas', href: '/admin/kelas', icon: BookOpen },
+                { title: 'Content Management', href: '/admin/content-management', icon: BookOpen },
+            ],
+        },
+        {
+            label: 'Monitoring',
+            items: [
+                { title: 'Monitoring Center', href: '/admin/monitoring', icon: Monitor },
+                { title: 'Audit Log', href: '/admin/audit-logs', icon: ClipboardList },
+                { title: 'Log Aktivitas', href: '/admin/logs', icon: Activity },
+            ],
+        },
+        {
+            label: 'Tools',
+            items: [
+                { title: 'Sertifikat', href: '/admin/certificate-templates', icon: Award },
+                { title: 'Pengumuman Global', href: '/admin/global-announcements', icon: Megaphone, badge: unreadCounts.pengumuman },
+                { title: 'Arsip Siswa', href: '/admin/inactive-students', icon: Archive },
+                { title: 'Backup & Recovery', href: '/admin/backup', icon: Database },
+                { title: 'Pengaturan', href: '/admin/settings', icon: Settings },
+            ],
+        },
+    ];
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader className="px-4 py-4 transition-all duration-200 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-1">

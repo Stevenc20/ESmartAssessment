@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Materi;
+use App\Models\NotificationRead;
 use App\Models\PengumpulanTugas;
 use App\Models\Pertemuan;
 use App\Models\ProgressMateri;
@@ -352,6 +353,15 @@ class MateriController extends Controller
                 'revisi_ke' => $submission?->revisi_ke ?? 0,
             ];
         });
+
+        NotificationRead::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'notifiable_type' => Materi::class,
+                'notifiable_id' => $materi->id,
+            ],
+            ['read_at' => now()]
+        );
 
         return Inertia::render('materi/siswa-detail', [
             'materi' => [

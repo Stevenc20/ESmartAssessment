@@ -100,6 +100,17 @@ export const NavMain = memo(function NavMain({
                                     >
                                         {item.title}
                                     </span>
+                                    {item.badge !== undefined && item.badge > 0 && (
+                                        <span
+                                            className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold text-white"
+                                            style={{
+                                                background: '#ef4444',
+                                                lineHeight: '1',
+                                            }}
+                                        >
+                                            {item.badge > 99 ? '99+' : item.badge}
+                                        </span>
+                                    )}
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

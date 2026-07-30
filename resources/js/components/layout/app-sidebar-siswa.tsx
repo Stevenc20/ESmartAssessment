@@ -21,13 +21,7 @@ import {
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
-const items: NavItem[] = [
-    { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
-    { title: 'Pengumuman', href: '/pengumuman', icon: Megaphone },
-    { title: 'Materi', href: '/materi-saya', icon: Library },
-    { title: 'Absensi', href: '/absen', icon: QrCode },
-    { title: 'Assessment', href: '/assessment', icon: GraduationCap },
-];
+type UnreadCounts = { pengumuman: number; materi: number; assessment: number };
 
 const kelasLabelMap: Record<string, string> = {
     '10': 'Genesis 10',
@@ -38,10 +32,21 @@ const kelasLabelMap: Record<string, string> = {
 type KelasSiswa = { id: number; nama_kelas: string; tingkat: string } | null;
 
 export function AppSidebarSiswa() {
-    const { kelasSiswa } = usePage<{ kelasSiswa: KelasSiswa }>().props;
+    const { kelasSiswa, unreadCounts } = usePage<{
+        kelasSiswa: KelasSiswa;
+        unreadCounts: UnreadCounts;
+    }>().props;
     const label = kelasSiswa
         ? kelasLabelMap[kelasSiswa.tingkat] ?? kelasSiswa.nama_kelas
         : null;
+
+    const items: NavItem[] = [
+        { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+        { title: 'Pengumuman', href: '/pengumuman', icon: Megaphone, badge: unreadCounts.pengumuman },
+        { title: 'Materi', href: '/materi-saya', icon: Library, badge: unreadCounts.materi },
+        { title: 'Absensi', href: '/absen', icon: QrCode },
+        { title: 'Assessment', href: '/assessment', icon: GraduationCap, badge: unreadCounts.assessment },
+    ];
 
     return (
         <Sidebar collapsible="icon" variant="inset">

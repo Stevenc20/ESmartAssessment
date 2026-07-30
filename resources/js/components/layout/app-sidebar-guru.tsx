@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     BarChart3,
     BookOpen,
@@ -22,16 +22,19 @@ import {
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
-const items: NavItem[] = [
-    { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
-    { title: 'Pengumuman', href: '/pengumuman', icon: Megaphone },
-    { title: 'Pertemuan', href: '/pertemuan', icon: Calendar },
-    { title: 'Laporan Absensi', href: '/laporan/absensi', icon: BarChart3 },
-    { title: 'Materi Pembelajaran', href: '/materi', icon: BookOpen },
-    { title: 'Assessment', href: '/assessment', icon: GraduationCap },
-];
+type UnreadCounts = { pengumuman: number; materi: number; assessment: number };
 
 export function AppSidebarGuru() {
+    const { unreadCounts } = usePage<{ unreadCounts: UnreadCounts }>().props;
+
+    const items: NavItem[] = [
+        { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+        { title: 'Pengumuman', href: '/pengumuman', icon: Megaphone, badge: unreadCounts.pengumuman },
+        { title: 'Pertemuan', href: '/pertemuan', icon: Calendar },
+        { title: 'Laporan Absensi', href: '/laporan/absensi', icon: BarChart3 },
+        { title: 'Materi Pembelajaran', href: '/materi', icon: BookOpen },
+        { title: 'Assessment', href: '/assessment', icon: GraduationCap },
+    ];
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader className="px-4 py-4 transition-all duration-200 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-1">

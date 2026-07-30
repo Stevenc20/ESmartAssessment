@@ -4,7 +4,10 @@ namespace App\Http\Middleware;
 
 use App\Models\Announcement;
 use App\Models\GlobalAnnouncement;
+use App\Models\Materi;
+use App\Models\NotificationRead;
 use App\Models\SystemSetting;
+use App\Models\Tugas;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -23,6 +26,7 @@ class HandleInertiaRequests extends Middleware
         $announcements = [];
         $kelasSiswa = null;
         $user = null;
+        $unreadCounts = ['pengumuman' => 0, 'materi' => 0, 'assessment' => 0];
 
         if ($request->user()) {
             $user = $request->user()->load('role');
@@ -94,6 +98,69 @@ class HandleInertiaRequests extends Middleware
                 ]);
 
             $announcements = $regular->concat($global)->sortByDesc('sort_at')->values()->map(fn ($a) => collect($a)->except('sort_at')->toArray())->toArray();
+
+            $announcementIds = Announcement::where(function ($q) use ($roleName) {
+                $q->whereNull('target_role')
+                    ->orWhere('target_role', '')
+                    ->orWhere('target_role', 'all')
+                    ->orWhere('target_role', $roleName);
+            })->pluck('id');
+
+            $globalIds = GlobalAnnouncement::where('is_active', true)
+                ->where(function ($q) {
+                    $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+                })
+                ->where(function ($q) {
+                    $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+                })
+                ->where(function ($q) use ($roleName) {
+                    $q->whereNull('target_role')
+                        ->orWhere('target_role', '')
+                        ->orWhere('target_role', 'all')
+                        ->orWhere('target_role', $roleName);
+                })->pluck('id');
+
+            $readIds = NotificationRead::where('user_id', $user->id)
+                ->get()
+                ->groupBy('notifiable_type');
+
+            $readPengumuman = isset($readIds[Announcement::class])
+                ? $readIds[Announcement::class]->pluck('notifiable_id')->toArray()
+                : [];
+            $readGlobal = isset($readIds[GlobalAnnouncement::class])
+                ? $readIds[GlobalAnnouncement::class]->pluck('notifiable_id')->toArray()
+                : [];
+
+            $unreadCounts['pengumuman'] = $announcementIds->diff($readPengumuman)->count()
+                + $globalIds->diff($readGlobal)->count();
+
+            if ($roleName === 'siswa' && $kelasSiswa) {
+                $tingkat = $kelasSiswa['tingkat'];
+
+                $materiIds = Materi::where(function ($q) use ($tingkat) {
+                    if ($tingkat) {
+                        $q->where('tingkat', $tingkat)->orWhereNull('tingkat');
+                    }
+                })->pluck('id');
+
+                $readMateriIds = isset($readIds[Materi::class])
+                    ? $readIds[Materi::class]->pluck('notifiable_id')->toArray()
+                    : [];
+
+                $unreadCounts['materi'] = $materiIds->diff($readMateriIds)->count();
+
+                $tugasIds = Tugas::whereHas('materi', function ($q) use ($tingkat) {
+                    if ($tingkat) {
+                        $q->where('tingkat', $tingkat)->orWhereNull('tingkat');
+                    }
+                })->pluck('id');
+
+                $readTugasIds = isset($readIds[Tugas::class])
+                    ? $readIds[Tugas::class]->pluck('notifiable_id')->toArray()
+                    : [];
+
+                $unreadCounts['assessment'] = $tugasIds->diff($readTugasIds)->count();
+            }
         }
 
         return [
@@ -105,6 +172,7 @@ class HandleInertiaRequests extends Middleware
             'features' => $features,
             'announcements' => $announcements,
             'kelasSiswa' => $kelasSiswa,
+            'unreadCounts' => $unreadCounts,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

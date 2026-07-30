@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Materi;
+use App\Models\NotificationRead;
 use App\Models\PengumpulanTugas;
 use App\Models\PenilaianTugas;
 use App\Models\Tugas;
@@ -72,6 +73,27 @@ class AssessmentController extends Controller
                         : null,
                 ];
             });
+
+        $now = now();
+        $records = [];
+        foreach ($tugasList as $t) {
+            $records[] = [
+                'user_id' => $user->id,
+                'notifiable_type' => Tugas::class,
+                'notifiable_id' => $t['id'],
+                'read_at' => $now,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        if (! empty($records)) {
+            NotificationRead::upsert(
+                $records,
+                ['user_id', 'notifiable_type', 'notifiable_id'],
+                ['read_at', 'updated_at']
+            );
+        }
 
         return Inertia::render('assessment/index', [
             'assessments' => $tugasList,
