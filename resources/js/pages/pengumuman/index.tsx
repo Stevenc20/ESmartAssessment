@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { AlertTriangle, Info, Megaphone, Settings, Wrench } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 type AnnouncementItem = {
@@ -45,12 +46,33 @@ const typeConfig = {
 };
 
 export default function PengumumanIndex({
-    list,
+    list: initialList,
 }: {
     list: AnnouncementItem[];
 }) {
     const { auth } = usePage<{ auth: { user?: { role?: { role_name: string } } } }>().props;
     const canManage = auth.user?.role?.role_name === 'super_admin' || auth.user?.role?.role_name === 'guru';
+
+    const [list, setList] = useState(initialList);
+
+    useEffect(() => {
+        setList(initialList);
+    }, [initialList]);
+
+    useEffect(() => {
+        const es = new EventSource('/api/announcements/stream');
+
+        es.addEventListener('refresh', () => {
+            fetch('/api/announcements')
+                .then((r) => r.json())
+                .then((data) => {
+                    if (data.list) setList(data.list);
+                })
+                .catch(() => {});
+        });
+
+        return () => es.close();
+    }, []);
 
     return (
         <>

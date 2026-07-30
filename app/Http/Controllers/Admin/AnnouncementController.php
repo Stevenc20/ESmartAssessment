@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Announcement;
 use App\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class AnnouncementController extends Controller
@@ -35,6 +36,8 @@ class AnnouncementController extends Controller
 
         Announcement::create($validated);
 
+        Cache::increment('announcement_version');
+
         return back()->with('success', 'Pengumuman berhasil ditambahkan.');
     }
 
@@ -50,12 +53,16 @@ class AnnouncementController extends Controller
 
         $announcement->update($validated);
 
+        Cache::increment('announcement_version');
+
         return back()->with('success', 'Pengumuman berhasil diperbarui.');
     }
 
     public function destroy(Announcement $announcement)
     {
         $announcement->delete();
+
+        Cache::increment('announcement_version');
 
         return back()->with('success', 'Pengumuman berhasil dihapus.');
     }

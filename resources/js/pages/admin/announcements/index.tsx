@@ -54,8 +54,8 @@ export default function AnnouncementsIndex({ items }: PageProps) {
             judul: item.judul,
             isi: item.isi,
             target_role: item.target_role ?? '',
-            starts_at: item.starts_at ?? '',
-            ends_at: item.ends_at ?? '',
+            starts_at: item.starts_at ? item.starts_at.substring(0, 16) : '',
+            ends_at: item.ends_at ? item.ends_at.substring(0, 16) : '',
         });
         setOpen(true);
     }
