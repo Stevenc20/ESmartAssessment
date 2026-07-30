@@ -30,15 +30,21 @@ export default function MateriPollWidget({ materiId, poll }: Props) {
         poll.my_vote_option_id
     );
 
-    const { post, processing } = useForm({
-        option_id: selectedOption,
+    const { data, setData, post, processing } = useForm({
+        option_id: poll.my_vote_option_id as number | null,
     });
 
     const hasVoted = poll.my_vote_option_id !== null;
 
+    const handleSelectOption = (optionId: number) => {
+        setSelectedOption(optionId);
+        setData('option_id', optionId);
+    };
+
     const handleVoteSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedOption) return;
+        const optionToSubmit = data.option_id || selectedOption;
+        if (!optionToSubmit) return;
 
         post(`/materi-saya/${materiId}/poll/vote`, {
             preserveScroll: true,
@@ -74,6 +80,7 @@ export default function MateriPollWidget({ materiId, poll }: Props) {
                         {poll.options.map((opt) => (
                             <label
                                 key={opt.id}
+                                onClick={() => handleSelectOption(opt.id)}
                                 className={`flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer ${
                                     selectedOption === opt.id
                                         ? 'border-indigo-600 bg-indigo-50/80 ring-2 ring-indigo-500/20 font-semibold text-indigo-900'
@@ -86,7 +93,7 @@ export default function MateriPollWidget({ materiId, poll }: Props) {
                                         name="poll_option"
                                         value={opt.id}
                                         checked={selectedOption === opt.id}
-                                        onChange={() => setSelectedOption(opt.id)}
+                                        onChange={() => handleSelectOption(opt.id)}
                                         className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300"
                                     />
                                     <span className="text-sm">{opt.opsi_text}</span>
