@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
+    BarChart3,
     GraduationCap,
     LayoutGrid,
     Library,
@@ -44,8 +45,9 @@ export function AppSidebarSiswa() {
     const items: NavItem[] = [
         { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
         { title: 'Pengumuman', href: '/pengumuman', icon: Megaphone, badge: unreadCounts.pengumuman },
-        { title: 'Materi', href: '/materi-saya', icon: Library, badge: unreadCounts.materi },
-        { title: 'Absensi', href: '/absen', icon: QrCode },
+        { title: 'Materi Saya', href: '/materi-saya', icon: Library, badge: unreadCounts.materi },
+        { title: 'Nilai & Progress', href: '/nilai-saya', icon: BarChart3 },
+        { title: 'Absensi Saya', href: '/absen', icon: QrCode },
         { title: 'Assessment', href: '/assessment', icon: GraduationCap, badge: unreadCounts.assessment },
         { title: 'Badge', href: '/badge', icon: Medal },
     ];

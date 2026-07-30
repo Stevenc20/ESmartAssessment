@@ -339,10 +339,10 @@ return;
                     )}
 
                     {/* Stats */}
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                         {[
                             {
-                                label: 'Total Absen',
+                                label: 'Total Pertemuan',
                                 value: stats.total,
                                 color: '#436391',
                                 icon: Calendar,
@@ -359,13 +359,19 @@ return;
                                 color: '#d97706',
                                 icon: Clock,
                             },
+                            {
+                                label: 'Tidak Hadir (Bolong)',
+                                value: stats.alpa ?? 0,
+                                color: '#dc2626',
+                                icon: AlertTriangle,
+                            },
                         ].map((s) => (
                             <div
                                 key={s.label}
                                 className="rounded-xl border border-slate-200 bg-white p-4"
                             >
                                 <div className="flex items-center justify-between">
-                                    <p className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                    <p className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
                                         {s.label}
                                     </p>
                                     <div
@@ -389,7 +395,7 @@ return;
                     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                         <div className="border-b border-slate-100 px-5 py-4">
                             <h2 className="text-sm font-bold text-slate-900">
-                                Riwayat Absensi
+                                Riwayat Presensi Pertemuan
                             </h2>
                         </div>
                         {riwayat.length > 0 ? (
@@ -403,7 +409,7 @@ return;
                                             Tanggal
                                         </th>
                                         <th className="px-4 py-2.5 font-semibold">
-                                            Scan
+                                            Waktu Scan
                                         </th>
                                         <th className="px-4 py-2.5 font-semibold">
                                             Status
@@ -432,27 +438,19 @@ return;
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span
-                                                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
                                                         r.status === 'hadir'
-                                                            ? 'bg-emerald-50 text-emerald-600'
-                                                            : r.status ===
-                                                                'terlambat'
-                                                              ? 'bg-amber-50 text-amber-600'
-                                                              : 'bg-red-50 text-red-600'
+                                                            ? 'bg-emerald-50 text-emerald-700'
+                                                            : r.status === 'terlambat'
+                                                            ? 'bg-amber-50 text-amber-700'
+                                                            : 'bg-red-50 text-red-700'
                                                     }`}
                                                 >
-                                                    {r.status === 'hadir' && (
-                                                        <CheckCircle className="h-3 w-3" />
-                                                    )}
-                                                    {r.status ===
-                                                        'terlambat' && (
-                                                        <Clock className="h-3 w-3" />
-                                                    )}
-                                                    {r.status ===
-                                                        'tidak_hadir' && (
-                                                        <AlertTriangle className="h-3 w-3" />
-                                                    )}
-                                                    {r.status}
+                                                    {r.status === 'hadir'
+                                                        ? 'Hadir'
+                                                        : r.status === 'terlambat'
+                                                        ? 'Terlambat'
+                                                        : 'Tidak Hadir (Bolong)'}
                                                 </span>
                                             </td>
                                         </tr>

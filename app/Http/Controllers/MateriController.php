@@ -820,6 +820,95 @@ class MateriController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
+    public function nilaiSiswaIndex(Request $request)
+    {
+        $siswa = $request->user();
+        $siswaId = $siswa->id;
+
+        $pertemuanList = Pertemuan::with(['roadmap', 'materi.quiz', 'materi.tugas'])
+            ->orderBy('urutan')
+            ->get();
+
+        $absensiRecords = \App\Models\Absensi::where('siswa_id', $siswaId)->get()->keyBy('pertemuan_id');
+
+        $pertemuanProgress = [];
+        $totalScoreSum = 0;
+        $countEvaluated = 0;
+        $completedQuizzesCount = 0;
+        $submittedTasksCount = 0;
+
+        foreach ($pertemuanList as $p) {
+            $materiList = $p->materi;
+            $materiIds = $materiList->pluck('id');
+
+            $progressRecords = ProgressMateri::where('siswa_id', $siswaId)
+                ->whereIn('materi_id', $materiIds)
+                ->get();
+
+            $quizScores = $progressRecords->pluck('quiz_score')->filter(fn ($v) => $v !== null);
+            $maxQuizScore = $quizScores->isNotEmpty() ? round($quizScores->max(), 2) : null;
+            $totalAttempts = $progressRecords->sum('quiz_attempts');
+
+            if ($maxQuizScore !== null) {
+                $completedQuizzesCount++;
+            }
+
+            $tugasIds = $materiList->flatMap(fn ($m) => $m->tugas)->pluck('id');
+            $pengumpulanList = PengumpulanTugas::where('siswa_id', $siswaId)
+                ->whereIn('tugas_id', $tugasIds)
+                ->with('penilaian')
+                ->get();
+
+            $tugasNilai = $pengumpulanList->map(fn ($ts) => $ts->penilaian?->nilai)->filter(fn ($v) => $v !== null);
+            $avgTugasScore = $tugasNilai->isNotEmpty() ? round($tugasNilai->avg(), 2) : null;
+
+            if ($pengumpulanList->isNotEmpty()) {
+                $submittedTasksCount++;
+            }
+
+            $combinedScore = null;
+            if ($maxQuizScore !== null && $avgTugasScore !== null) {
+                $combinedScore = round(($maxQuizScore + $avgTugasScore) / 2, 2);
+            } elseif ($maxQuizScore !== null) {
+                $combinedScore = $maxQuizScore;
+            } elseif ($avgTugasScore !== null) {
+                $combinedScore = $avgTugasScore;
+            }
+
+            if ($combinedScore !== null) {
+                $totalScoreSum += $combinedScore;
+                $countEvaluated++;
+            }
+
+            $abs = $absensiRecords->get($p->id);
+            $absStatus = $abs ? $abs->status : 'alpa';
+
+            $pertemuanProgress[] = [
+                'pertemuan_id' => $p->id,
+                'pertemuan_judul' => $p->judul,
+                'roadmap_judul' => $p->roadmap?->judul ?? '-',
+                'absensi_status' => $absStatus,
+                'quiz_score' => $maxQuizScore,
+                'quiz_attempts' => $totalAttempts,
+                'tugas_score' => $avgTugasScore,
+                'tugas_submitted' => $pengumpulanList->isNotEmpty(),
+                'combined_score' => $combinedScore,
+            ];
+        }
+
+        $overallAvg = $countEvaluated > 0 ? round($totalScoreSum / $countEvaluated, 2) : 0;
+
+        return Inertia::render('materi/nilai-saya', [
+            'stats' => [
+                'overall_avg' => $overallAvg,
+                'total_pertemuan' => $pertemuanList->count(),
+                'completed_quizzes' => $completedQuizzesCount,
+                'submitted_tasks' => $submittedTasksCount,
+            ],
+            'pertemuanProgress' => $pertemuanProgress,
+        ]);
+    }
+
     public function destroy(Materi $materi)
     {
         if ($materi->thumbnail) {

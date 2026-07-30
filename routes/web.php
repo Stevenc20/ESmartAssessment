@@ -47,6 +47,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
 
+    Route::get('/nilai-saya', [MateriController::class, 'nilaiSiswaIndex'])->name('materi.siswa.nilai');
+
     Route::prefix('materi-saya')->name('materi.siswa.')->group(function () {
         Route::get('/', [MateriController::class, 'siswa'])->name('index');
         Route::get('/{materi}', [MateriController::class, 'showSiswa'])->name('show');

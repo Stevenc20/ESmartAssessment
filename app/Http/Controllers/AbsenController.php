@@ -186,30 +186,55 @@ class AbsenController extends Controller
         $user = $request->user();
         $siswaId = $user->id;
 
-        $totalHadir = Absensi::where('siswa_id', $siswaId)->where('status', 'hadir')->count();
-        $totalTerlambat = Absensi::where('siswa_id', $siswaId)->where('status', 'terlambat')->count();
-        $totalAbsen = Absensi::where('siswa_id', $siswaId)->count();
+        $allPertemuan = \App\Models\Pertemuan::with('roadmap')->orderBy('urutan')->get();
+        $absensiRecords = Absensi::where('siswa_id', $siswaId)->get()->keyBy('pertemuan_id');
 
-        $riwayat = Absensi::where('siswa_id', $siswaId)
-            ->with('pertemuan.roadmap')
-            ->latest()
-            ->get()
-            ->map(fn ($a) => [
-                'id' => $a->id,
-                'pertemuan' => $a->pertemuan?->judul ?? '-',
-                'roadmap' => $a->pertemuan?->roadmap?->judul ?? '-',
-                'status' => $a->status,
-                'scan_time' => $a->scan_time?->format('d M Y H:i'),
-                'tanggal' => $a->pertemuan?->tanggal?->format('d M Y') ?? '-',
-            ]);
+        $totalHadir = 0;
+        $totalTerlambat = 0;
+        $totalAlpa = 0;
+
+        $riwayat = $allPertemuan->map(function ($p) use ($absensiRecords, &$totalHadir, &$totalTerlambat, &$totalAlpa) {
+            $abs = $absensiRecords->get($p->id);
+
+            if ($abs) {
+                if ($abs->status === 'hadir') {
+                    $totalHadir++;
+                } elseif ($abs->status === 'terlambat') {
+                    $totalTerlambat++;
+                }
+
+                return [
+                    'id' => $abs->id,
+                    'pertemuan_id' => $p->id,
+                    'pertemuan' => $p->judul,
+                    'roadmap' => $p->roadmap?->judul ?? '-',
+                    'status' => $abs->status,
+                    'scan_time' => $abs->scan_time ? $abs->scan_time->format('d M Y H:i') : '-',
+                    'tanggal' => $p->tanggal ? $p->tanggal->format('d M Y') : '-',
+                ];
+            }
+
+            $totalAlpa++;
+
+            return [
+                'id' => 'p-'.$p->id,
+                'pertemuan_id' => $p->id,
+                'pertemuan' => $p->judul,
+                'roadmap' => $p->roadmap?->judul ?? '-',
+                'status' => 'alpa',
+                'scan_time' => '-',
+                'tanggal' => $p->tanggal ? $p->tanggal->format('d M Y') : '-',
+            ];
+        });
 
         $activeSessions = $this->getActiveSessionsForSiswa($siswaId);
 
         return Inertia::render('absen/index', [
             'stats' => [
-                'total' => $totalAbsen,
+                'total' => $allPertemuan->count(),
                 'hadir' => $totalHadir,
                 'terlambat' => $totalTerlambat,
+                'alpa' => $totalAlpa,
             ],
             'riwayat' => $riwayat,
             'active_sessions' => $activeSessions,
