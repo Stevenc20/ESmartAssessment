@@ -37,6 +37,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('materi', MateriController::class);
 
+    Route::post('/materi/{materi}/quiz', [MateriController::class, 'quizStore'])->name('materi.quiz.store');
+    Route::put('/materi/{materi}/quiz/{quiz}', [MateriController::class, 'quizUpdate'])->name('materi.quiz.update');
+    Route::delete('/materi/{materi}/quiz/{quiz}', [MateriController::class, 'quizDestroy'])->name('materi.quiz.destroy');
+
     Route::get('pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
 
     Route::prefix('materi-saya')->name('materi.siswa.')->group(function () {
@@ -44,6 +48,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{materi}', [MateriController::class, 'showSiswa'])->name('show');
         Route::post('/{materi}/progress', [MateriController::class, 'updateProgress'])->name('progress');
         Route::post('/tugas/{tugas}/submit', [MateriController::class, 'submitTugas'])->name('tugas.submit');
+        Route::post('/{materi}/quiz', [MateriController::class, 'quizSubmit'])->name('quiz.submit');
     });
 
     Route::prefix('course')->name('course.')->group(function () {

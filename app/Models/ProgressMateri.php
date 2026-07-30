@@ -8,7 +8,7 @@ class ProgressMateri extends Model
 {
     protected $table = 'progress_materi';
 
-    protected $fillable = ['siswa_id', 'materi_id', 'status', 'completed_at'];
+    protected $fillable = ['siswa_id', 'materi_id', 'status', 'completed_at', 'quiz_score', 'quiz_attempts'];
 
     public function siswa()
     {

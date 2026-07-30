@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Materi;
+use App\Models\MateriQuiz;
 use App\Models\NotificationRead;
 use App\Models\PengumpulanTugas;
 use App\Models\Pertemuan;
 use App\Models\ProgressMateri;
 use App\Models\Roadmap;
 use App\Models\Tugas;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -46,11 +46,10 @@ class MateriController extends Controller
                 'roadmap' => $m->pertemuan?->roadmap?->judul ?? '-',
                 'created_by' => $m->creator?->name ?? '-',
                 'created_at' => $m->created_at->format('d M Y'),
+                'has_quiz' => $m->quiz()->exists(),
             ]);
 
-        $stats = [
-            'total' => $materiList->count(),
-        ];
+        $stats = ['total' => $materiList->count()];
 
         return Inertia::render('materi/index', [
             'materiList' => $materiList,
@@ -146,12 +145,21 @@ class MateriController extends Controller
                 'tingkat' => $p->roadmap?->tingkat,
             ]);
 
+        $quiz = $materi->quiz()->get()->map(fn ($q) => [
+            'id' => $q->id,
+            'soal' => $q->soal,
+            'opsi' => $q->opsi,
+            'jawaban_benar' => $q->jawaban_benar,
+            'urutan' => $q->urutan,
+        ]);
+
         return Inertia::render('materi/edit', [
             'materi' => [
                 'id' => $materi->id,
                 'pertemuan_id' => $materi->pertemuan_id,
                 'judul' => $materi->judul,
                 'deskripsi' => $materi->deskripsi,
+                'konten' => $materi->konten,
                 'thumbnail' => $materi->thumbnail ? Storage::url($materi->thumbnail) : null,
                 'video_url' => $materi->video_url,
                 'pdf_file' => $materi->pdf_file ? Storage::url($materi->pdf_file) : null,
@@ -160,6 +168,7 @@ class MateriController extends Controller
                 'tingkat' => $materi->tingkat,
             ],
             'pertemuanList' => $pertemuanList,
+            'quiz' => $quiz,
         ]);
     }
 
@@ -173,6 +182,7 @@ class MateriController extends Controller
             'pertemuan_id' => 'nullable|integer|exists:pertemuan,id',
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
+            'konten' => 'nullable|string',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:102400',
             'pdf_file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:102400',
             'video_url' => 'nullable|string|max:255',
@@ -207,6 +217,52 @@ class MateriController extends Controller
 
         return redirect()->route('materi.index')
             ->with('success', 'Materi berhasil diperbarui.');
+    }
+
+    public function quizStore(Request $request, Materi $materi)
+    {
+        $validated = $request->validate([
+            'soal' => 'required|string',
+            'opsi' => 'required|array|min:2|max:5',
+            'opsi.*' => 'required|string',
+            'jawaban_benar' => 'required|string',
+        ]);
+
+        $maxUrutan = $materi->quiz()->max('urutan') ?? 0;
+
+        MateriQuiz::create([
+            'materi_id' => $materi->id,
+            'soal' => $validated['soal'],
+            'opsi' => $validated['opsi'],
+            'jawaban_benar' => $validated['jawaban_benar'],
+            'urutan' => $maxUrutan + 1,
+        ]);
+
+        return redirect()->route('materi.edit', $materi->id)
+            ->with('success', 'Soal quiz berhasil ditambahkan.');
+    }
+
+    public function quizUpdate(Request $request, Materi $materi, MateriQuiz $quiz)
+    {
+        $validated = $request->validate([
+            'soal' => 'required|string',
+            'opsi' => 'required|array|min:2|max:5',
+            'opsi.*' => 'required|string',
+            'jawaban_benar' => 'required|string',
+        ]);
+
+        $quiz->update($validated);
+
+        return redirect()->route('materi.edit', $materi->id)
+            ->with('success', 'Soal quiz berhasil diperbarui.');
+    }
+
+    public function quizDestroy(Materi $materi, MateriQuiz $quiz)
+    {
+        $quiz->delete();
+
+        return redirect()->route('materi.edit', $materi->id)
+            ->with('success', 'Soal quiz berhasil dihapus.');
     }
 
     public function siswa(Request $request)
@@ -287,6 +343,9 @@ class MateriController extends Controller
                             'created_by' => $m->creator?->name ?? '-',
                             'progress_status' => $progress?->status ?? 'not_started',
                             'completed_at' => $progress?->completed_at,
+                            'has_quiz' => $m->quiz()->exists(),
+                            'quiz_score' => $progress?->quiz_score,
+                            'quiz_attempts' => $progress?->quiz_attempts ?? 0,
                             'tugas' => $tugasList,
                         ];
                     }),
@@ -330,7 +389,7 @@ class MateriController extends Controller
     {
         $user = $request->user();
 
-        $materi->load(['pertemuan.roadmap', 'creator', 'tugas.pengumpulan.penilaian', 'progress']);
+        $materi->load(['pertemuan.roadmap', 'creator', 'tugas.pengumpulan.penilaian', 'progress', 'quiz']);
 
         $progress = $materi->progress->firstWhere('siswa_id', $user->id);
 
@@ -362,6 +421,14 @@ class MateriController extends Controller
             ];
         });
 
+        $quizList = $materi->quiz->map(fn ($q) => [
+            'id' => $q->id,
+            'soal' => $q->soal,
+            'opsi' => $q->opsi,
+            'jawaban_benar' => $q->jawaban_benar,
+            'urutan' => $q->urutan,
+        ]);
+
         NotificationRead::updateOrCreate(
             [
                 'user_id' => $user->id,
@@ -376,6 +443,7 @@ class MateriController extends Controller
                 'id' => $materi->id,
                 'judul' => $materi->judul,
                 'deskripsi' => $materi->deskripsi,
+                'konten' => $materi->konten,
                 'thumbnail' => $materi->thumbnail ? Storage::url($materi->thumbnail) : null,
                 'video_url' => $materi->video_url,
                 'video_embed_url' => $this->getYoutubeEmbedUrl($materi->video_url),
@@ -385,10 +453,72 @@ class MateriController extends Controller
                 'created_by' => $materi->creator?->name ?? '-',
                 'progress_status' => $progress?->status ?? 'not_started',
                 'completed_at' => $progress?->completed_at,
+                'quiz_score' => $progress?->quiz_score,
+                'quiz_attempts' => $progress?->quiz_attempts ?? 0,
                 'tugas' => $tugasList,
+                'quiz' => $quizList,
             ],
             'pertemuan' => $materi->pertemuan?->judul ?? '-',
             'roadmap' => $materi->pertemuan?->roadmap?->judul ?? '-',
+        ]);
+    }
+
+    public function quizSubmit(Request $request, Materi $materi)
+    {
+        $user = $request->user();
+        $quizQuestions = $materi->quiz()->get();
+
+        $validated = $request->validate([
+            'answers' => 'required|array',
+            'answers.*' => 'required|string',
+        ]);
+
+        $progress = ProgressMateri::firstOrNew([
+            'siswa_id' => $user->id,
+            'materi_id' => $materi->id,
+        ]);
+
+        if ($progress->quiz_attempts >= 2) {
+            return back()->withErrors(['quiz' => 'Kesempatan mengerjakan quiz sudah habis (maksimal 2x).']);
+        }
+
+        if (!$progress->status || $progress->status === 'not_started') {
+            $progress->status = 'in_progress';
+        }
+
+        $correct = 0;
+        $total = $quizQuestions->count();
+        $results = [];
+
+        foreach ($quizQuestions as $q) {
+            $userAnswer = $validated['answers'][$q->id] ?? '';
+            $isCorrect = $userAnswer === $q->jawaban_benar;
+            if ($isCorrect) $correct++;
+            $results[] = [
+                'id' => $q->id,
+                'soal' => $q->soal,
+                'jawaban_benar' => $q->jawaban_benar,
+                'jawaban_user' => $userAnswer,
+                'benar' => $isCorrect,
+            ];
+        }
+
+        $score = $total > 0 ? round(($correct / $total) * 100, 2) : 0;
+
+        $progress->quiz_attempts += 1;
+        $progress->quiz_score = $score;
+        $progress->save();
+
+        return back()->with([
+            'quiz_results' => [
+                'score' => $score,
+                'correct' => $correct,
+                'total' => $total,
+                'attempts' => $progress->quiz_attempts,
+                'max_attempts' => 2,
+                'details' => $results,
+            ],
+            'success' => 'Quiz selesai! Nilai: ' . $score,
         ]);
     }
 

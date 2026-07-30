@@ -15,6 +15,31 @@ import {
 import { useRef, useState } from 'react';
 
 /* ── Types ── */
+type QuizItem = {
+    id: number;
+    soal: string;
+    opsi: string[];
+    jawaban_benar: string;
+    urutan: number;
+};
+
+type QuizResultDetail = {
+    id: number;
+    soal: string;
+    jawaban_benar: string;
+    jawaban_user: string;
+    benar: boolean;
+};
+
+type QuizResults = {
+    score: number;
+    correct: number;
+    total: number;
+    attempts: number;
+    max_attempts: number;
+    details: QuizResultDetail[];
+};
+
 type TugasItem = {
     id: number;
     judul: string;
@@ -35,6 +60,7 @@ type MateriDetail = {
     id: number;
     judul: string;
     deskripsi: string | null;
+    konten: string | null;
     thumbnail: string | null;
     video_url: string | null;
     video_embed_url: string | null;
@@ -44,6 +70,9 @@ type MateriDetail = {
     created_by: string;
     progress_status: 'not_started' | 'in_progress' | 'completed';
     completed_at: string | null;
+    quiz_score: number | null;
+    quiz_attempts: number;
+    quiz: QuizItem[];
     tugas: TugasItem[];
 };
 
@@ -238,7 +267,7 @@ function TugasCard({ tugas }: { tugas: TugasItem }) {
                             <button
                                 onClick={submitTugas}
                                 disabled={processing}
-                                className="ml-auto rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 min-w-[120px]"
+                                className="ml-auto min-w-[120px] rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
                             >
                                 {processing
                                     ? uploadProgress > 0
@@ -269,11 +298,20 @@ export default function MateriSiswaDetail({
     pertemuan: string;
     roadmap: string;
 }) {
-    const { errors } = usePage().props;
+    const { errors, quiz_results } = usePage().props as unknown as {
+        errors: Record<string, string>;
+        quiz_results?: QuizResults;
+    };
     const [loadingProgress, setLoadingProgress] = useState(false);
+    const [quizAnswers, setQuizAnswers] = useState<Record<number, string>>({});
+    const [submittingQuiz, setSubmittingQuiz] = useState(false);
 
     const cfg = progressConfig[materi.progress_status];
     const StatusIcon = cfg.icon;
+    const hasQuiz = materi.quiz && materi.quiz.length > 0;
+    const quizMaxed =
+        materi.quiz_attempts >= 2 || (materi.quiz_score !== null && materi.quiz_attempts >= 2);
+    const results = quiz_results as QuizResults | undefined;
 
     function updateProgress(status: string) {
         setLoadingProgress(true);
@@ -286,6 +324,27 @@ export default function MateriSiswaDetail({
             },
         );
     }
+
+    function submitQuiz(e: React.FormEvent) {
+        e.preventDefault();
+        if (!hasQuiz || submittingQuiz) return;
+        setSubmittingQuiz(true);
+        router.post(
+            `/materi-saya/${materi.id}/quiz`,
+            { answers: quizAnswers },
+            {
+                preserveScroll: true,
+                onFinish: () => setSubmittingQuiz(false),
+            },
+        );
+    }
+
+    function setAnswer(quizId: number, value: string) {
+        setQuizAnswers((prev) => ({ ...prev, [quizId]: value }));
+    }
+
+    const allAnswered =
+        hasQuiz && materi.quiz.every((q) => quizAnswers[q.id]?.trim());
 
     return (
         <>
@@ -380,6 +439,24 @@ export default function MateriSiswaDetail({
                         </div>
                     </div>
 
+                    {/* Konten */}
+                    {materi.konten && (
+                        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                            <div className="border-b border-slate-100 px-5 py-3">
+                                <h2 className="text-sm font-semibold text-slate-900">
+                                    Materi Pembelajaran
+                                </h2>
+                            </div>
+                            <div className="prose prose-slate max-w-none px-5 py-4">
+                                <div
+                                    dangerouslySetInnerHTML={{
+                                        __html: materi.konten,
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     {/* Video */}
                     {materi.video_embed_url && (
                         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -456,6 +533,192 @@ export default function MateriSiswaDetail({
                                             </p>
                                         </div>
                                     </a>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Quiz Section */}
+                    {hasQuiz && (
+                        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                            <div className="border-b border-slate-100 px-5 py-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-slate-500" />
+                                        <h2 className="text-sm font-semibold text-slate-900">
+                                            Quiz
+                                        </h2>
+                                    </div>
+                                    <span className="text-xs text-slate-400">
+                                        {materi.quiz_attempts}/2 kali
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="space-y-4 p-5">
+                                {/* Quiz Results */}
+                                {results && (
+                                    <div
+                                        className={`rounded-lg border p-4 ${
+                                            results.score >= 70
+                                                ? 'border-emerald-200 bg-emerald-50'
+                                                : 'border-red-200 bg-red-50'
+                                        }`}
+                                    >
+                                        <p
+                                            className={`text-lg font-bold ${
+                                                results.score >= 70
+                                                    ? 'text-emerald-700'
+                                                    : 'text-red-700'
+                                            }`}
+                                        >
+                                            {results.score >= 70
+                                                ? 'Selamat!'
+                                                : 'Belum lulus'}
+                                        </p>
+                                        <p className="mt-1 text-sm text-slate-600">
+                                            Nilai:{' '}
+                                            <span className="font-bold">
+                                                {results.score}
+                                            </span>{' '}
+                                            ({results.correct}/{results.total}{' '}
+                                            benar)
+                                        </p>
+                                        <p className="text-xs text-slate-500">
+                                            Percobaan ke-{results.attempts}/
+                                            {results.max_attempts}
+                                        </p>
+                                        {results.details && (
+                                            <div className="mt-3 space-y-2 border-t border-slate-200 pt-3">
+                                                {results.details.map((d) => (
+                                                    <div
+                                                        key={d.id}
+                                                        className={`rounded-lg px-3 py-2 text-xs ${
+                                                            d.benar
+                                                                ? 'bg-emerald-50 text-emerald-700'
+                                                                : 'bg-red-50 text-red-700'
+                                                        }`}
+                                                    >
+                                                        <p className="font-semibold">
+                                                            {d.soal}
+                                                        </p>
+                                                        <p>
+                                                            Jawabanmu:{' '}
+                                                            <span
+                                                                className={
+                                                                    d.benar
+                                                                        ? 'text-emerald-600'
+                                                                        : 'text-red-600'
+                                                                }
+                                                            >
+                                                                {d.jawaban_user ||
+                                                                    '(kosong)'}
+                                                            </span>
+                                                        </p>
+                                                        {!d.benar && (
+                                                            <p>
+                                                                Jawaban benar:{' '}
+                                                                <span className="text-emerald-600">
+                                                                    {
+                                                                        d.jawaban_benar
+                                                                    }
+                                                                </span>
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Previous Score (when page reloads without flash) */}
+                                {!results && quizMaxed && (
+                                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                                        <p className="text-sm font-semibold text-slate-700">
+                                            Quiz selesai
+                                        </p>
+                                        <p className="mt-1 text-xs text-slate-500">
+                                            Nilai akhir: {materi.quiz_score} —
+                                            Percobaan: {materi.quiz_attempts}/2
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Quiz Form */}
+                                {!quizMaxed && (
+                                    <form
+                                        onSubmit={submitQuiz}
+                                        className="space-y-4"
+                                    >
+                                        {materi.quiz.map((q, idx) => (
+                                            <div
+                                                key={q.id}
+                                                className="rounded-lg border border-slate-200 p-4"
+                                            >
+                                                <p className="mb-3 text-sm font-semibold text-slate-900">
+                                                    <span className="text-slate-400">
+                                                        {idx + 1}.
+                                                    </span>{' '}
+                                                    {q.soal}
+                                                </p>
+                                                <div className="space-y-2">
+                                                    {q.opsi.map((o, i) => (
+                                                        <label
+                                                            key={i}
+                                                            className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors ${
+                                                                quizAnswers[
+                                                                    q.id
+                                                                ] === o
+                                                                    ? 'border-blue-300 bg-blue-50 text-blue-700'
+                                                                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                                                            }`}
+                                                        >
+                                                            <input
+                                                                type="radio"
+                                                                name={`quiz_${q.id}`}
+                                                                value={o}
+                                                                checked={
+                                                                    quizAnswers[
+                                                                        q.id
+                                                                    ] === o
+                                                                }
+                                                                onChange={() =>
+                                                                    setAnswer(
+                                                                        q.id,
+                                                                        o,
+                                                                    )
+                                                                }
+                                                                className="h-4 w-4 text-blue-600"
+                                                            />
+                                                            <span>
+                                                                {String.fromCharCode(
+                                                                    65 + i,
+                                                                )}. {o}
+                                                            </span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {errors.quiz && (
+                                            <p className="text-sm text-red-500">
+                                                {errors.quiz}
+                                            </p>
+                                        )}
+
+                                        <button
+                                            type="submit"
+                                            disabled={
+                                                !allAnswered || submittingQuiz
+                                            }
+                                            className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                                        >
+                                            {submittingQuiz
+                                                ? 'Mengirim...'
+                                                : 'Kumpulkan Quiz'}
+                                        </button>
+                                    </form>
                                 )}
                             </div>
                         </div>

@@ -8,7 +8,7 @@ class Materi extends Model
 {
     protected $table = 'materi';
 
-    protected $fillable = ['pertemuan_id', 'judul', 'thumbnail', 'deskripsi', 'video_url', 'pdf_file', 'drive_link', 'created_by', 'tingkat'];
+    protected $fillable = ['pertemuan_id', 'judul', 'thumbnail', 'deskripsi', 'konten', 'video_url', 'pdf_file', 'drive_link', 'created_by', 'tingkat'];
 
     public function pertemuan()
     {
@@ -23,6 +23,11 @@ class Materi extends Model
     public function progress()
     {
         return $this->hasMany(ProgressMateri::class);
+    }
+
+    public function quiz()
+    {
+        return $this->hasMany(MateriQuiz::class)->orderBy('urutan');
     }
 
     public function creator()
