@@ -30,7 +30,7 @@ class MateriController extends Controller
     public function index()
     {
         $materiList = Materi::with(['pertemuan.roadmap', 'creator'])
-            ->latest()
+            ->orderBy('created_at')
             ->get()
             ->map(fn ($m) => [
                 'id' => $m->id,
