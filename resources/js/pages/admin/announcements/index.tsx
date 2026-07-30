@@ -19,6 +19,8 @@ type Announcement = {
     judul: string;
     isi: string;
     target_role: string | null;
+    starts_at: string | null;
+    ends_at: string | null;
     created_by: number;
     creator?: { id: number; name: string };
     created_at: string;
@@ -36,6 +38,8 @@ export default function AnnouncementsIndex({ items }: PageProps) {
         judul: '',
         isi: '',
         target_role: '',
+        starts_at: '',
+        ends_at: '',
     });
 
     function openCreate() {
@@ -50,6 +54,8 @@ export default function AnnouncementsIndex({ items }: PageProps) {
             judul: item.judul,
             isi: item.isi,
             target_role: item.target_role ?? '',
+            starts_at: item.starts_at ?? '',
+            ends_at: item.ends_at ?? '',
         });
         setOpen(true);
     }
@@ -130,6 +136,38 @@ router.delete(`/admin/announcements/${id}`, {
                                         placeholder="guru, siswa, all"
                                     />
                                 </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label>Mulai</Label>
+                                        <Input
+                                            type="datetime-local"
+                                            value={data.starts_at}
+                                            onChange={(e) =>
+                                                setData('starts_at', e.target.value)
+                                            }
+                                        />
+                                        {errors.starts_at && (
+                                            <p className="mt-1 text-sm text-red-500">
+                                                {errors.starts_at}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <Label>Selesai</Label>
+                                        <Input
+                                            type="datetime-local"
+                                            value={data.ends_at}
+                                            onChange={(e) =>
+                                                setData('ends_at', e.target.value)
+                                            }
+                                        />
+                                        {errors.ends_at && (
+                                            <p className="mt-1 text-sm text-red-500">
+                                                {errors.ends_at}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
                                 <div>
                                     <Label>Isi</Label>
                                     <Textarea
@@ -169,6 +207,7 @@ router.delete(`/admin/announcements/${id}`, {
                                 <tr className="border-b text-left text-muted-foreground">
                                     <th className="p-3 font-medium">Judul</th>
                                     <th className="p-3 font-medium">Target</th>
+                                    <th className="p-3 font-medium">Jadwal</th>
                                     <th className="p-3 font-medium">Oleh</th>
                                     <th className="p-3 font-medium">Tanggal</th>
                                     <th className="p-3 font-medium">Aksi</th>
@@ -187,6 +226,11 @@ router.delete(`/admin/announcements/${id}`, {
                                             <Badge variant="outline">
                                                 {item.target_role ?? 'Semua'}
                                             </Badge>
+                                        </td>
+                                        <td className="p-3 text-muted-foreground whitespace-nowrap">
+                                            {item.starts_at
+                                                ? `${new Date(item.starts_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} - ${new Date(item.ends_at ?? item.starts_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`
+                                                : '-'}
                                         </td>
                                         <td className="p-3 text-muted-foreground">
                                             {item.creator?.name ?? '-'}
@@ -223,7 +267,7 @@ router.delete(`/admin/announcements/${id}`, {
                                 {items.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={5}
+                                            colSpan={6}
                                             className="p-6 text-center text-muted-foreground"
                                         >
                                             Belum ada pengumuman.

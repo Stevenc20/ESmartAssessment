@@ -27,6 +27,8 @@ class AnnouncementController extends Controller
             'judul' => 'required|string|max:255',
             'isi' => 'required|string',
             'target_role' => 'nullable|string|max:50',
+            'starts_at' => 'nullable|date',
+            'ends_at' => 'nullable|date|after_or_equal:starts_at',
         ]);
 
         $validated['created_by'] = auth()->id();
@@ -42,6 +44,8 @@ class AnnouncementController extends Controller
             'judul' => 'required|string|max:255',
             'isi' => 'required|string',
             'target_role' => 'nullable|string|max:50',
+            'starts_at' => 'nullable|date',
+            'ends_at' => 'nullable|date|after_or_equal:starts_at',
         ]);
 
         $announcement->update($validated);
