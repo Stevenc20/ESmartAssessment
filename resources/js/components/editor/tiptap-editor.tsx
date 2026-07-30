@@ -24,14 +24,14 @@ import {
     AlignRight,
     LoaderCircle,
 } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 type TiptapEditorProps = {
     initialContent: string;
     onChange: (html: string) => void;
     placeholder?: string;
     editable?: boolean;
-    uploadUrl?: string;
+    materiId?: number;
 };
 
 export default function TiptapEditor({
@@ -39,7 +39,7 @@ export default function TiptapEditor({
     onChange,
     placeholder = 'Tulis konten di sini...',
     editable = true,
-    uploadUrl,
+    materiId,
 }: TiptapEditorProps) {
     const fileRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
@@ -60,30 +60,25 @@ export default function TiptapEditor({
         },
     });
 
-    const addImage = useCallback(() => {
-        if (uploadUrl) {
+    function handleImageClick() {
+        if (materiId) {
             fileRef.current?.click();
-        } else {
-            const url = window.prompt('Masukkan URL gambar:');
-            if (url && editor) {
-                editor.chain().focus().setImage({ src: url }).run();
-            }
         }
-    }, [editor, uploadUrl]);
+    }
 
     async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
-        if (!file || !editor) return;
+        if (!file || !editor || !materiId) return;
 
         setUploading(true);
         try {
             const formData = new FormData();
             formData.append('image', file);
 
-            const res = await fetch(uploadUrl!, {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await fetch(
+                `${window.location.origin}/materi/${materiId}/upload-image`,
+                { method: 'POST', body: formData },
+            );
 
             if (!res.ok) throw new Error('Upload gagal');
 
@@ -239,7 +234,7 @@ export default function TiptapEditor({
                 <span className="mx-1 w-px bg-slate-200" />
 
                 <ToolButton
-                    onClick={addImage}
+                    onClick={handleImageClick}
                     title={uploading ? 'Mengupload...' : 'Insert Image'}
                 >
                     {uploading ? (

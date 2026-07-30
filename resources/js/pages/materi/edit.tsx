@@ -259,10 +259,10 @@ export default function MateriEdit({
                                     <Label>Konten</Label>
                                     <TiptapEditor
                                         key={materi.id}
+                                        materiId={materi.id}
                                         initialContent={materi.konten ?? ''}
                                         onChange={setKonten}
                                         placeholder="Tulis konten materi di sini..."
-                                        uploadUrl={`/materi/${materi.id}/upload-image`}
                                     />
                                     {errors.konten && (
                                         <p className="mt-1 text-sm text-red-500">
