@@ -186,7 +186,10 @@ class AbsenController extends Controller
         $user = $request->user();
         $siswaId = $user->id;
 
-        $allPertemuan = \App\Models\Pertemuan::with('roadmap')->orderBy('urutan')->get();
+        $allPertemuan = \App\Models\Pertemuan::where('status', 'published')
+            ->with('roadmap')
+            ->orderBy('urutan')
+            ->get();
         $absensiRecords = Absensi::where('siswa_id', $siswaId)->get()->keyBy('pertemuan_id');
 
         $totalHadir = 0;

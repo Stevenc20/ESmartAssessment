@@ -825,7 +825,8 @@ class MateriController extends Controller
         $siswa = $request->user();
         $siswaId = $siswa->id;
 
-        $pertemuanList = Pertemuan::with(['roadmap', 'materi.quiz', 'materi.tugas'])
+        $pertemuanList = Pertemuan::where('status', 'published')
+            ->with(['roadmap', 'materi.quiz', 'materi.tugas'])
             ->orderBy('urutan')
             ->get();
 
