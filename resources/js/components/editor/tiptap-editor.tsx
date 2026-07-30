@@ -22,22 +22,28 @@ import {
     AlignLeft,
     AlignCenter,
     AlignRight,
+    LoaderCircle,
 } from 'lucide-react';
-import { useCallback } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 type TiptapEditorProps = {
-    content: string;
+    initialContent: string;
     onChange: (html: string) => void;
     placeholder?: string;
     editable?: boolean;
+    uploadUrl?: string;
 };
 
 export default function TiptapEditor({
-    content,
+    initialContent,
     onChange,
     placeholder = 'Tulis konten di sini...',
     editable = true,
+    uploadUrl,
 }: TiptapEditorProps) {
+    const fileRef = useRef<HTMLInputElement>(null);
+    const [uploading, setUploading] = useState(false);
+
     const editor = useEditor({
         extensions: [
             StarterKit,
@@ -47,7 +53,7 @@ export default function TiptapEditor({
             Underline,
             Placeholder.configure({ placeholder }),
         ],
-        content,
+        content: initialContent,
         editable,
         onUpdate: ({ editor }) => {
             onChange(editor.getHTML());
@@ -55,11 +61,47 @@ export default function TiptapEditor({
     });
 
     const addImage = useCallback(() => {
-        const url = window.prompt('Masukkan URL gambar:');
-        if (url && editor) {
-            editor.chain().focus().setImage({ src: url }).run();
+        if (uploadUrl) {
+            fileRef.current?.click();
+        } else {
+            const url = window.prompt('Masukkan URL gambar:');
+            if (url && editor) {
+                editor.chain().focus().setImage({ src: url }).run();
+            }
         }
-    }, [editor]);
+    }, [editor, uploadUrl]);
+
+    async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file || !editor) return;
+
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const res = await fetch(uploadUrl!, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('value') ?? '',
+                },
+                body: formData,
+            });
+
+            if (!res.ok) throw new Error('Upload gagal');
+
+            const data = await res.json();
+            editor.chain().focus().setImage({ src: data.url }).run();
+        } catch (err) {
+            alert('Gagal upload gambar');
+        } finally {
+            setUploading(false);
+            if (fileRef.current) fileRef.current.value = '';
+        }
+    }
 
     if (!editor) return null;
 
@@ -90,6 +132,14 @@ export default function TiptapEditor({
 
     return (
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+            <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+            />
+
             <div className="flex flex-wrap gap-0.5 border-b border-slate-200 bg-slate-50 px-2 py-1.5">
                 <ToolButton
                     onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
@@ -194,8 +244,15 @@ export default function TiptapEditor({
 
                 <span className="mx-1 w-px bg-slate-200" />
 
-                <ToolButton onClick={addImage} title="Insert Image">
-                    <ImageIcon className="h-4 w-4" />
+                <ToolButton
+                    onClick={addImage}
+                    title={uploading ? 'Mengupload...' : 'Insert Image'}
+                >
+                    {uploading ? (
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <ImageIcon className="h-4 w-4" />
+                    )}
                 </ToolButton>
 
                 <span className="mx-1 w-px bg-slate-200" />

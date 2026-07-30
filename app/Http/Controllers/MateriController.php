@@ -571,6 +571,17 @@ class MateriController extends Controller
         return back()->with('success', 'Progress berhasil diperbarui.');
     }
 
+    public function uploadImage(Request $request, Materi $materi)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        ]);
+
+        $path = $request->file('image')->store('konten-images', 'public');
+
+        return response()->json(['url' => Storage::url($path)]);
+    }
+
     public function destroy(Materi $materi)
     {
         if ($materi->thumbnail) {

@@ -40,6 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/materi/{materi}/quiz', [MateriController::class, 'quizStore'])->name('materi.quiz.store');
     Route::put('/materi/{materi}/quiz/{quiz}', [MateriController::class, 'quizUpdate'])->name('materi.quiz.update');
     Route::delete('/materi/{materi}/quiz/{quiz}', [MateriController::class, 'quizDestroy'])->name('materi.quiz.destroy');
+    Route::post('/materi/{materi}/upload-image', [MateriController::class, 'uploadImage'])->name('materi.upload-image');
 
     Route::get('pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
 
