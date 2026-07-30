@@ -205,58 +205,54 @@ export default function MateriPenilaian({
                         </Card>
                     </div>
 
-                    {/* Filter & Search Bar - Fixed Neat Layout */}
-                    <Card className="border-slate-200 shadow-sm">
-                        <CardContent className="p-4 md:p-5">
-                            <form
-                                onSubmit={handleSearchSubmit}
-                                className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
-                            >
-                                <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-12 md:items-center">
-                                    {/* Search Input */}
-                                    <div className="relative sm:col-span-7 lg:col-span-8">
-                                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                                        <Input
-                                            value={search}
-                                            onChange={(e) => setSearch(e.target.value)}
-                                            placeholder="Cari nama, email, no HP, jurusan..."
-                                            className="h-10 pl-9 text-xs"
-                                        />
-                                    </div>
+                    {/* Filter & Search Bar - Sleek Professional Toolbar */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs">
+                        <form
+                            onSubmit={handleSearchSubmit}
+                            className="flex flex-col gap-2.5 sm:flex-row sm:items-center"
+                        >
+                            {/* Search Input */}
+                            <div className="relative flex-1">
+                                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                <Input
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Cari nama, email, no HP, jurusan..."
+                                    className="h-9 pl-9 text-xs border-slate-200 focus-visible:ring-blue-500"
+                                />
+                            </div>
 
-                                    {/* Filter Select */}
-                                    <div className="sm:col-span-5 lg:col-span-4">
-                                        <Select
-                                            value={kelasId}
-                                            onValueChange={handleFilterChange}
-                                        >
-                                            <SelectTrigger className="h-10 w-full text-xs">
-                                                <div className="flex items-center gap-2">
-                                                    <Filter className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                                                    <SelectValue placeholder="Semua Kelas" />
-                                                </div>
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="all">Semua Kelas</SelectItem>
-                                                {kelasList.map((k) => (
-                                                    <SelectItem
-                                                        key={k.id}
-                                                        value={String(k.id)}
-                                                    >
-                                                        {k.nama_kelas}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
+                            {/* Filter Select */}
+                            <div className="w-full sm:w-56 shrink-0">
+                                <Select
+                                    value={kelasId}
+                                    onValueChange={handleFilterChange}
+                                >
+                                    <SelectTrigger className="h-9 w-full text-xs border-slate-200 bg-white">
+                                        <div className="flex items-center gap-2 text-slate-600">
+                                            <Filter className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                            <SelectValue placeholder="Semua Kelas" />
+                                        </div>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Semua Kelas</SelectItem>
+                                        {kelasList.map((k) => (
+                                            <SelectItem
+                                                key={k.id}
+                                                value={String(k.id)}
+                                            >
+                                                {k.nama_kelas}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                                <Button type="submit" variant="secondary" className="h-10 px-5 text-xs font-bold shrink-0">
-                                    Cari Data
-                                </Button>
-                            </form>
-                        </CardContent>
-                    </Card>
+                            <Button type="submit" size="sm" variant="secondary" className="h-9 px-4 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 shrink-0">
+                                Cari Data
+                            </Button>
+                        </form>
+                    </div>
 
                     {/* Master Table */}
                     <Card className="border-slate-200 overflow-hidden shadow-sm">
