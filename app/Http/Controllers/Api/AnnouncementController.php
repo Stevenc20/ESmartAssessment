@@ -76,6 +76,7 @@ class AnnouncementController extends Controller
         }
 
         $response = new StreamedResponse(function () use ($request, $user) {
+            set_time_limit(0);
             $request->session()->save();
 
             $lastVersion = Cache::get('announcement_version', 0);
