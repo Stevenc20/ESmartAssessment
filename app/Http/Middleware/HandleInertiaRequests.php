@@ -60,6 +60,12 @@ class HandleInertiaRequests extends Middleware
                     ->orWhere('target_role', 'all')
                     ->orWhere('target_role', $roleName);
             })
+                ->where(function ($q) {
+                    $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+                })
+                ->where(function ($q) {
+                    $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+                })
                 ->latest()
                 ->get()
                 ->map(fn ($a) => [
@@ -104,7 +110,14 @@ class HandleInertiaRequests extends Middleware
                     ->orWhere('target_role', '')
                     ->orWhere('target_role', 'all')
                     ->orWhere('target_role', $roleName);
-            })->pluck('id');
+            })
+                ->where(function ($q) {
+                    $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+                })
+                ->where(function ($q) {
+                    $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+                })
+                ->pluck('id');
 
             $globalIds = GlobalAnnouncement::where('is_active', true)
                 ->where(function ($q) {
