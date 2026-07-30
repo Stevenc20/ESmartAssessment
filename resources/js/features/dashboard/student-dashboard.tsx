@@ -301,7 +301,7 @@ export default function StudentDashboard({
                             </h2>
                         </div>
                         <Link
-                            href="/analytics"
+                            href="/nilai-saya"
                             className="inline-flex items-center gap-1 text-xs font-semibold text-violet-600 hover:text-violet-700"
                         >
                             Lihat Semua <ArrowRight className="h-3.5 w-3.5" />
