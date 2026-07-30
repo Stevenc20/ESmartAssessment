@@ -582,6 +582,213 @@ class MateriController extends Controller
         return response()->json(['url' => Storage::url($path)]);
     }
 
+    public function penilaianIndex(Request $request)
+    {
+        $pertemuanList = Pertemuan::with(['roadmap', 'materi.quiz', 'materi.tugas'])
+            ->orderBy('urutan')
+            ->get();
+
+        $query = \App\Models\User::role('siswa')
+            ->with(['kelas', 'progressMateri', 'pengumpulanTugas.penilaian']);
+
+        if ($request->filled('kelas_id')) {
+            $query->whereHas('kelas', function ($q) use ($request) {
+                $q->where('kelas.id', $request->kelas_id);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('jurusan', 'like', "%{$search}%");
+            });
+        }
+
+        $students = $query->get();
+
+        $matrix = $students->map(function ($siswa) use ($pertemuanList) {
+            $kelasObj = $siswa->kelas->first();
+            $namaKelas = $kelasObj?->nama_kelas ?? ($siswa->kelas ?? '-');
+            $jurusan = $siswa->jurusan ?? '-';
+
+            $pertemuanScores = [];
+            $totalScoreSum = 0;
+            $countEvaluated = 0;
+
+            foreach ($pertemuanList as $p) {
+                $materiList = $p->materi;
+                $materiIds = $materiList->pluck('id');
+
+                $quizScores = ProgressMateri::where('siswa_id', $siswa->id)
+                    ->whereIn('materi_id', $materiIds)
+                    ->whereNotNull('quiz_score')
+                    ->pluck('quiz_score');
+
+                $maxQuizScore = $quizScores->isNotEmpty() ? round($quizScores->max(), 2) : null;
+
+                $tugasIds = $materiList->flatMap->tugas->pluck('id');
+                $tugasNilai = PengumpulanTugas::where('siswa_id', $siswa->id)
+                    ->whereIn('tugas_id', $tugasIds)
+                    ->whereHas('penilaian')
+                    ->get()
+                    ->map(fn ($ts) => $ts->penilaian?->nilai)
+                    ->filter(fn ($v) => $v !== null);
+
+                $avgTugasScore = $tugasNilai->isNotEmpty() ? round($tugasNilai->avg(), 2) : null;
+
+                $combinedScore = null;
+                if ($maxQuizScore !== null && $avgTugasScore !== null) {
+                    $combinedScore = round(($maxQuizScore + $avgTugasScore) / 2, 2);
+                } elseif ($maxQuizScore !== null) {
+                    $combinedScore = $maxQuizScore;
+                } elseif ($avgTugasScore !== null) {
+                    $combinedScore = $avgTugasScore;
+                }
+
+                if ($combinedScore !== null) {
+                    $totalScoreSum += $combinedScore;
+                    $countEvaluated++;
+                }
+
+                $pertemuanScores[$p->id] = [
+                    'pertemuan_id' => $p->id,
+                    'pertemuan_judul' => $p->judul,
+                    'quiz_score' => $maxQuizScore,
+                    'tugas_score' => $avgTugasScore,
+                    'combined_score' => $combinedScore,
+                ];
+            }
+
+            $overallAvg = $countEvaluated > 0 ? round($totalScoreSum / $countEvaluated, 2) : 0;
+
+            return [
+                'id' => $siswa->id,
+                'nama' => $siswa->name,
+                'email' => $siswa->email,
+                'kelas' => $namaKelas,
+                'jurusan' => $jurusan,
+                'pertemuan_scores' => $pertemuanScores,
+                'rata_rata' => $overallAvg,
+            ];
+        });
+
+        $kelasList = \App\Models\Kelas::orderBy('nama_kelas')->get(['id', 'nama_kelas']);
+
+        return Inertia::render('materi/penilaian', [
+            'pertemuanList' => $pertemuanList->map(fn ($p) => [
+                'id' => $p->id,
+                'judul' => $p->judul,
+                'urutan' => $p->urutan,
+            ]),
+            'students' => $matrix,
+            'kelasList' => $kelasList,
+            'filters' => $request->only(['kelas_id', 'search']),
+        ]);
+    }
+
+    public function penilaianExport(Request $request)
+    {
+        $pertemuanList = Pertemuan::with('materi.tugas')->orderBy('urutan')->get();
+
+        $query = \App\Models\User::role('siswa')
+            ->with(['kelas', 'progressMateri', 'pengumpulanTugas.penilaian']);
+
+        if ($request->filled('kelas_id')) {
+            $query->whereHas('kelas', function ($q) use ($request) {
+                $q->where('kelas.id', $request->kelas_id);
+            });
+        }
+
+        $students = $query->get();
+
+        $filename = 'rekap_penilaian_siswa_' . date('Y-m-d_H-i-s') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($students, $pertemuanList) {
+            $file = fopen('php://output', 'w');
+
+            fputs($file, "\xEF\xBB\xBF");
+
+            $columns = ['No', 'Nama Siswa', 'Email', 'Kelas', 'Jurusan'];
+            foreach ($pertemuanList as $p) {
+                $columns[] = $p->judul . ' (Quiz)';
+                $columns[] = $p->judul . ' (Tugas)';
+                $columns[] = $p->judul . ' (Nilai Akhir)';
+            }
+            $columns[] = 'Rata-Rata Akhir';
+
+            fputcsv($file, $columns);
+
+            $no = 1;
+            foreach ($students as $siswa) {
+                $kelasObj = $siswa->kelas->first();
+                $namaKelas = $kelasObj?->nama_kelas ?? ($siswa->kelas ?? '-');
+                $jurusan = $siswa->jurusan ?? '-';
+
+                $row = [$no++, $siswa->name, $siswa->email, $namaKelas, $jurusan];
+                $totalScoreSum = 0;
+                $countEvaluated = 0;
+
+                foreach ($pertemuanList as $p) {
+                    $materiList = $p->materi;
+                    $materiIds = $materiList->pluck('id');
+
+                    $quizScores = ProgressMateri::where('siswa_id', $siswa->id)
+                        ->whereIn('materi_id', $materiIds)
+                        ->whereNotNull('quiz_score')
+                        ->pluck('quiz_score');
+
+                    $maxQuizScore = $quizScores->isNotEmpty() ? round($quizScores->max(), 2) : '-';
+
+                    $tugasIds = $materiList->flatMap(fn ($m) => $m->tugas)->pluck('id');
+                    $tugasNilai = PengumpulanTugas::where('siswa_id', $siswa->id)
+                        ->whereIn('tugas_id', $tugasIds)
+                        ->whereHas('penilaian')
+                        ->get()
+                        ->map(fn ($ts) => $ts->penilaian?->nilai)
+                        ->filter(fn ($v) => $v !== null);
+
+                    $avgTugasScore = $tugasNilai->isNotEmpty() ? round($tugasNilai->avg(), 2) : '-';
+
+                    $combinedScore = '-';
+                    $numericQuiz = is_numeric($maxQuizScore) ? (float)$maxQuizScore : null;
+                    $numericTugas = is_numeric($avgTugasScore) ? (float)$avgTugasScore : null;
+
+                    if ($numericQuiz !== null && $numericTugas !== null) {
+                        $combinedScore = round(($numericQuiz + $numericTugas) / 2, 2);
+                    } elseif ($numericQuiz !== null) {
+                        $combinedScore = $numericQuiz;
+                    } elseif ($numericTugas !== null) {
+                        $combinedScore = $numericTugas;
+                    }
+
+                    if (is_numeric($combinedScore)) {
+                        $totalScoreSum += (float)$combinedScore;
+                        $countEvaluated++;
+                    }
+
+                    $row[] = $maxQuizScore;
+                    $row[] = $avgTugasScore;
+                    $row[] = $combinedScore;
+                }
+
+                $row[] = $countEvaluated > 0 ? round($totalScoreSum / $countEvaluated, 2) : '0';
+
+                fputcsv($file, $row);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     public function destroy(Materi $materi)
     {
         if ($materi->thumbnail) {

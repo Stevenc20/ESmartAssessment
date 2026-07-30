@@ -35,6 +35,9 @@ Route::middleware(['guest'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('penilaian-materi', [MateriController::class, 'penilaianIndex'])->name('materi.penilaian.index');
+    Route::get('penilaian-materi/export', [MateriController::class, 'penilaianExport'])->name('materi.penilaian.export');
+
     Route::resource('materi', MateriController::class);
 
     Route::post('/materi/{materi}/quiz', [MateriController::class, 'quizStore'])->name('materi.quiz.store');
