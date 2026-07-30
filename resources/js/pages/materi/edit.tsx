@@ -75,7 +75,7 @@ export default function MateriEdit({
         form.append('pertemuan_id', pertemuanId);
         form.append('judul', judul);
         form.append('deskripsi', deskripsi);
-        form.append('tingkat', tingkat);
+        if (tingkat) form.append('tingkat', tingkat);
 
         if (thumbRef.current?.files?.[0]) {
             form.append('thumbnail', thumbRef.current.files[0]);

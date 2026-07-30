@@ -99,6 +99,10 @@ class MateriController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->has('tingkat') && $request->tingkat === '') {
+            $request->merge(['tingkat' => null]);
+        }
+
         $data = $request->validate([
             'pertemuan_id' => 'nullable|integer|exists:pertemuan,id',
             'judul' => 'required|string|max:255',
@@ -110,7 +114,7 @@ class MateriController extends Controller
             'tingkat' => 'nullable|string|in:10,11',
         ]);
 
-        $data['tingkat'] = $data['tingkat'] ?: null;
+        $data['tingkat'] = $data['tingkat'] ?? null;
         if (empty($data['pertemuan_id'])) {
             $data['pertemuan_id'] = null;
         }
@@ -161,6 +165,10 @@ class MateriController extends Controller
 
     public function update(Request $request, Materi $materi)
     {
+        if ($request->has('tingkat') && $request->tingkat === '') {
+            $request->merge(['tingkat' => null]);
+        }
+
         $data = $request->validate([
             'pertemuan_id' => 'nullable|integer|exists:pertemuan,id',
             'judul' => 'required|string|max:255',
@@ -172,7 +180,7 @@ class MateriController extends Controller
             'tingkat' => 'nullable|string|in:10,11',
         ]);
 
-        $data['tingkat'] = $data['tingkat'] ?: null;
+        $data['tingkat'] = $data['tingkat'] ?? null;
         if (empty($data['pertemuan_id'])) {
             $data['pertemuan_id'] = null;
         }
