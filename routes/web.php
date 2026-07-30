@@ -57,7 +57,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{materi}/quiz', [MateriController::class, 'quizSubmit'])->name('quiz.submit');
         Route::post('/{materi}/poll/vote', [MateriController::class, 'votePoll'])->name('poll.vote');
         Route::post('/{materi}/discussion', [MateriController::class, 'storeDiscussion'])->name('discussion.store');
-        Route::delete('/discussion/{discussion}', [MateriController::class, 'deleteDiscussion'])->name('discussion.destroy');
+        Route::match(['delete', 'post'], '/discussion/{discussion}', [MateriController::class, 'deleteDiscussion'])->name('discussion.destroy');
     });
 
     Route::prefix('course')->name('course.')->group(function () {

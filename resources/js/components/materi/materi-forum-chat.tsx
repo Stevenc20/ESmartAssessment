@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import {
     CornerDownRight,
     Loader2,
@@ -65,8 +65,7 @@ export default function MateriForumChat({ materiId, discussions }: Props) {
 
     const handleDeletePesan = (discussionId: number) => {
         if (confirm('Apakah Anda yakin ingin menghapus pesan ini?')) {
-            post(`/materi-saya/discussion/${discussionId}`, {
-                _method: 'DELETE',
+            router.delete(`/materi-saya/discussion/${discussionId}`, {
                 preserveScroll: true,
             });
         }
