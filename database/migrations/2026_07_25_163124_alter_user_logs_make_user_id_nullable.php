@@ -9,11 +9,23 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('ALTER TABLE user_logs MODIFY user_id BIGINT UNSIGNED NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE user_logs MODIFY user_id BIGINT UNSIGNED NULL');
+        } else {
+            Schema::table('user_logs', function (Blueprint $table) {
+                $table->unsignedBigInteger('user_id')->nullable()->change();
+            });
+        }
     }
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE user_logs MODIFY user_id BIGINT UNSIGNED NOT NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE user_logs MODIFY user_id BIGINT UNSIGNED NOT NULL');
+        } else {
+            Schema::table('user_logs', function (Blueprint $table) {
+                $table->unsignedBigInteger('user_id')->nullable(false)->change();
+            });
+        }
     }
 };

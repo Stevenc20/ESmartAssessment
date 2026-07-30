@@ -62,7 +62,7 @@ return new class extends Migration
             $table->foreignId('pertemuan_id')->constrained('course_pertemuan')->onDelete('cascade');
             $table->text('soal');
             $table->json('opsi');
-            $table->string('jawaban_benar', 10);
+            $table->text('jawaban_benar');
             $table->integer('urutan')->default(0);
             $table->timestamps();
         });

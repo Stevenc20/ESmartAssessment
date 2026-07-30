@@ -8,6 +8,7 @@ import {
     Download,
     ExternalLink,
     FileText,
+    HelpCircle,
     PlayCircle,
     Upload,
     X,
@@ -305,6 +306,7 @@ export default function MateriSiswaDetail({
     const [loadingProgress, setLoadingProgress] = useState(false);
     const [quizAnswers, setQuizAnswers] = useState<Record<number, string>>({});
     const [submittingQuiz, setSubmittingQuiz] = useState(false);
+    const [startQuiz, setStartQuiz] = useState(false);
 
     const cfg = progressConfig[materi.progress_status];
     const StatusIcon = cfg.icon;
@@ -447,7 +449,7 @@ export default function MateriSiswaDetail({
                                     Materi Pembelajaran
                                 </h2>
                             </div>
-                            <div className="prose prose-slate max-w-none px-5 py-4">
+                            <div className="prose prose-slate max-w-none px-5 py-4 [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-xl [&_img]:my-4 [&_img]:shadow-sm [&_iframe]:w-full [&_iframe]:aspect-video [&_iframe]:rounded-xl [&_iframe]:my-4 [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-slate-200 [&_th]:p-2 [&_td]:border [&_td]:border-slate-200 [&_td]:p-2">
                                 <div
                                     dangerouslySetInnerHTML={{
                                         __html: materi.konten,
@@ -644,81 +646,105 @@ export default function MateriSiswaDetail({
                                     </div>
                                 )}
 
-                                {/* Quiz Form */}
-                                {!quizMaxed && (
-                                    <form
-                                        onSubmit={submitQuiz}
-                                        className="space-y-4"
-                                    >
-                                        {materi.quiz.map((q, idx) => (
-                                            <div
-                                                key={q.id}
-                                                className="rounded-lg border border-slate-200 p-4"
-                                            >
-                                                <p className="mb-3 text-sm font-semibold text-slate-900">
-                                                    <span className="text-slate-400">
-                                                        {idx + 1}.
-                                                    </span>{' '}
-                                                    {q.soal}
+                                {/* Quiz Form / Confirmation */}
+                                {!quizMaxed && !results && (
+                                    !startQuiz ? (
+                                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center space-y-4">
+                                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                                                <HelpCircle className="h-6 w-6" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-base font-bold text-slate-900">Yakin ingin mengerjakan quiz sekarang?</h3>
+                                                <p className="mt-1 text-xs text-slate-500 max-w-md mx-auto">
+                                                    Quiz ini terdiri dari <span className="font-semibold text-slate-700">{materi.quiz.length} soal</span>.
+                                                    Kesempatan pengerjaan tersisa <span className="font-semibold text-slate-700">{2 - materi.quiz_attempts}x</span>.
                                                 </p>
-                                                <div className="space-y-2">
-                                                    {q.opsi.map((o, i) => (
-                                                        <label
-                                                            key={i}
-                                                            className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors ${
-                                                                quizAnswers[
-                                                                    q.id
-                                                                ] === o
-                                                                    ? 'border-blue-300 bg-blue-50 text-blue-700'
-                                                                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                                                            }`}
-                                                        >
-                                                            <input
-                                                                type="radio"
-                                                                name={`quiz_${q.id}`}
-                                                                value={o}
-                                                                checked={
+                                            </div>
+                                            <div className="pt-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setStartQuiz(true)}
+                                                    className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-700 shadow-sm hover:shadow"
+                                                >
+                                                    Mulai Kerjakan Quiz
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <form
+                                            onSubmit={submitQuiz}
+                                            className="space-y-4"
+                                        >
+                                            {materi.quiz.map((q, idx) => (
+                                                <div
+                                                    key={q.id}
+                                                    className="rounded-lg border border-slate-200 p-4"
+                                                >
+                                                    <p className="mb-3 text-sm font-semibold text-slate-900">
+                                                        <span className="text-slate-400">
+                                                            {idx + 1}.
+                                                        </span>{' '}
+                                                        {q.soal}
+                                                    </p>
+                                                    <div className="space-y-2">
+                                                        {q.opsi.map((o, i) => (
+                                                            <label
+                                                                key={i}
+                                                                className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors ${
                                                                     quizAnswers[
                                                                         q.id
                                                                     ] === o
-                                                                }
-                                                                onChange={() =>
-                                                                    setAnswer(
-                                                                        q.id,
-                                                                        o,
-                                                                    )
-                                                                }
-                                                                className="h-4 w-4 text-blue-600"
-                                                            />
-                                                            <span>
-                                                                {String.fromCharCode(
-                                                                    65 + i,
-                                                                )}. {o}
-                                                            </span>
-                                                        </label>
-                                                    ))}
+                                                                        ? 'border-blue-300 bg-blue-50 text-blue-700'
+                                                                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                                                                }`}
+                                                            >
+                                                                <input
+                                                                    type="radio"
+                                                                    name={`quiz_${q.id}`}
+                                                                    value={o}
+                                                                    checked={
+                                                                        quizAnswers[
+                                                                            q.id
+                                                                        ] === o
+                                                                    }
+                                                                    onChange={() =>
+                                                                        setAnswer(
+                                                                            q.id,
+                                                                            o,
+                                                                        )
+                                                                    }
+                                                                    className="h-4 w-4 text-blue-600"
+                                                                />
+                                                                <span>
+                                                                    {String.fromCharCode(
+                                                                        65 + i,
+                                                                    )}. {o}
+                                                                </span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
 
-                                        {errors.quiz && (
-                                            <p className="text-sm text-red-500">
-                                                {errors.quiz}
-                                            </p>
-                                        )}
+                                            {errors.quiz && (
+                                                <p className="text-sm text-red-500">
+                                                    {errors.quiz}
+                                                </p>
+                                            )}
 
-                                        <button
-                                            type="submit"
-                                            disabled={
-                                                !allAnswered || submittingQuiz
-                                            }
-                                            className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-                                        >
-                                            {submittingQuiz
-                                                ? 'Mengirim...'
-                                                : 'Kumpulkan Quiz'}
-                                        </button>
-                                    </form>
+                                            <button
+                                                type="submit"
+                                                disabled={
+                                                    !allAnswered || submittingQuiz
+                                                }
+                                                className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                                            >
+                                                {submittingQuiz
+                                                    ? 'Mengirim...'
+                                                    : 'Kumpulkan Quiz'}
+                                            </button>
+                                        </form>
+                                    )
                                 )}
                             </div>
                         </div>

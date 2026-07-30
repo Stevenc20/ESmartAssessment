@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('materi_id')->constrained('materi')->onDelete('cascade');
             $table->text('soal');
             $table->json('opsi');
-            $table->string('jawaban_benar', 10);
+            $table->text('jawaban_benar');
             $table->integer('urutan')->default(0);
             $table->timestamps();
         });
