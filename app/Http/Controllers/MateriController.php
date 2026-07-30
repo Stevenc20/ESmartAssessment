@@ -590,11 +590,15 @@ class MateriController extends Controller
 
         $query = \App\Models\User::whereHas('role', function ($q) {
             $q->where('role_name', 'siswa');
-        })->with(['kelas', 'progressMateri', 'pengumpulanTugas.penilaian']);
+        })->with(['progressMateri', 'pengumpulanTugas.penilaian']);
 
         if ($request->filled('kelas_id')) {
-            $query->whereHas('kelas', function ($q) use ($request) {
-                $q->where('kelas.id', $request->kelas_id);
+            $kelasFilter = $request->kelas_id;
+            $query->where(function ($q) use ($kelasFilter) {
+                $q->where('kelas', $kelasFilter)
+                  ->orWhereHas('kelas', function ($k) use ($kelasFilter) {
+                      $k->where('kelas.id', $kelasFilter);
+                  });
             });
         }
 
@@ -610,8 +614,16 @@ class MateriController extends Controller
         $students = $query->get();
 
         $matrix = $students->map(function ($siswa) use ($pertemuanList) {
-            $kelasObj = $siswa->kelas->first();
-            $namaKelas = $kelasObj?->nama_kelas ?? ($siswa->kelas ?? '-');
+            $namaKelas = '-';
+            if (is_string($siswa->kelas) && !empty($siswa->kelas)) {
+                $namaKelas = $siswa->kelas;
+            } elseif (method_exists($siswa, 'kelas')) {
+                $kelasObj = $siswa->kelas()->first();
+                if ($kelasObj) {
+                    $namaKelas = $kelasObj->nama_kelas;
+                }
+            }
+
             $jurusan = $siswa->jurusan ?? '-';
 
             $pertemuanScores = [];
@@ -629,7 +641,7 @@ class MateriController extends Controller
 
                 $maxQuizScore = $quizScores->isNotEmpty() ? round($quizScores->max(), 2) : null;
 
-                $tugasIds = $materiList->flatMap->tugas->pluck('id');
+                $tugasIds = $materiList->flatMap(fn ($m) => $m->tugas)->pluck('id');
                 $tugasNilai = PengumpulanTugas::where('siswa_id', $siswa->id)
                     ->whereIn('tugas_id', $tugasIds)
                     ->whereHas('penilaian')
@@ -695,11 +707,15 @@ class MateriController extends Controller
 
         $query = \App\Models\User::whereHas('role', function ($q) {
             $q->where('role_name', 'siswa');
-        })->with(['kelas', 'progressMateri', 'pengumpulanTugas.penilaian']);
+        })->with(['progressMateri', 'pengumpulanTugas.penilaian']);
 
         if ($request->filled('kelas_id')) {
-            $query->whereHas('kelas', function ($q) use ($request) {
-                $q->where('kelas.id', $request->kelas_id);
+            $kelasFilter = $request->kelas_id;
+            $query->where(function ($q) use ($kelasFilter) {
+                $q->where('kelas', $kelasFilter)
+                  ->orWhereHas('kelas', function ($k) use ($kelasFilter) {
+                      $k->where('kelas.id', $kelasFilter);
+                  });
             });
         }
 
@@ -729,8 +745,16 @@ class MateriController extends Controller
 
             $no = 1;
             foreach ($students as $siswa) {
-                $kelasObj = $siswa->kelas->first();
-                $namaKelas = $kelasObj?->nama_kelas ?? ($siswa->kelas ?? '-');
+                $namaKelas = '-';
+                if (is_string($siswa->kelas) && !empty($siswa->kelas)) {
+                    $namaKelas = $siswa->kelas;
+                } elseif (method_exists($siswa, 'kelas')) {
+                    $kelasObj = $siswa->kelas()->first();
+                    if ($kelasObj) {
+                        $namaKelas = $kelasObj->nama_kelas;
+                    }
+                }
+
                 $jurusan = $siswa->jurusan ?? '-';
 
                 $row = [$no++, $siswa->name, $siswa->email, $namaKelas, $jurusan];
