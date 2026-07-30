@@ -2,16 +2,29 @@ import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
     BookOpen,
-    Download,
+    Calendar,
+    CheckCircle2,
+    Eye,
     FileSpreadsheet,
     Filter,
     GraduationCap,
+    Mail,
+    Phone,
     Search,
+    User as UserIcon,
     Users,
+    X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -39,8 +52,12 @@ type StudentMatrixItem = {
     id: number;
     nama: string;
     email: string;
+    no_hp: string;
+    foto: string | null;
     kelas: string;
     jurusan: string;
+    status: string;
+    created_at: string;
     pertemuan_scores: Record<number, PertemuanScore>;
     rata_rata: number;
 };
@@ -63,6 +80,7 @@ export default function MateriPenilaian({
 }) {
     const [kelasId, setKelasId] = useState(filters.kelas_id ?? 'all');
     const [search, setSearch] = useState(filters.search ?? '');
+    const [selectedStudent, setSelectedStudent] = useState<StudentMatrixItem | null>(null);
 
     function handleFilterChange(newKelasId: string) {
         setKelasId(newKelasId);
@@ -135,7 +153,7 @@ export default function MateriPenilaian({
 
                         <Button
                             onClick={handleExport}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 shadow-sm"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 shadow-sm shrink-0"
                         >
                             <FileSpreadsheet className="h-4 w-4" />
                             Tarik / Export Excel (CSV)
@@ -187,32 +205,34 @@ export default function MateriPenilaian({
                         </Card>
                     </div>
 
-                    {/* Filter & Search Bar */}
-                    <Card className="border-slate-200">
-                        <CardContent className="p-4">
+                    {/* Filter & Search Bar - Fixed Neat Layout */}
+                    <Card className="border-slate-200 shadow-sm">
+                        <CardContent className="p-4 md:p-5">
                             <form
                                 onSubmit={handleSearchSubmit}
-                                className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                                className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
                             >
-                                <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-                                    <div className="relative flex-1 max-w-sm">
+                                <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-12 md:items-center">
+                                    {/* Search Input */}
+                                    <div className="relative sm:col-span-7 lg:col-span-8">
                                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                         <Input
                                             value={search}
                                             onChange={(e) => setSearch(e.target.value)}
-                                            placeholder="Cari nama, email, jurusan..."
-                                            className="pl-9 text-xs"
+                                            placeholder="Cari nama, email, no HP, jurusan..."
+                                            className="h-10 pl-9 text-xs"
                                         />
                                     </div>
 
-                                    <div className="w-full sm:w-48">
+                                    {/* Filter Select */}
+                                    <div className="sm:col-span-5 lg:col-span-4">
                                         <Select
                                             value={kelasId}
                                             onValueChange={handleFilterChange}
                                         >
-                                            <SelectTrigger className="text-xs">
+                                            <SelectTrigger className="h-10 w-full text-xs">
                                                 <div className="flex items-center gap-2">
-                                                    <Filter className="h-3.5 w-3.5 text-slate-400" />
+                                                    <Filter className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                                                     <SelectValue placeholder="Semua Kelas" />
                                                 </div>
                                             </SelectTrigger>
@@ -231,46 +251,52 @@ export default function MateriPenilaian({
                                     </div>
                                 </div>
 
-                                <Button type="submit" variant="secondary" size="sm" className="text-xs font-semibold">
-                                    Cari
+                                <Button type="submit" variant="secondary" className="h-10 px-5 text-xs font-bold shrink-0">
+                                    Cari Data
                                 </Button>
                             </form>
                         </CardContent>
                     </Card>
 
                     {/* Master Table */}
-                    <Card className="border-slate-200 overflow-hidden">
+                    <Card className="border-slate-200 overflow-hidden shadow-sm">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-xs border-collapse">
                                 <thead>
                                     <tr className="border-b border-slate-200 bg-slate-50 text-slate-700">
-                                        <th className="px-4 py-3 font-bold text-center w-12 border-r border-slate-200">
+                                        <th className="px-4 py-3.5 font-bold text-center w-12 border-r border-slate-200">
                                             No
                                         </th>
-                                        <th className="px-4 py-3 font-bold border-r border-slate-200 min-w-[180px]">
+                                        <th className="px-4 py-3.5 font-bold border-r border-slate-200 min-w-[200px]">
                                             Nama Siswa
                                         </th>
-                                        <th className="px-4 py-3 font-bold border-r border-slate-200 min-w-[100px]">
+                                        <th className="px-4 py-3.5 font-bold border-r border-slate-200 min-w-[130px]">
+                                            No. Telepon / HP
+                                        </th>
+                                        <th className="px-4 py-3.5 font-bold border-r border-slate-200 min-w-[90px]">
                                             Kelas
                                         </th>
-                                        <th className="px-4 py-3 font-bold border-r border-slate-200 min-w-[120px]">
+                                        <th className="px-4 py-3.5 font-bold border-r border-slate-200 min-w-[110px]">
                                             Jurusan
                                         </th>
 
                                         {pertemuanList.map((p, idx) => (
                                             <th
                                                 key={p.id}
-                                                className="px-4 py-3 font-bold border-r border-slate-200 text-center min-w-[140px]"
+                                                className="px-4 py-3.5 font-bold border-r border-slate-200 text-center min-w-[130px]"
                                             >
                                                 <div>Pertemuan {idx + 1}</div>
-                                                <div className="text-[10px] font-normal text-slate-500 truncate max-w-[140px]">
+                                                <div className="text-[10px] font-normal text-slate-500 truncate max-w-[130px]">
                                                     {p.judul}
                                                 </div>
                                             </th>
                                         ))}
 
-                                        <th className="px-4 py-3 font-bold text-center bg-emerald-50/70 text-emerald-900 min-w-[120px]">
+                                        <th className="px-4 py-3.5 font-bold text-center bg-emerald-50/70 text-emerald-900 min-w-[120px]">
                                             Rata-Rata Akhir
+                                        </th>
+                                        <th className="px-3 py-3.5 font-bold text-center min-w-[80px]">
+                                            Biodata
                                         </th>
                                     </tr>
                                 </thead>
@@ -278,7 +304,7 @@ export default function MateriPenilaian({
                                     {students.length === 0 ? (
                                         <tr>
                                             <td
-                                                colSpan={5 + pertemuanList.length}
+                                                colSpan={6 + pertemuanList.length}
                                                 className="px-4 py-8 text-center text-slate-400 italic"
                                             >
                                                 Belum ada data siswa / penilaian
@@ -291,19 +317,53 @@ export default function MateriPenilaian({
                                                     {idx + 1}
                                                 </td>
                                                 <td className="px-4 py-3 border-r border-slate-200">
-                                                    <p className="font-bold text-slate-900">
-                                                        {s.nama}
-                                                    </p>
-                                                    <p className="text-[10px] text-slate-400 truncate max-w-[180px]">
-                                                        {s.email}
-                                                    </p>
+                                                    <div className="flex items-center gap-2.5">
+                                                        {s.foto ? (
+                                                            <img
+                                                                src={s.foto}
+                                                                alt={s.nama}
+                                                                className="h-8 w-8 rounded-full object-cover shrink-0 border"
+                                                            />
+                                                        ) : (
+                                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-xs shrink-0">
+                                                                {s.nama.charAt(0).toUpperCase()}
+                                                            </div>
+                                                        )}
+                                                        <div className="min-w-0">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setSelectedStudent(s)}
+                                                                className="font-bold text-slate-900 hover:text-blue-600 text-left transition-colors truncate block max-w-[170px]"
+                                                            >
+                                                                {s.nama}
+                                                            </button>
+                                                            <p className="text-[10px] text-slate-400 truncate max-w-[170px]">
+                                                                {s.email}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3 border-r border-slate-200 text-slate-700 font-medium">
+                                                    {s.no_hp !== '-' ? (
+                                                        <a
+                                                            href={`https://wa.me/${s.no_hp.replace(/[^0-9]/g, '')}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-emerald-700 hover:underline font-semibold flex items-center gap-1"
+                                                        >
+                                                            <Phone className="h-3 w-3 text-emerald-600" />
+                                                            {s.no_hp}
+                                                        </a>
+                                                    ) : (
+                                                        <span className="text-slate-400">-</span>
+                                                    )}
                                                 </td>
                                                 <td className="px-4 py-3 border-r border-slate-200 font-semibold text-slate-700">
                                                     <span className="inline-flex rounded bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">
                                                         {s.kelas}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-3 border-r border-slate-200 text-slate-600">
+                                                <td className="px-4 py-3 border-r border-slate-200 text-slate-600 font-medium">
                                                     {s.jurusan}
                                                 </td>
 
@@ -362,6 +422,17 @@ export default function MateriPenilaian({
                                                         {s.rata_rata}
                                                     </span>
                                                 </td>
+                                                <td className="px-3 py-3 text-center">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => setSelectedStudent(s)}
+                                                        className="h-7 px-2 text-xs font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                                                    >
+                                                        <Eye className="h-3.5 w-3.5 mr-1" />
+                                                        Detail
+                                                    </Button>
+                                                </td>
                                             </tr>
                                         ))
                                     )}
@@ -371,6 +442,112 @@ export default function MateriPenilaian({
                     </Card>
                 </div>
             </div>
+
+            {/* Student Biodata Dialog */}
+            <Dialog open={!!selectedStudent} onOpenChange={(open) => !open && setSelectedStudent(null)}>
+                {selectedStudent && (
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2 text-base font-bold">
+                                <UserIcon className="h-5 w-5 text-blue-600" />
+                                Detail Biodata Siswa
+                            </DialogTitle>
+                            <DialogDescription className="text-xs">
+                                Informasi profil pendaftaran dan rekap nilai siswa.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="space-y-4 pt-2">
+                            {/* Profile Header */}
+                            <div className="flex items-center gap-4 rounded-xl bg-slate-50 p-4 border border-slate-100">
+                                {selectedStudent.foto ? (
+                                    <img
+                                        src={selectedStudent.foto}
+                                        alt={selectedStudent.nama}
+                                        className="h-16 w-16 rounded-full object-cover border-2 border-white shadow-sm"
+                                    />
+                                ) : (
+                                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white font-black text-xl shadow-sm">
+                                        {selectedStudent.nama.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+                                <div>
+                                    <h3 className="text-base font-bold text-slate-900">
+                                        {selectedStudent.nama}
+                                    </h3>
+                                    <p className="text-xs text-slate-500">{selectedStudent.email}</p>
+                                    <div className="mt-1 flex items-center gap-2">
+                                        <span className="inline-flex rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                                            Kelas {selectedStudent.kelas}
+                                        </span>
+                                        <span className="inline-flex rounded-md bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700">
+                                            {selectedStudent.jurusan}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Details List */}
+                            <div className="space-y-2.5 text-xs divide-y divide-slate-100">
+                                <div className="flex justify-between py-1.5">
+                                    <span className="text-slate-500 font-medium flex items-center gap-1.5">
+                                        <Phone className="h-3.5 w-3.5 text-slate-400" />
+                                        Nomor Telepon / HP:
+                                    </span>
+                                    {selectedStudent.no_hp !== '-' ? (
+                                        <a
+                                            href={`https://wa.me/${selectedStudent.no_hp.replace(/[^0-9]/g, '')}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-bold text-emerald-600 hover:underline"
+                                        >
+                                            {selectedStudent.no_hp}
+                                        </a>
+                                    ) : (
+                                        <span className="font-semibold text-slate-400">Belum diisi</span>
+                                    )}
+                                </div>
+
+                                <div className="flex justify-between py-1.5">
+                                    <span className="text-slate-500 font-medium flex items-center gap-1.5">
+                                        <Mail className="h-3.5 w-3.5 text-slate-400" />
+                                        Email Akun:
+                                    </span>
+                                    <span className="font-semibold text-slate-800">{selectedStudent.email}</span>
+                                </div>
+
+                                <div className="flex justify-between py-1.5">
+                                    <span className="text-slate-500 font-medium flex items-center gap-1.5">
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-slate-400" />
+                                        Status Akun:
+                                    </span>
+                                    <span className="font-bold text-emerald-600 capitalize">
+                                        {selectedStudent.status}
+                                    </span>
+                                </div>
+
+                                <div className="flex justify-between py-1.5">
+                                    <span className="text-slate-500 font-medium flex items-center gap-1.5">
+                                        <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                                        Tanggal Mendaftar:
+                                    </span>
+                                    <span className="font-semibold text-slate-800">{selectedStudent.created_at}</span>
+                                </div>
+
+                                <div className="flex justify-between py-1.5">
+                                    <span className="text-slate-500 font-medium flex items-center gap-1.5">
+                                        <GraduationCap className="h-3.5 w-3.5 text-slate-400" />
+                                        Rata-Rata Nilai Akhir:
+                                    </span>
+                                    <span className="font-black text-sm text-emerald-600">
+                                        {selectedStudent.rata_rata}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </DialogContent>
+                )}
+            </Dialog>
         </>
     );
 }

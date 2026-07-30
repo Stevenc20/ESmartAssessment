@@ -680,8 +680,12 @@ class MateriController extends Controller
                 'id' => $siswa->id,
                 'nama' => $siswa->name,
                 'email' => $siswa->email,
+                'no_hp' => $siswa->no_hp ?? '-',
+                'foto' => $siswa->foto ? \Illuminate\Support\Facades\Storage::url($siswa->foto) : null,
                 'kelas' => $namaKelas,
                 'jurusan' => $jurusan,
+                'status' => $siswa->status ?? 'active',
+                'created_at' => $siswa->created_at ? $siswa->created_at->format('d M Y H:i') : '-',
                 'pertemuan_scores' => $pertemuanScores,
                 'rata_rata' => $overallAvg,
             ];
@@ -733,7 +737,7 @@ class MateriController extends Controller
 
             fputs($file, "\xEF\xBB\xBF");
 
-            $columns = ['No', 'Nama Siswa', 'Email', 'Kelas', 'Jurusan'];
+            $columns = ['No', 'Nama Siswa', 'Email', 'No. HP', 'Kelas', 'Jurusan'];
             foreach ($pertemuanList as $p) {
                 $columns[] = $p->judul . ' (Quiz)';
                 $columns[] = $p->judul . ' (Tugas)';
@@ -756,8 +760,9 @@ class MateriController extends Controller
                 }
 
                 $jurusan = $siswa->jurusan ?? '-';
+                $noHp = $siswa->no_hp ?? '-';
 
-                $row = [$no++, $siswa->name, $siswa->email, $namaKelas, $jurusan];
+                $row = [$no++, $siswa->name, $siswa->email, $noHp, $namaKelas, $jurusan];
                 $totalScoreSum = 0;
                 $countEvaluated = 0;
 
