@@ -3,7 +3,6 @@ import {
     BookOpen,
     Download,
     ExternalLink,
-    FileSpreadsheet,
     FileText,
     Image,
     Pencil,
@@ -82,20 +81,12 @@ export default function MateriIndex({
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Link href="/penilaian-materi">
-                                <Button variant="outline" className="inline-flex items-center gap-2 rounded-lg border-slate-300 font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50">
-                                    <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
-                                    Tarik / Rekap Penilaian Siswa
-                                </Button>
-                            </Link>
-                            <Link href="/materi/create">
-                                <Button className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-orange-700">
-                                    <Plus className="h-4 w-4" />
-                                    Tambah Materi
-                                </Button>
-                            </Link>
-                        </div>
+                        <Link href="/materi/create">
+                            <Button className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-orange-700">
+                                <Plus className="h-4 w-4" />
+                                Tambah Materi
+                            </Button>
+                        </Link>
                     </div>
 
                     {/* Stats */}
