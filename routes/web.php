@@ -4,10 +4,11 @@ use App\Http\Controllers\AbsenController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\Auth\AdminLoginController;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\BadgeController;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\CourseSiswaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaporanController;
-use App\Http\Controllers\MateriController;
-use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\PengumumanController;
 use App\Http\Controllers\PertemuanController;
 use Illuminate\Support\Facades\Route;
@@ -33,15 +34,38 @@ Route::middleware(['guest'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::resource('materi', MateriController::class);
+    Route::prefix('materi')->name('course.')->group(function () {
+        Route::get('/', [CourseController::class, 'index'])->name('index');
+        Route::get('/create', [CourseController::class, 'create'])->name('create');
+        Route::post('/', [CourseController::class, 'store'])->name('store');
+        Route::get('/{course}/edit', [CourseController::class, 'edit'])->name('edit');
+        Route::put('/{course}', [CourseController::class, 'update'])->name('update');
+        Route::delete('/{course}', [CourseController::class, 'destroy'])->name('destroy');
+        Route::get('/{course}/pertemuan', [CourseController::class, 'pertemuan'])->name('pertemuan');
+        Route::get('/{course}/pertemuan/create', [CourseController::class, 'pertemuanCreate'])->name('pertemuan.create');
+        Route::post('/{course}/pertemuan', [CourseController::class, 'pertemuanStore'])->name('pertemuan.store');
+        Route::get('/{course}/pertemuan/{pertemuan}/edit', [CourseController::class, 'pertemuanEdit'])->name('pertemuan.edit');
+        Route::put('/{course}/pertemuan/{pertemuan}', [CourseController::class, 'pertemuanUpdate'])->name('pertemuan.update');
+        Route::delete('/{course}/pertemuan/{pertemuan}', [CourseController::class, 'pertemuanDestroy'])->name('pertemuan.destroy');
+        Route::post('/{course}/pertemuan/{pertemuan}/section', [CourseController::class, 'sectionStore'])->name('section.store');
+        Route::put('/{course}/pertemuan/{pertemuan}/section/{section}', [CourseController::class, 'sectionUpdate'])->name('section.update');
+        Route::delete('/{course}/pertemuan/{pertemuan}/section/{section}', [CourseController::class, 'sectionDestroy'])->name('section.destroy');
+        Route::post('/{course}/pertemuan/{pertemuan}/section/reorder', [CourseController::class, 'sectionReorder'])->name('section.reorder');
+        Route::post('/{course}/pertemuan/{pertemuan}/file', [CourseController::class, 'fileStore'])->name('file.store');
+        Route::delete('/{course}/pertemuan/{pertemuan}/file/{file}', [CourseController::class, 'fileDestroy'])->name('file.destroy');
+        Route::post('/{course}/pertemuan/{pertemuan}/quiz', [CourseController::class, 'quizStore'])->name('quiz.store');
+        Route::put('/{course}/pertemuan/{pertemuan}/quiz/{quiz}', [CourseController::class, 'quizUpdate'])->name('quiz.update');
+        Route::delete('/{course}/pertemuan/{pertemuan}/quiz/{quiz}', [CourseController::class, 'quizDestroy'])->name('quiz.destroy');
+    });
 
     Route::get('pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
 
-    Route::prefix('materi-saya')->name('materi.siswa.')->group(function () {
-        Route::get('/', [MateriController::class, 'siswa'])->name('index');
-        Route::get('/{materi}', [MateriController::class, 'showSiswa'])->name('show');
-        Route::post('/{materi}/progress', [MateriController::class, 'updateProgress'])->name('progress');
-        Route::post('/tugas/{tugas}/submit', [MateriController::class, 'submitTugas'])->name('tugas.submit');
+    Route::prefix('materi-saya')->name('course.siswa.')->group(function () {
+        Route::get('/', [CourseSiswaController::class, 'index'])->name('index');
+        Route::get('/{course}', [CourseSiswaController::class, 'show'])->name('show');
+        Route::get('/{course}/{pertemuan}', [CourseSiswaController::class, 'pertemuan'])->name('pertemuan');
+        Route::post('/{course}/{pertemuan}/quiz', [CourseSiswaController::class, 'quizSubmit'])->name('quiz.submit');
+        Route::post('/{course}/{pertemuan}/selesai', [CourseSiswaController::class, 'markComplete'])->name('selesai');
     });
 
     Route::prefix('assessment')->name('assessment.')->group(function () {
