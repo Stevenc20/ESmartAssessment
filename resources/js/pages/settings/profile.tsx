@@ -26,7 +26,6 @@ export default function Profile() {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     const { data, setData, post, processing, errors } = useForm({
-        _method: 'PATCH',
         name: user.name ?? '',
         email: user.email ?? '',
         no_hp: (user as any).no_hp ?? '',
