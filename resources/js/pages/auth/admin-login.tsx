@@ -120,7 +120,7 @@ export default function AdminLogin({ recaptcha_site_key, errors: serverErrors }:
                     <Button
                         type="submit"
                         className="mt-2 w-full"
-                        disabled={processing || (recaptcha_site_key && !recaptchaReady)}
+                        disabled={processing || (!!recaptcha_site_key && !recaptchaReady)}
                     >
                         {processing && <Spinner />}
                         Masuk

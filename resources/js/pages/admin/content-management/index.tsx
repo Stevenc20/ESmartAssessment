@@ -90,7 +90,17 @@ export default function ContentManagementIndex({
             badge_name: item.badge_name,
             icon: item.icon ?? '',
             description: item.description ?? '',
-            conditions: item.conditions ?? null,
+            conditions: item.conditions
+                ? {
+                      ...item.conditions,
+                      value:
+                          typeof item.conditions.value === 'boolean'
+                              ? item.conditions.value
+                                  ? 1
+                                  : 0
+                              : item.conditions.value,
+                  }
+                : null,
         });
         setOpenBadge(true);
     }

@@ -149,7 +149,7 @@ function TugasCard({ tugas }: { tugas: TugasItem }) {
             preserveScroll: true,
             forceFormData: true,
             only: ['flash'],
-            onProgress: (progress) => setUploadProgress(progress.percentage),
+            onProgress: (progress) => setUploadProgress(progress?.percentage ?? 0),
             onSuccess: () => {
                 setFileName(null);
                 setData('file_tugas', null);

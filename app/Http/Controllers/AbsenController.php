@@ -6,6 +6,9 @@ use App\Models\Absensi;
 use App\Models\GlobalAnnouncement;
 use App\Models\Pertemuan;
 use App\Models\QrSession;
+use App\Models\Role;
+use App\Models\User;
+use App\Services\AttendanceAlertService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -80,7 +83,7 @@ class AbsenController extends Controller
         ]);
     }
 
-    public function tutup(Pertemuan $pertemuan)
+    public function tutup(Request $request, Pertemuan $pertemuan)
     {
         $session = QrSession::where('pertemuan_id', $pertemuan->id)
             ->where('status', 'active')
@@ -91,6 +94,10 @@ class AbsenController extends Controller
         GlobalAnnouncement::where('judul', 'Absen Dibuka - '.$pertemuan->judul)
             ->where('is_active', true)
             ->update(['is_active' => false, 'ends_at' => now()]);
+
+        if ($pertemuan->roadmap_id) {
+            app(AttendanceAlertService::class)->checkRoadmap($pertemuan->roadmap_id);
+        }
 
         return response()->json(['status' => 'closed']);
     }
@@ -181,12 +188,94 @@ class AbsenController extends Controller
         ]);
     }
 
+    public function rekap(Request $request, Pertemuan $pertemuan)
+    {
+        $this->authorizeGuru($request);
+
+        $roleSiswa = Role::where('role_name', 'siswa')->first();
+        $siswa = User::where('role_id', $roleSiswa?->id)
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        $absensi = Absensi::where('pertemuan_id', $pertemuan->id)
+            ->get()
+            ->keyBy('siswa_id');
+
+        $roster = $siswa->map(fn ($s) => [
+            'siswa_id' => $s->id,
+            'nama' => $s->name,
+            'status' => $absensi->get($s->id)?->status ?? Absensi::STATUS_ALPA,
+        ]);
+
+        return response()->json([
+            'pertemuan_id' => $pertemuan->id,
+            'pertemuan' => $pertemuan->judul,
+            'roster' => $roster,
+            'total_siswa' => $roster->count(),
+            'sudah_absen' => $absensi->count(),
+        ]);
+    }
+
+    public function manual(Request $request, Pertemuan $pertemuan)
+    {
+        $this->authorizeGuru($request);
+
+        $data = $request->validate([
+            'status' => ['required', 'array'],
+            'status.*' => ['required', 'in:'.implode(',', [
+                Absensi::STATUS_HADIR,
+                Absensi::STATUS_TERLAMBAT,
+                Absensi::STATUS_IZIN,
+                Absensi::STATUS_SAKIT,
+                Absensi::STATUS_ALPA,
+            ])],
+        ]);
+
+        $roleSiswa = Role::where('role_name', 'siswa')->first();
+        $validSiswaIds = User::where('role_id', $roleSiswa?->id)
+            ->where('status', 'active')
+            ->pluck('id')
+            ->flip();
+
+        $updated = 0;
+        foreach ($data['status'] as $siswaId => $status) {
+            if (! isset($validSiswaIds[$siswaId])) {
+                continue;
+            }
+
+            Absensi::updateOrCreate(
+                ['siswa_id' => $siswaId, 'pertemuan_id' => $pertemuan->id],
+                ['status' => $status, 'qr_session_id' => null],
+            );
+            $updated++;
+        }
+
+        $sent = [];
+        if ($pertemuan->roadmap_id) {
+            $sent = app(AttendanceAlertService::class)->checkRoadmap($pertemuan->roadmap_id);
+        }
+
+        return response()->json([
+            'success' => true,
+            'updated' => $updated,
+            'alerts_sent' => $sent,
+        ]);
+    }
+
+    private function authorizeGuru(Request $request): void
+    {
+        if ($request->user()->role?->role_name !== 'guru') {
+            abort(403, 'Hanya guru yang dapat mengelola absensi manual.');
+        }
+    }
+
     public function siswaIndex(Request $request)
     {
         $user = $request->user();
         $siswaId = $user->id;
 
-        $allPertemuan = \App\Models\Pertemuan::where('status', 'published')
+        $allPertemuan = Pertemuan::where('status', 'published')
             ->with('roadmap')
             ->orderBy('urutan')
             ->get();
@@ -194,9 +283,11 @@ class AbsenController extends Controller
 
         $totalHadir = 0;
         $totalTerlambat = 0;
+        $totalIzin = 0;
+        $totalSakit = 0;
         $totalAlpa = 0;
 
-        $riwayat = $allPertemuan->map(function ($p) use ($absensiRecords, &$totalHadir, &$totalTerlambat, &$totalAlpa) {
+        $riwayat = $allPertemuan->map(function ($p) use ($absensiRecords, &$totalHadir, &$totalTerlambat, &$totalIzin, &$totalSakit, &$totalAlpa) {
             $abs = $absensiRecords->get($p->id);
 
             if ($abs) {
@@ -204,6 +295,12 @@ class AbsenController extends Controller
                     $totalHadir++;
                 } elseif ($abs->status === 'terlambat') {
                     $totalTerlambat++;
+                } elseif ($abs->status === 'izin') {
+                    $totalIzin++;
+                } elseif ($abs->status === 'sakit') {
+                    $totalSakit++;
+                } else {
+                    $totalAlpa++;
                 }
 
                 return [
@@ -237,6 +334,8 @@ class AbsenController extends Controller
                 'total' => $allPertemuan->count(),
                 'hadir' => $totalHadir,
                 'terlambat' => $totalTerlambat,
+                'izin' => $totalIzin,
+                'sakit' => $totalSakit,
                 'alpa' => $totalAlpa,
             ],
             'riwayat' => $riwayat,

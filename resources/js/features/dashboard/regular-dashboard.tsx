@@ -11,6 +11,7 @@ import {
     Users,
     ClipboardList,
     AlertCircle,
+    AlertTriangle,
 } from 'lucide-react';
 import type { Auth } from '@/types';
 
@@ -28,7 +29,18 @@ type GuruDashboard = {
     menungguPenilaian: number;
     rataNilai: number;
     recentActivity: GuruActivity[];
+    attendanceRiskCount: number;
+    attendanceAlerts: AttendanceAlertItem[];
+    attendanceThreshold: number;
 } | null;
+
+type AttendanceAlertItem = {
+    siswa_id: number;
+    nama: string;
+    persentase: number;
+    roadmap_id: number;
+    roadmap_judul: string;
+};
 
 type PageProps = {
     auth: Auth;
@@ -176,6 +188,58 @@ export default function RegularDashboard() {
                     </div>
                 ))}
             </div>
+
+            {/* ── Attendance Risk Indicator ── */}
+            {guruDashboard &&
+                guruDashboard.attendanceAlerts.length > 0 && (
+                    <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="mb-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-700">
+                                    <AlertTriangle className="h-4.5 w-4.5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-sm font-bold text-red-900">
+                                        Peringatan Kehadiran Rendah
+                                    </h2>
+                                    <p className="text-xs text-red-600">
+                                        {
+                                            guruDashboard.attendanceRiskCount
+                                        }{' '}
+                                        siswa di bawah {guruDashboard.attendanceThreshold}
+                                        % kehadiran
+                                    </p>
+                                </div>
+                            </div>
+                            <Link href="/laporan/absensi?mode=roadmap">
+                                <span className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-red-700">
+                                    Lihat Laporan
+                                    <ArrowRight className="h-3.5 w-3.5" />
+                                </span>
+                            </Link>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                            {guruDashboard.attendanceAlerts.map((a) => (
+                                <div
+                                    key={a.siswa_id}
+                                    className="flex items-center justify-between gap-2 rounded-lg border border-red-200 bg-white px-3 py-2.5"
+                                >
+                                    <div className="min-w-0">
+                                        <p className="truncate text-sm font-bold text-slate-900">
+                                            {a.nama}
+                                        </p>
+                                        <p className="truncate text-[11px] text-slate-500">
+                                            {a.roadmap_judul}
+                                        </p>
+                                    </div>
+                                    <span className="shrink-0 rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">
+                                        {a.persentase}%
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
             {/* ── Main Grid ── */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

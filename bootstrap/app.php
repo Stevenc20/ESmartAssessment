@@ -37,6 +37,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'materi/*/upload-image',
+            'pertemuan/*/absen/buka',
+            'pertemuan/*/absen/tutup',
+            'pertemuan/*/absen/manual',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

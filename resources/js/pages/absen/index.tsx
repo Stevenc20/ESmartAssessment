@@ -8,6 +8,8 @@ import {
     Camera,
     CameraOff,
     Smartphone,
+    HeartHandshake,
+    Stethoscope,
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
@@ -28,7 +30,14 @@ type ActiveSession = {
 };
 
 type Props = {
-    stats: { total: number; hadir: number; terlambat: number };
+    stats: {
+        total: number;
+        hadir: number;
+        terlambat: number;
+        izin: number;
+        sakit: number;
+        alpa: number;
+    };
     riwayat: RiwayatItem[];
     active_sessions: ActiveSession[];
 };
@@ -339,7 +348,7 @@ return;
                     )}
 
                     {/* Stats */}
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                         {[
                             {
                                 label: 'Total Pertemuan',
@@ -358,6 +367,18 @@ return;
                                 value: stats.terlambat,
                                 color: '#d97706',
                                 icon: Clock,
+                            },
+                            {
+                                label: 'Izin',
+                                value: stats.izin ?? 0,
+                                color: '#0284c7',
+                                icon: HeartHandshake,
+                            },
+                            {
+                                label: 'Sakit',
+                                value: stats.sakit ?? 0,
+                                color: '#7c3aed',
+                                icon: Stethoscope,
                             },
                             {
                                 label: 'Tidak Hadir (Bolong)',
@@ -443,6 +464,10 @@ return;
                                                             ? 'bg-emerald-50 text-emerald-700'
                                                             : r.status === 'terlambat'
                                                             ? 'bg-amber-50 text-amber-700'
+                                                            : r.status === 'izin'
+                                                            ? 'bg-sky-50 text-sky-700'
+                                                            : r.status === 'sakit'
+                                                            ? 'bg-violet-50 text-violet-700'
                                                             : 'bg-red-50 text-red-700'
                                                     }`}
                                                 >
@@ -450,6 +475,10 @@ return;
                                                         ? 'Hadir'
                                                         : r.status === 'terlambat'
                                                         ? 'Terlambat'
+                                                        : r.status === 'izin'
+                                                        ? 'Izin'
+                                                        : r.status === 'sakit'
+                                                        ? 'Sakit'
                                                         : 'Tidak Hadir (Bolong)'}
                                                 </span>
                                             </td>

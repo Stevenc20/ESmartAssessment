@@ -372,7 +372,7 @@ function SectionEditor({
     return (
         <div className="space-y-3">
             <Input value={judul} onChange={(e) => setJudul(e.target.value)} placeholder="Judul section" />
-            <TiptapEditor content={konten} onChange={setKonten} />
+            <TiptapEditor initialContent={konten} onChange={setKonten} />
             <div className="flex justify-end">
                 <Button onClick={save} disabled={saving} size="sm" className="bg-blue-600 text-white hover:bg-blue-700">
                     <Save className="h-3.5 w-3.5" />

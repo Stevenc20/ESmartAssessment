@@ -6,9 +6,9 @@ import type { Auth } from '@/types';
 
 type PageProps = {
     auth: Auth;
-    stats?: any;
-    recentUsers?: any[];
-    recentLogs?: any[];
+    stats: any;
+    recentUsers: any[];
+    recentLogs: any[];
     studentDashboard?: any;
 };
 

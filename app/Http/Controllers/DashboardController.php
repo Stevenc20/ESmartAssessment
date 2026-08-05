@@ -9,12 +9,14 @@ use App\Models\ChallengeSubmission;
 use App\Models\Kelas;
 use App\Models\Materi;
 use App\Models\PengumpulanTugas;
+use App\Models\Pertemuan;
 use App\Models\Portfolio;
-use App\Models\StudentBadge;
 use App\Models\ProgressMateri;
+use App\Models\StudentBadge;
 use App\Models\StudentPoint;
 use App\Models\Tugas;
 use App\Models\User;
+use App\Services\AttendanceAlertService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -69,7 +71,7 @@ class DashboardController extends Controller
 
             $materiIds = Materi::where('created_by', $guruId)->pluck('id');
             $tugasIds = Tugas::whereIn('materi_id', $materiIds)->pluck('id');
-            $pertemuanIds = \App\Models\Pertemuan::whereIn(
+            $pertemuanIds = Pertemuan::whereIn(
                 'id',
                 Materi::whereIn('id', $materiIds)->pluck('pertemuan_id')
             )->pluck('id');
@@ -138,12 +140,18 @@ class DashboardController extends Controller
                 ->values()
                 ->map(fn ($item) => collect($item)->except('sort_time')->toArray());
 
+            $attendanceAlerts = app(AttendanceAlertService::class)->studentsBelowThreshold(10);
+            $attendanceRiskCount = count($attendanceAlerts);
+
             $guruDashboard = [
                 'totalSiswa' => $totalSiswa,
                 'tugasAktif' => $tugasAktif,
                 'menungguPenilaian' => $menungguPenilaian,
                 'rataNilai' => $rataNilai,
                 'recentActivity' => $guruActivity,
+                'attendanceRiskCount' => $attendanceRiskCount,
+                'attendanceAlerts' => $attendanceAlerts,
+                'attendanceThreshold' => AttendanceAlertService::THRESHOLD,
             ];
         }
 

@@ -116,7 +116,12 @@ export default function UsersEdit({ user, roles }: PageProps) {
                                 <Label>Status</Label>
                                 <Select
                                     value={data.status}
-                                    onValueChange={(v) => setData('status', v)}
+                                    onValueChange={(v) =>
+                                        setData(
+                                            'status',
+                                            v as AdminUser['status'],
+                                        )
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue />

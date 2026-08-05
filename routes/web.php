@@ -112,6 +112,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{pertemuan}/absen/buka', [AbsenController::class, 'buka'])->name('absen.buka');
         Route::post('/{pertemuan}/absen/tutup', [AbsenController::class, 'tutup'])->name('absen.tutup');
         Route::get('/{pertemuan}/absen/status', [AbsenController::class, 'status'])->name('absen.status');
+        Route::get('/{pertemuan}/absen/rekap', [AbsenController::class, 'rekap'])->name('absen.rekap');
+        Route::post('/{pertemuan}/absen/manual', [AbsenController::class, 'manual'])->name('absen.manual');
     });
 
     Route::get('/absen', [AbsenController::class, 'siswaIndex'])->name('absen.siswa.index');

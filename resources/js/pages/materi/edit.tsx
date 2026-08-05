@@ -112,7 +112,7 @@ export default function MateriEdit({
         router.post(`/materi/${materi.id}`, form, {
             preserveScroll: true,
             forceFormData: true,
-            onProgress: (progress) => setUploadProgress(progress.percentage),
+            onProgress: (progress) => setUploadProgress(progress?.percentage ?? 0),
             onFinish: () => {
                 setProcessing(false);
                 setUploadProgress(0);

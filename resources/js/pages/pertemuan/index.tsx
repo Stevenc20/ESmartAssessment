@@ -3,6 +3,7 @@ import {
     Calendar,
     ChevronDown,
     ChevronRight,
+    ClipboardEdit,
     FileText,
     Plus,
     Save,
@@ -75,6 +76,12 @@ type QrSessionData = {
     total_scanned: number;
 };
 
+type ManualRosterItem = {
+    siswa_id: number;
+    nama: string;
+    status: string;
+};
+
 const kelasLabelMap: Record<string, string> = {
     '10': 'Kelas 10 Genesis',
     '11': 'Kelas 11 Ascend',
@@ -110,13 +117,25 @@ export default function PertemuanIndex({
 }: {
     roadmaps: RoadmapItem[];
 }) {
-    const { errors } = usePage().props;
+    const { auth, errors } = usePage().props;
+    const isGuru = auth.user?.role?.role_name === 'guru';
     const [showAddDialog, setShowAddDialog] = useState(false);
     const [expandedYears, setExpandedYears] = useState<Record<number, boolean>>(
         {},
     );
     const [qrSession, setQrSession] = useState<QrSessionData | null>(null);
     const [qrLoading, setQrLoading] = useState<number | null>(null);
+    const [manualSession, setManualSession] = useState<{
+        pertemuanId: number;
+        pertemuanJudul: string;
+        roster: ManualRosterItem[];
+    } | null>(null);
+    const [manualStatuses, setManualStatuses] = useState<
+        Record<number, string>
+    >({});
+    const [manualLoading, setManualLoading] = useState<number | null>(null);
+    const [manualSaving, setManualSaving] = useState(false);
+    const [manualSaved, setManualSaved] = useState(false);
 
     const { data, setData, post, processing } = useForm({
         judul: '',
@@ -223,6 +242,67 @@ return;
         } catch (e) {
             console.error('Gagal tutup absen:', e);
         }
+    }
+
+    async function bukaKelolaAbsen(pertemuan: PertemuanItem) {
+        setManualLoading(pertemuan.id);
+
+        try {
+            const res = await fetch(`/pertemuan/${pertemuan.id}/absen/rekap`);
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message ?? 'Gagal memuat roster');
+            }
+
+            const statuses: Record<number, string> = {};
+            data.roster.forEach(
+                (r: ManualRosterItem) => (statuses[r.siswa_id] = r.status),
+            );
+
+            setManualStatuses(statuses);
+            setManualSession({
+                pertemuanId: pertemuan.id,
+                pertemuanJudul: pertemuan.judul,
+                roster: data.roster,
+            });
+        } catch (e) {
+            console.error('Gagal muat roster absen:', e);
+        }
+
+        setManualLoading(null);
+    }
+
+    async function simpanKelolaAbsen() {
+        if (!manualSession) {
+return;
+}
+
+        setManualSaving(true);
+        setManualSaved(false);
+
+        try {
+            const res = await fetch(
+                `/pertemuan/${manualSession.pertemuanId}/absen/manual`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: manualStatuses }),
+                },
+            );
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message ?? 'Gagal menyimpan absen');
+            }
+
+            setManualSaved(true);
+            setTimeout(() => setManualSaved(false), 2000);
+        } catch (e) {
+            console.error('Gagal simpan absen manual:', e);
+        }
+
+        setManualSaving(false);
     }
 
     const pollStatus = useCallback(async () => {
@@ -501,6 +581,16 @@ return null;
                                                                     onBukaAbsen={
                                                                         bukaAbsen
                                                                     }
+                                                                    onKelolaAbsen={
+                                                                        bukaKelolaAbsen
+                                                                    }
+                                                                    canKelola={
+                                                                        isGuru
+                                                                    }
+                                                                    kelolaLoading={
+                                                                        manualLoading ===
+                                                                        p.id
+                                                                    }
                                                                     isQrActive={
                                                                         qrSession?.pertemuanId ===
                                                                         p.id
@@ -652,6 +742,118 @@ tutupAbsen();
                 </DialogContent>
             </Dialog>
 
+            {/* Manual Attendance Dialog */}
+            <Dialog
+                open={manualSession !== null}
+                onOpenChange={(o) => {
+                    if (!o) {
+setManualSession(null);
+}
+                }}
+            >
+                <DialogContent className="gap-3 p-4 sm:max-w-lg">
+                    <DialogHeader className="gap-1">
+                        <DialogTitle className="flex items-center gap-2 text-sm">
+                            <ClipboardEdit className="h-4 w-4 text-violet-600" />
+                            Kelola Absen — {manualSession?.pertemuanJudul}
+                        </DialogTitle>
+                        <DialogDescription className="text-[11px]">
+                            Atur status kehadiran siswa secara manual. Hanya
+                            tersedia untuk role guru.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {manualSession && (
+                        <div className="flex max-h-[60vh] flex-col gap-3">
+                            <div className="flex items-center justify-between rounded-lg bg-violet-50 px-3 py-2">
+                                <span className="text-xs font-semibold text-violet-700">
+                                    Total siswa
+                                </span>
+                                <span className="text-sm font-bold text-violet-700">
+                                    {manualSession.roster.length}
+                                </span>
+                            </div>
+
+                            <div className="divide-y divide-slate-100 overflow-y-auto rounded-lg border border-slate-200">
+                                {manualSession.roster.map((r) => (
+                                    <div
+                                        key={r.siswa_id}
+                                        className="flex items-center justify-between gap-2 px-3 py-2"
+                                    >
+                                        <span className="min-w-0 truncate text-xs font-medium text-slate-700">
+                                            {r.nama}
+                                        </span>
+                                        <Select
+                                            value={
+                                                manualStatuses[r.siswa_id] ??
+                                                'alpa'
+                                            }
+                                            onValueChange={(v) =>
+                                                setManualStatuses((prev) => ({
+                                                    ...prev,
+                                                    [r.siswa_id]: v,
+                                                }))
+                                            }
+                                        >
+                                            <SelectTrigger className="h-7 w-28 text-[11px]">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="hadir">
+                                                    Hadir
+                                                </SelectItem>
+                                                <SelectItem value="terlambat">
+                                                    Terlambat
+                                                </SelectItem>
+                                                <SelectItem value="izin">
+                                                    Izin
+                                                </SelectItem>
+                                                <SelectItem value="sakit">
+                                                    Sakit
+                                                </SelectItem>
+                                                <SelectItem value="alpa">
+                                                    Alpa
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="flex items-center justify-end gap-2">
+                                {manualSaved && (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-600">
+                                        <Check className="h-3 w-3" />
+                                        Tersimpan
+                                    </span>
+                                )}
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setManualSession(null)}
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    onClick={simpanKelolaAbsen}
+                                    disabled={manualSaving}
+                                    size="sm"
+                                    className="bg-violet-600 text-white hover:bg-violet-700"
+                                >
+                                    {manualSaving ? (
+                                        <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                        <Save className="mr-1 h-3.5 w-3.5" />
+                                    )}
+                                    Simpan
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
+
             {/* Add Roadmap Dialog */}
             <Dialog
                 open={showAddDialog}
@@ -783,11 +985,17 @@ setShowAddDialog(false);
 function PertemuanCard({
     pertemuan,
     onBukaAbsen,
+    onKelolaAbsen,
+    canKelola,
+    kelolaLoading,
     isQrActive,
     qrLoading,
 }: {
     pertemuan: PertemuanItem;
     onBukaAbsen: (p: PertemuanItem) => void;
+    onKelolaAbsen: (p: PertemuanItem) => void;
+    canKelola: boolean;
+    kelolaLoading: boolean;
     isQrActive: boolean;
     qrLoading: boolean;
 }) {
@@ -835,6 +1043,21 @@ function PertemuanCard({
                     </span>
                 </div>
                 <div className="flex items-center gap-1.5">
+                    {canKelola && (
+                        <button
+                            onClick={() => onKelolaAbsen(pertemuan)}
+                            disabled={kelolaLoading}
+                            className="inline-flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-[11px] font-semibold text-violet-600 transition-all hover:bg-violet-100"
+                            title="Kelola absen manual"
+                        >
+                            {kelolaLoading ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                                <ClipboardEdit className="h-3 w-3" />
+                            )}
+                            Kelola
+                        </button>
+                    )}
                     <button
                         onClick={save}
                         disabled={processing}

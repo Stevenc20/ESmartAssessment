@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+﻿import { Head } from '@inertiajs/react';
 import {
     Activity,
     BookOpen,
@@ -51,37 +51,37 @@ type Props = {
 const statCards = [
     {
         title: 'Total User',
-        key: 'totalUsers' as const,
+        statKey: 'totalUsers' as const,
         icon: Users,
         color: '#3b82f6',
     },
     {
         title: 'Siswa',
-        key: 'totalSiswa' as const,
+        statKey: 'totalSiswa' as const,
         icon: GraduationCap,
         color: '#8b5cf6',
     },
     {
         title: 'Guru',
-        key: 'totalGuru' as const,
+        statKey: 'totalGuru' as const,
         icon: UserCheck,
         color: '#10b981',
     },
     {
         title: 'Kelas',
-        key: 'totalKelas' as const,
+        statKey: 'totalKelas' as const,
         icon: BookOpen,
         color: '#f59e0b',
     },
     {
         title: 'Assessment',
-        key: 'totalAssessment' as const,
+        statKey: 'totalAssessment' as const,
         icon: Zap,
         color: '#14b8a6',
     },
     {
         title: 'Challenge',
-        key: 'totalChallenge' as const,
+        statKey: 'totalChallenge' as const,
         icon: Trophy,
         color: '#f43f5e',
     },
@@ -188,7 +188,7 @@ return null;
         <>
             <Head title="Dashboard" />
             <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-                {/* ── Hero ── */}
+                {/* â”€â”€ Hero â”€â”€ */}
                 <div className="relative overflow-hidden rounded-xl border border-[#e9edf3] bg-white p-6 shadow-sm md:p-8">
                     <div
                         className="absolute inset-0 opacity-[0.04]"
@@ -233,18 +233,18 @@ return null;
                     </div>
                 </div>
 
-                {/* ── Stats Grid ── */}
+                {/* â”€â”€ Stats Grid â”€â”€ */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                     {statCards.map((stat) => (
                         <StatCard
                             key={stat.title}
                             {...stat}
-                            value={stats[stat.key]}
+                            value={stats[stat.statKey]}
                         />
                     ))}
                 </div>
 
-                {/* ── Main Grid ── */}
+                {/* â”€â”€ Main Grid â”€â”€ */}
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                     <div className="rounded-xl border border-[#e9edf3] bg-white lg:col-span-2">
                         <div className="flex items-center justify-between border-b border-[#e9edf3] px-5 py-4">
@@ -418,7 +418,7 @@ return null;
                     </div>
                 </div>
 
-                {/* ── Activity Log ── */}
+                {/* â”€â”€ Activity Log â”€â”€ */}
                 <div className="rounded-xl border border-[#e9edf3] bg-white">
                     <div className="flex items-center justify-between border-b border-[#e9edf3] px-5 py-4">
                         <div className="flex items-center gap-2.5">
@@ -456,7 +456,7 @@ return null;
                                                 </span>
                                                 <span className="text-slate-500">
                                                     {' '}
-                                                    · {log.activity}
+                                                    Â· {log.activity}
                                                 </span>
                                             </p>
                                         </div>
