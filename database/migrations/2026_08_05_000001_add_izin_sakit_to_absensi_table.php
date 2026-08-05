@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        DB::table('absensi')
+            ->where('status', 'tidak_hadir')
+            ->update(['status' => 'alpa']);
+
         Schema::table('absensi', function (Blueprint $table) {
             $table->enum('status', ['hadir', 'terlambat', 'izin', 'sakit', 'alpa'])->default('alpa')->change();
             $table->foreignId('qr_session_id')->nullable()->change();
