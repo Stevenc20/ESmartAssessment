@@ -89,6 +89,15 @@ const bulanList = [
     { value: '12', label: 'Desember' },
 ];
 
+const formatTanggal = (tanggal: string): string => {
+    const d = new Date(tanggal);
+    if (Number.isNaN(d.getTime())) return tanggal;
+    return d.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'short',
+    });
+};
+
 const statusConfig: Record<
     string,
     { label: string; bg: string; text: string; dot: string }
@@ -397,17 +406,25 @@ export default function LaporanAbsensi({
                                                 Nama Siswa
                                             </th>
                                             {mode === 'roadmap' &&
-                                                pertemuan?.map((p) => (
+                                                pertemuan?.map((p, i) => (
                                                     <th
                                                         key={p.id}
                                                         className="px-2 py-2.5 text-center font-semibold"
                                                     >
-                                                        <div>
-                                                            {p.judul}
+                                                        <div className="text-xs font-bold text-slate-700">
+                                                            Pert{' '}
+                                                            {p.urutan ?? i + 1}
                                                         </div>
+                                                        {p.judul && (
+                                                            <div className="text-[10px] font-normal text-slate-500">
+                                                                {p.judul}
+                                                            </div>
+                                                        )}
                                                         {p.tanggal && (
                                                             <div className="text-[10px] font-normal text-slate-400">
-                                                                {p.tanggal}
+                                                                {formatTanggal(
+                                                                    p.tanggal,
+                                                                )}
                                                             </div>
                                                         )}
                                                     </th>
