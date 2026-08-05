@@ -99,7 +99,8 @@ class LaporanController extends Controller
                 'tahun' => $r->tahun,
                 'bulan_nama' => $this->bulanNama($r->bulan),
                 'tingkat' => $r->tingkat,
-                'total_pertemuan' => $r->pertemuan->where('status', 'published')->count(),
+                'total_pertemuan' => $r->pertemuan->count(),
+                'published_pertemuan' => $r->pertemuan->where('status', 'published')->count(),
             ]);
 
         $roadmap = Roadmap::with(['pertemuan' => fn ($q) => $q->where('status', 'published')->orderBy('urutan')])
@@ -109,6 +110,7 @@ class LaporanController extends Controller
             return Inertia::render('laporan/absensi', [
                 'data' => [],
                 'total_pertemuan' => 0,
+                'pertemuan_total' => 0,
                 'bulan' => now()->month,
                 'tahun' => now()->year,
                 'mode' => 'roadmap',
@@ -161,6 +163,7 @@ class LaporanController extends Controller
         return Inertia::render('laporan/absensi', [
             'data' => $data,
             'total_pertemuan' => $totalPertemuan,
+            'pertemuan_total' => $roadmap->pertemuan()->count(),
             'bulan' => now()->month,
             'tahun' => now()->year,
             'mode' => 'roadmap',

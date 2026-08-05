@@ -52,6 +52,7 @@ type RoadmapItem = {
     bulan_nama: string;
     tingkat: string | null;
     total_pertemuan: number;
+    published_pertemuan?: number;
 };
 
 type PertemuanItem = {
@@ -72,6 +73,7 @@ type Props = {
     roadmaps?: RoadmapItem[];
     pertemuan?: PertemuanItem[];
     roadmap_judul?: string | null;
+    pertemuan_total?: number;
 };
 
 const bulanList = [
@@ -145,6 +147,7 @@ export default function LaporanAbsensi({
     roadmaps,
     pertemuan,
     roadmap_judul,
+    pertemuan_total,
 }: Props) {
     const [filterBulan, setFilterBulan] = useState(String(bulan));
     const [filterTahun, setFilterTahun] = useState(String(tahun));
@@ -332,7 +335,14 @@ export default function LaporanAbsensi({
                                             >
                                                 {r.bulan_nama} {r.tahun} —{' '}
                                                 {r.judul} ({r.total_pertemuan}{' '}
-                                                pertemuan)
+                                                pertemuan
+                                                {typeof r.published_pertemuan ===
+                                                    'number' &&
+                                                r.published_pertemuan <
+                                                    r.total_pertemuan
+                                                    ? `, ${r.published_pertemuan} published`
+                                                    : ''}
+                                                )
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -366,6 +376,18 @@ export default function LaporanAbsensi({
                             )}
                         </div>
                     )}
+
+                    {mode === 'roadmap' &&
+                        total_pertemuan === 0 &&
+                        (pertemuan_total ?? 0) > 0 && (
+                            <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-800">
+                                <AlertTriangle className="h-4 w-4 shrink-0" />
+                                Semua pertemuan di roadmap ini masih draft
+                                ({pertemuan_total} pertemuan) — laporan hanya
+                                menghitung pertemuan berstatus published.
+                                Publikasikan lewat menu Pertemuan.
+                            </div>
+                        )}
 
                     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-4">
@@ -592,7 +614,9 @@ export default function LaporanAbsensi({
                                 </p>
                                 <p className="text-xs text-slate-400">
                                     {mode === 'roadmap'
-                                        ? 'Pilih roadmap yang memiliki pertemuan publikasi.'
+                                        ? roadmap_judul
+                                            ? 'Tidak ada siswa aktif yang terdaftar, atau pertemuan roadmap masih draft.'
+                                            : 'Pilih roadmap terlebih dahulu.'
                                         : total_pertemuan === 0
                                           ? 'Tidak ada pertemuan yang dipublikasikan pada bulan ini.'
                                           : 'Tidak ada siswa aktif yang terdaftar.'}
