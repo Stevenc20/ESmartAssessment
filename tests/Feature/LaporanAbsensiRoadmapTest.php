@@ -103,3 +103,44 @@ test('roadmap tanpa pertemuan published tidak menampilkan kolom pertemuan', func
             ->has('pertemuan', 0)
         );
 });
+
+test('pertemuan draft yang sudah punya absensi tetap dihitung', function () {
+    $role = laporanRole('siswa');
+    $siswa = laporanSiswa($role, 'Siswa Tiga');
+    $guru = User::create([
+        'name' => 'Guru Tiga',
+        'email' => 'gurutiga@test.test',
+        'password' => 'password',
+        'role_id' => laporanRole('guru')->id,
+        'status' => 'active',
+    ]);
+
+    $roadmap = Roadmap::create([
+        'judul' => 'Roadmap Hybrid',
+        'bulan' => 7,
+        'tahun' => 2026,
+        'tingkat' => '12',
+        'created_by' => $guru->id,
+    ]);
+
+    $pertemuan = collect([1, 2, 3, 4])->map(fn ($i) => Pertemuan::create([
+        'roadmap_id' => $roadmap->id,
+        'judul' => "Pertemuan $i",
+        'urutan' => $i,
+        'tanggal' => $i <= 2 ? now()->subMonth() : now(),
+        'status' => 'draft',
+    ]));
+
+    Absensi::create([
+        'siswa_id' => $siswa->id,
+        'pertemuan_id' => $pertemuan[1]->id,
+        'status' => 'hadir',
+    ]);
+
+    $this->actingAs($guru)->get(route('laporan.absensi').'?mode=roadmap&roadmap_id='.$roadmap->id)
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('total_pertemuan', 1)
+            ->where('pertemuan_total', 4)
+            ->has('pertemuan', 1)
+        );
+});

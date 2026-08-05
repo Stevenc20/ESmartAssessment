@@ -29,7 +29,7 @@ class AttendanceAlertService
         }
 
         $pertemuanIds = Pertemuan::where('roadmap_id', $roadmapId)
-            ->where('status', 'published')
+            ->where(fn ($q) => $q->where('status', 'published')->orWhereHas('absensi'))
             ->pluck('id');
 
         $total = $pertemuanIds->count();
@@ -104,7 +104,7 @@ class AttendanceAlertService
             ->where('status', 'active')
             ->get();
 
-        $roadmaps = Roadmap::with(['pertemuan' => fn ($q) => $q->where('status', 'published')])
+        $roadmaps = Roadmap::with(['pertemuan' => fn ($q) => $q->where(fn ($qq) => $qq->where('status', 'published')->orWhereHas('absensi'))])
             ->orderBy('tahun', 'desc')
             ->orderBy('bulan', 'desc')
             ->get()

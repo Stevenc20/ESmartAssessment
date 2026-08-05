@@ -30,7 +30,7 @@ class LaporanController extends Controller
         $bulan = (int) $request->input('bulan', now()->month);
         $tahun = (int) $request->input('tahun', now()->year);
 
-        $pertemuan = Pertemuan::where('status', 'published')
+        $pertemuan = Pertemuan::where(fn ($q) => $q->where('status', 'published')->orWhereHas('absensi'))
             ->where(function ($q) use ($bulan, $tahun) {
                 $q->whereNull('tanggal')
                     ->orWhere(fn ($q2) => $q2->whereYear('tanggal', $tahun)->whereMonth('tanggal', $bulan));
@@ -101,9 +101,12 @@ class LaporanController extends Controller
                 'tingkat' => $r->tingkat,
                 'total_pertemuan' => $r->pertemuan->count(),
                 'published_pertemuan' => $r->pertemuan->where('status', 'published')->count(),
+                'counted_pertemuan' => $r->pertemuan
+                    ->filter(fn ($p) => $p->status === 'published' || $p->absensi()->exists())
+                    ->count(),
             ]);
 
-        $roadmap = Roadmap::with(['pertemuan' => fn ($q) => $q->where('status', 'published')->orderBy('urutan')])
+        $roadmap = Roadmap::with(['pertemuan' => fn ($q) => $q->where(fn ($qq) => $qq->where('status', 'published')->orWhereHas('absensi'))->orderBy('urutan')])
             ->find($roadmapId);
 
         if (! $roadmap) {

@@ -53,6 +53,7 @@ type RoadmapItem = {
     tingkat: string | null;
     total_pertemuan: number;
     published_pertemuan?: number;
+    counted_pertemuan?: number;
 };
 
 type PertemuanItem = {
@@ -336,11 +337,11 @@ export default function LaporanAbsensi({
                                                 {r.bulan_nama} {r.tahun} —{' '}
                                                 {r.judul} ({r.total_pertemuan}{' '}
                                                 pertemuan
-                                                {typeof r.published_pertemuan ===
+                                                {typeof r.counted_pertemuan ===
                                                     'number' &&
-                                                r.published_pertemuan <
+                                                r.counted_pertemuan <
                                                     r.total_pertemuan
-                                                    ? `, ${r.published_pertemuan} published`
+                                                    ? `, ${r.counted_pertemuan} terhitung`
                                                     : ''}
                                                 )
                                             </SelectItem>
@@ -382,10 +383,11 @@ export default function LaporanAbsensi({
                         (pertemuan_total ?? 0) > 0 && (
                             <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-800">
                                 <AlertTriangle className="h-4 w-4 shrink-0" />
-                                Semua pertemuan di roadmap ini masih draft
-                                ({pertemuan_total} pertemuan) — laporan hanya
-                                menghitung pertemuan berstatus published.
-                                Publikasikan lewat menu Pertemuan.
+                                Belum ada pertemuan yang dihitung ({pertemuan_total}{' '}
+                                pertemuan) — laporan hanya menghitung pertemuan
+                                published atau yang sudah punya absensi.
+                                Publikasikan atau buka absensinya lewat menu
+                                Pertemuan.
                             </div>
                         )}
 
