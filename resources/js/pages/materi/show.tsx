@@ -21,6 +21,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import MateriForumChat, { type DiscussionItem } from '@/components/materi/materi-forum-chat';
 
 type MateriDetail = {
     id: number;
@@ -49,6 +50,7 @@ type MateriDetail = {
     roadmap: string;
     created_by: string;
     created_at: string;
+    discussions?: DiscussionItem[];
 };
 
 function formatBytes(bytes: number): string {
@@ -102,11 +104,11 @@ export default function MateriShow({
                     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                         {/* Thumbnail */}
                         {materi.thumbnail && (
-                            <div className="aspect-video w-full overflow-hidden bg-slate-100">
+                            <div className="flex w-full items-center justify-center bg-slate-100">
                                 <img
                                     src={materi.thumbnail}
                                     alt={materi.judul}
-                                    className="h-full w-full object-contain"
+                                    className="mx-auto max-h-80 w-auto max-w-full object-contain"
                                 />
                             </div>
                         )}
@@ -307,6 +309,16 @@ export default function MateriShow({
                     )}
                 </div>
             </div>
+
+            {/* Forum Diskusi */}
+            {materi.discussions !== undefined && (
+                <MateriForumChat
+                    materiId={materi.id}
+                    discussions={materi.discussions ?? []}
+                    postUrl={`/materi/${materi.id}/discussion`}
+                    deleteUrl={(id) => `/materi/discussions/${id}`}
+                />
+            )}
 
             {/* Delete Confirmation */}
             <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>

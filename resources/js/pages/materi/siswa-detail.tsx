@@ -412,11 +412,11 @@ export default function MateriSiswaDetail({
                     {/* Header Card */}
                     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                         {materi.thumbnail && (
-                            <div className="aspect-video w-full overflow-hidden bg-slate-100">
+                            <div className="flex w-full items-center justify-center bg-slate-100">
                                 <img
                                     src={materi.thumbnail}
                                     alt={materi.judul}
-                                    className="h-full w-full object-contain"
+                                    className="mx-auto max-h-80 w-auto max-w-full object-contain"
                                 />
                             </div>
                         )}

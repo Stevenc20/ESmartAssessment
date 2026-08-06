@@ -48,6 +48,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/materi/folders/{folder}', [MateriController::class, 'deleteFolder'])->name('materi.folder.destroy');
     Route::get('/materi/files/{file}/download', [MateriController::class, 'downloadFile'])->name('materi.file.download');
     Route::delete('/materi/files/{file}', [MateriController::class, 'deleteFile'])->name('materi.file.destroy');
+    Route::post('/materi/{materi}/discussion', [MateriController::class, 'storeDiscussion'])->name('materi.discussion.store');
+    Route::delete('/materi/discussions/{discussion}', [MateriController::class, 'deleteDiscussion'])->name('materi.discussion.destroy');
 
     Route::get('pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
 

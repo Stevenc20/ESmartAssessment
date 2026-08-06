@@ -161,9 +161,9 @@ class MateriController extends Controller
         ]);
     }
 
-    public function show(Materi $materi)
+    public function show(Request $request, Materi $materi)
     {
-        $materi->load(['pertemuan.roadmap', 'creator', 'folders', 'files']);
+        $materi->load(['pertemuan.roadmap', 'creator', 'folders', 'files', 'discussions.user', 'discussions.replies.user']);
 
         return Inertia::render('materi/show', [
             'materi' => [
@@ -182,6 +182,7 @@ class MateriController extends Controller
                 'roadmap' => $materi->pertemuan?->roadmap?->judul ?? '-',
                 'created_by' => $materi->creator?->name ?? '-',
                 'created_at' => $materi->created_at->format('d M Y'),
+                'discussions' => $this->discussionData($materi, $request->user()),
             ],
         ]);
     }
@@ -695,28 +696,7 @@ class MateriController extends Controller
             ];
         }
 
-        $discussionsData = $materi->discussions->map(function ($d) use ($user) {
-            return [
-                'id' => $d->id,
-                'user_id' => $d->user_id,
-                'user_name' => $d->user?->name ?? 'User',
-                'user_role' => $d->user?->role?->role_name ?? 'siswa',
-                'user_avatar' => $d->user?->avatar,
-                'pesan' => $d->pesan,
-                'created_at' => $d->created_at->diffForHumans(),
-                'is_mine' => $d->user_id === $user->id,
-                'replies' => $d->replies->map(fn ($r) => [
-                    'id' => $r->id,
-                    'user_id' => $r->user_id,
-                    'user_name' => $r->user?->name ?? 'User',
-                    'user_role' => $r->user?->role?->role_name ?? 'siswa',
-                    'user_avatar' => $r->user?->avatar,
-                    'pesan' => $r->pesan,
-                    'created_at' => $r->created_at->diffForHumans(),
-                    'is_mine' => $r->user_id === $user->id,
-                ]),
-            ];
-        });
+        $discussionsData = $this->discussionData($materi, $user);
 
         return Inertia::render('materi/siswa-detail', [
             'materi' => [
@@ -798,6 +778,32 @@ class MateriController extends Controller
         $discussion->delete();
 
         return back()->with('success', 'Pesan diskusi berhasil dihapus.');
+    }
+
+    private function discussionData(Materi $materi, $user)
+    {
+        return $materi->discussions->map(function ($d) use ($user) {
+            return [
+                'id' => $d->id,
+                'user_id' => $d->user_id,
+                'user_name' => $d->user?->name ?? 'User',
+                'user_role' => $d->user?->role?->role_name ?? 'siswa',
+                'user_avatar' => $d->user?->avatar,
+                'pesan' => $d->pesan,
+                'created_at' => $d->created_at->diffForHumans(),
+                'is_mine' => $d->user_id === $user->id,
+                'replies' => $d->replies->map(fn ($r) => [
+                    'id' => $r->id,
+                    'user_id' => $r->user_id,
+                    'user_name' => $r->user?->name ?? 'User',
+                    'user_role' => $r->user?->role?->role_name ?? 'siswa',
+                    'user_avatar' => $r->user?->avatar,
+                    'pesan' => $r->pesan,
+                    'created_at' => $r->created_at->diffForHumans(),
+                    'is_mine' => $r->user_id === $user->id,
+                ]),
+            ];
+        });
     }
 
     public function quizSubmit(Request $request, Materi $materi)

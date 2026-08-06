@@ -39,9 +39,11 @@ export type DiscussionItem = {
 type Props = {
     materiId: number;
     discussions: DiscussionItem[];
+    postUrl?: string;
+    deleteUrl?: (discussionId: number) => string;
 };
 
-export default function MateriForumChat({ materiId, discussions }: Props) {
+export default function MateriForumChat({ materiId, discussions, postUrl, deleteUrl }: Props) {
     const getInitials = useInitials();
     const [replyToId, setReplyToId] = useState<number | null>(null);
 
@@ -54,7 +56,7 @@ export default function MateriForumChat({ materiId, discussions }: Props) {
         e.preventDefault();
         if (!data.pesan.trim()) return;
 
-        post(`/materi-saya/${materiId}/discussion`, {
+        post(postUrl ?? `/materi-saya/${materiId}/discussion`, {
             preserveScroll: true,
             onSuccess: () => {
                 reset();
@@ -65,9 +67,14 @@ export default function MateriForumChat({ materiId, discussions }: Props) {
 
     const handleDeletePesan = (discussionId: number) => {
         if (confirm('Apakah Anda yakin ingin menghapus pesan ini?')) {
-            router.delete(`/materi-saya/discussion/${discussionId}`, {
-                preserveScroll: true,
-            });
+            router.delete(
+                deleteUrl
+                    ? deleteUrl(discussionId)
+                    : `/materi-saya/discussion/${discussionId}`,
+                {
+                    preserveScroll: true,
+                },
+            );
         }
     };
 
