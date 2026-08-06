@@ -189,14 +189,27 @@ acc[r.tahun] = [];
         );
     }
 
+    function getCsrfHeaders(extraHeaders: Record<string, string> = {}): Record<string, string> {
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        return {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            ...(token ? { 'X-CSRF-TOKEN': token } : {}),
+            ...extraHeaders,
+        };
+    }
+
     async function bukaAbsen(pertemuan: PertemuanItem) {
         setQrLoading(pertemuan.id);
 
         try {
             const res = await fetch(`/pertemuan/${pertemuan.id}/absen/buka`, {
                 method: 'POST',
+                headers: getCsrfHeaders(),
             });
             const data = await res.json();
+            if (!res.ok) throw new Error(data.message ?? 'Gagal membuka absen');
+
             const qrDataUrl = await QRCode.toDataURL(data.qr_url, {
                 width: 300,
                 margin: 2,
@@ -231,12 +244,13 @@ acc[r.tahun] = [];
 
     async function tutupAbsen() {
         if (!qrSession) {
-return;
-}
+            return;
+        }
 
         try {
             await fetch(`/pertemuan/${qrSession.pertemuanId}/absen/tutup`, {
                 method: 'POST',
+                headers: getCsrfHeaders(),
             });
             setQrSession(null);
         } catch (e) {
@@ -248,7 +262,9 @@ return;
         setManualLoading(pertemuan.id);
 
         try {
-            const res = await fetch(`/pertemuan/${pertemuan.id}/absen/rekap`);
+            const res = await fetch(`/pertemuan/${pertemuan.id}/absen/rekap`, {
+                headers: getCsrfHeaders(),
+            });
             const data = await res.json();
 
             if (!res.ok) {
@@ -275,8 +291,8 @@ return;
 
     async function simpanKelolaAbsen() {
         if (!manualSession) {
-return;
-}
+            return;
+        }
 
         setManualSaving(true);
         setManualSaved(false);
@@ -286,7 +302,7 @@ return;
                 `/pertemuan/${manualSession.pertemuanId}/absen/manual`,
                 {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getCsrfHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ status: manualStatuses }),
                 },
             );

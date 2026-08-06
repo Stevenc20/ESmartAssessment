@@ -47,25 +47,25 @@ export default function ScanAbsen({
                         {/* Title */}
                         <h1 className="mb-1 text-xl font-bold text-slate-900">
                             {status === 'success' && 'Absensi Berhasil!'}
-                            {status === 'already' && 'Sudah Absen'}
-                            {status === 'invalid' && 'Gagal'}
+                            {status === 'already' && 'Sudah Absen Sebelumnya'}
+                            {status === 'invalid' && 'Absensi Gagal'}
                         </h1>
 
-                        {/* Pertemuan name */}
+                        {/* Pertemuan badge */}
                         {pertemuan && (
-                            <p className="mb-4 text-sm text-slate-500">
-                                {pertemuan}
-                            </p>
+                            <div className="my-3 inline-block rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-extrabold text-indigo-700 border border-indigo-100">
+                                📌 {pertemuan}
+                            </div>
                         )}
 
                         {/* Message */}
-                        <p className="mb-2 text-sm text-slate-600">{message}</p>
+                        <p className="mb-2 text-xs text-slate-600 leading-relaxed">{message}</p>
 
                         {/* Scan time */}
                         {scan_time && (
-                            <div className="mb-4 flex items-center justify-center gap-1.5 text-xs text-slate-400">
-                                <Clock className="h-3.5 w-3.5" />
-                                <span>{scan_time}</span>
+                            <div className="mb-4 flex items-center justify-center gap-1.5 text-xs font-medium text-slate-400">
+                                <Clock className="h-3.5 w-3.5 text-slate-400" />
+                                <span>Waktu: {scan_time}</span>
                             </div>
                         )}
 

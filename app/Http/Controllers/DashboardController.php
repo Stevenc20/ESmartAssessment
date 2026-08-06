@@ -199,9 +199,16 @@ class DashboardController extends Controller
                 ->where('status', 'completed')
                 ->count();
 
-            $totalPertemuan = Absensi::where('siswa_id', $siswaId)->count();
-            $hadir = Absensi::where('siswa_id', $siswaId)->where('status', 'hadir')->count();
-            $kehadiran = $totalPertemuan > 0 ? round(($hadir / $totalPertemuan) * 100) : 0;
+            $totalPertemuan = Pertemuan::where(function ($q) {
+                $q->whereIn('status', ['published', 'completed'])
+                    ->orWhereHas('absensi');
+            })->count();
+
+            $hadirCount = Absensi::where('siswa_id', $siswaId)
+                ->whereIn('status', [Absensi::STATUS_HADIR, Absensi::STATUS_TERLAMBAT])
+                ->count();
+
+            $kehadiran = $totalPertemuan > 0 ? round(($hadirCount / $totalPertemuan) * 100) : 0;
 
             $certificateCount = Certificate::where('siswa_id', $siswaId)->count();
 

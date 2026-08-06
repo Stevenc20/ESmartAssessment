@@ -175,12 +175,16 @@ class AbsenController extends Controller
             ->where('siswa_id', auth()->id())
             ->first();
 
+        $pertemuanTitle = $session->pertemuan
+            ? ($session->pertemuan->urutan ? 'Pertemuan '.$session->pertemuan->urutan.': '.$session->pertemuan->judul : $session->pertemuan->judul)
+            : 'Pertemuan';
+
         if ($existing) {
             return Inertia::render('absen/scan', [
                 'status' => 'already',
-                'message' => 'Anda sudah melakukan absensi.',
+                'message' => 'Anda sudah melakukan absensi untuk pertemuan ini.',
                 'scan_time' => $existing->scan_time?->format('d M Y H:i:s'),
-                'pertemuan' => $session->pertemuan?->judul ?? 'Pertemuan',
+                'pertemuan' => $pertemuanTitle,
             ]);
         }
 
@@ -198,7 +202,7 @@ class AbsenController extends Controller
             'status' => 'success',
             'message' => 'Absensi berhasil!',
             'scan_time' => now()->format('d M Y H:i:s'),
-            'pertemuan' => $session->pertemuan?->judul ?? 'Pertemuan',
+            'pertemuan' => $pertemuanTitle,
         ]);
     }
 
@@ -289,7 +293,10 @@ class AbsenController extends Controller
         $user = $request->user();
         $siswaId = $user->id;
 
-        $allPertemuan = Pertemuan::where('status', 'published')
+        $allPertemuan = Pertemuan::where(function ($q) {
+            $q->whereIn('status', ['published', 'completed'])
+                ->orWhereHas('absensi');
+        })
             ->with('roadmap')
             ->orderBy('urutan')
             ->get();
