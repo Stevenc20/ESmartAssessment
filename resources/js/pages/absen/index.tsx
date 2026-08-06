@@ -10,6 +10,8 @@ import {
     Smartphone,
     HeartHandshake,
     Stethoscope,
+    ZoomIn,
+    ZoomOut,
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
@@ -48,11 +50,42 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
     const [polledSessions, setPolledSessions] =
         useState<ActiveSession[]>(active_sessions);
     const [autoScanning, setAutoScanning] = useState(false);
+    const [zoomAvailable, setZoomAvailable] = useState(false);
+    const [zoomLevel, setZoomLevel] = useState(1);
+    const [zoomMin, setZoomMin] = useState(1);
+    const [zoomMax, setZoomMax] = useState(1);
     const scannerRef = useRef<HTMLDivElement>(null);
     const html5QrCodeRef = useRef<any>(null);
     const scannerStartedRef = useRef(false);
     const autoStartDoneRef = useRef(false);
     const startScannerRef = useRef<() => void>(() => {});
+
+    const applyCameraZoom = useCallback(async (nextZoom: number) => {
+        const scanner = html5QrCodeRef.current;
+        if (!scanner) return;
+
+        try {
+            const zoomFeature = scanner
+                .getRunningTrackCameraCapabilities()
+                .zoomFeature();
+
+            if (!zoomFeature.isSupported()) {
+                setZoomAvailable(false);
+                return;
+            }
+
+            const min = zoomFeature.min();
+            const max = zoomFeature.max();
+            const clamped = Math.min(max, Math.max(min, nextZoom));
+
+            await scanner.applyVideoConstraints({ advanced: [{ zoom: clamped }] });
+            setZoomMin(min);
+            setZoomMax(max);
+            setZoomLevel(clamped);
+        } catch {
+            setZoomAvailable(false);
+        }
+    }, []);
 
     const stopScanner = useCallback(async () => {
         if (html5QrCodeRef.current) {
@@ -68,6 +101,8 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
         }
 
         scannerStartedRef.current = false;
+        setZoomAvailable(false);
+        setZoomLevel(1);
     }, []);
 
     const startScanner = useCallback(async () => {
@@ -115,11 +150,13 @@ return;
                 },
                 () => {},
             );
+
+            await applyCameraZoom(1);
         } catch (err: any) {
             setCameraError(err?.message || 'Kamera tidak dapat diakses');
             setScannerActive(false);
         }
-    }, []);
+    }, [applyCameraZoom]);
 
     useEffect(() => {
         startScannerRef.current = startScanner;
@@ -254,6 +291,35 @@ return;
                                     guru
                                 </p>
                             </div>
+                            {zoomAvailable && (
+                                <div className="flex items-center justify-center gap-3 border-t border-white/10 bg-black/80 px-4 py-2.5">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            applyCameraZoom(zoomLevel - 0.5)
+                                        }
+                                        disabled={zoomLevel <= zoomMin}
+                                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
+                                        aria-label="Perkecil kamera"
+                                    >
+                                        <ZoomOut className="h-4 w-4" />
+                                    </button>
+                                    <span className="w-14 text-center text-xs font-bold text-white tabular-nums">
+                                        {Math.round(zoomLevel * 100)}%
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            applyCameraZoom(zoomLevel + 0.5)
+                                        }
+                                        disabled={zoomLevel >= zoomMax}
+                                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
+                                        aria-label="Perbesar kamera"
+                                    >
+                                        <ZoomIn className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
 
