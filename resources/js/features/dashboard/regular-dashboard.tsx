@@ -220,9 +220,10 @@ export default function RegularDashboard() {
                         </div>
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                             {guruDashboard.attendanceAlerts.map((a) => (
-                                <div
+                                <Link
                                     key={a.siswa_id}
-                                    className="flex items-center justify-between gap-2 rounded-lg border border-red-200 bg-white px-3 py-2.5"
+                                    href={`/laporan/absensi?mode=roadmap&roadmap_id=${a.roadmap_id}`}
+                                    className="flex items-center justify-between gap-2 rounded-lg border border-red-200 bg-white px-3 py-2.5 transition-colors hover:border-red-300 hover:bg-red-50"
                                 >
                                     <div className="min-w-0">
                                         <p className="truncate text-sm font-bold text-slate-900">
@@ -232,10 +233,13 @@ export default function RegularDashboard() {
                                             {a.roadmap_judul}
                                         </p>
                                     </div>
-                                    <span className="shrink-0 rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">
-                                        {a.persentase}%
+                                    <span className="flex shrink-0 items-center gap-1.5">
+                                        <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">
+                                            {a.persentase}%
+                                        </span>
+                                        <ArrowRight className="h-3.5 w-3.5 text-red-400" />
                                     </span>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     </div>
