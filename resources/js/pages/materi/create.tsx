@@ -25,6 +25,7 @@ export default function MateriCreate({
     const { errors } = usePage().props;
     const thumbRef = useRef<HTMLInputElement>(null);
     const fileRef = useRef<HTMLInputElement>(null);
+    const [thumbPreview, setThumbPreview] = useState<string | null>(null);
     const [judul, setJudul] = useState('');
     const [deskripsi, setDeskripsi] = useState('');
     const [pertemuanId, setPertemuanId] = useState('');
@@ -224,10 +225,26 @@ export default function MateriCreate({
 
                                 <div>
                                     <Label>Thumbnail</Label>
+                                    {thumbPreview && (
+                                        <div className="mb-2 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                                            <img
+                                                src={thumbPreview}
+                                                alt=""
+                                                className="h-auto w-full"
+                                            />
+                                        </div>
+                                    )}
                                     <Input
                                         ref={thumbRef}
                                         type="file"
                                         accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (thumbPreview) {
+                                                URL.revokeObjectURL(thumbPreview);
+                                            }
+                                            setThumbPreview(file ? URL.createObjectURL(file) : null);
+                                        }}
                                         className="file:mr-2 file:rounded-lg file:border-0 file:bg-orange-50 file:px-3 file:py-1 file:text-xs file:font-bold file:text-orange-700 hover:file:bg-orange-100"
                                     />
                                     {errors.thumbnail && (

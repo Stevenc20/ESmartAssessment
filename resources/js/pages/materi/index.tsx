@@ -136,7 +136,7 @@ export default function MateriIndex({
                                                 <img
                                                     src={materi.thumbnail}
                                                     alt=""
-                                                    className="max-h-12 max-w-16 rounded-lg object-contain bg-slate-100"
+                                                    className="h-12 w-16 rounded-lg object-cover"
                                                 />
                                             ) : (
                                                 <div className="flex h-12 w-16 items-center justify-center rounded-lg bg-orange-50 text-orange-300">

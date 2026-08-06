@@ -104,11 +104,11 @@ export default function MateriShow({
                     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                         {/* Thumbnail */}
                         {materi.thumbnail && (
-                            <div className="flex w-full items-center justify-center bg-slate-100">
+                            <div className="w-full bg-slate-100">
                                 <img
                                     src={materi.thumbnail}
                                     alt={materi.judul}
-                                    className="mx-auto max-h-80 w-auto max-w-full object-contain"
+                                    className="h-auto w-full"
                                 />
                             </div>
                         )}

@@ -65,6 +65,7 @@ export default function MateriEdit({
     const { errors } = usePage().props;
     const thumbRef = useRef<HTMLInputElement>(null);
     const fileRef = useRef<HTMLInputElement>(null);
+    const [thumbPreview, setThumbPreview] = useState<string | null>(null);
     const [judul, setJudul] = useState(materi.judul);
     const [deskripsi, setDeskripsi] = useState(materi.deskripsi ?? '');
     const [konten, setKonten] = useState(materi.konten ?? '');
@@ -359,15 +360,31 @@ export default function MateriEdit({
 
                                 <div>
                                     <Label>Thumbnail</Label>
-                                    {materi.thumbnail && (
-                                        <p className="mb-1 truncate text-xs text-slate-500">
-                                            File: {materi.thumbnail}
-                                        </p>
+                                    {(thumbPreview || materi.thumbnail) && (
+                                        <>
+                                            <div className="mb-2 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                                                <img
+                                                    src={thumbPreview ?? materi.thumbnail ?? ''}
+                                                    alt=""
+                                                    className="h-auto w-full"
+                                                />
+                                            </div>
+                                            <p className="mb-1 truncate text-xs text-slate-500">
+                                                File: {materi.thumbnail}
+                                            </p>
+                                        </>
                                     )}
                                     <Input
                                         ref={thumbRef}
                                         type="file"
                                         accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (thumbPreview) {
+                                                URL.revokeObjectURL(thumbPreview);
+                                            }
+                                            setThumbPreview(file ? URL.createObjectURL(file) : null);
+                                        }}
                                         className="file:mr-2 file:rounded-lg file:border-0 file:bg-orange-50 file:px-3 file:py-1 file:text-xs file:font-bold file:text-orange-700 hover:file:bg-orange-100"
                                     />
                                     {errors.thumbnail && (
