@@ -3,8 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Announcement;
-use App\Models\GlobalAnnouncement;
+use App\Services\AnnouncementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -13,59 +12,16 @@ class AnnouncementController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
-        $roleName = $user->role?->role_name;
+        return response()->json([
+            'list' => app(AnnouncementService::class)->listForUser($request->user()),
+        ]);
+    }
 
-        $regular = Announcement::where(function ($q) use ($roleName) {
-            $q->whereNull('target_role')
-                ->orWhere('target_role', '')
-                ->orWhere('target_role', 'all')
-                ->orWhere('target_role', $roleName);
-        })
-            ->where(function ($q) {
-                $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
-            })
-            ->where(function ($q) {
-                $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
-            })
-            ->latest()
-            ->get()
-            ->map(fn ($a) => [
-                'id' => 'announcement_'.$a->id,
-                'judul' => $a->judul,
-                'isi' => $a->isi,
-                'type' => 'info',
-                'source' => 'announcements',
-                'created_at' => $a->created_at->format('d M Y'),
-            ]);
-
-        $global = GlobalAnnouncement::where('is_active', true)
-            ->where(function ($q) {
-                $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
-            })
-            ->where(function ($q) {
-                $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
-            })
-            ->where(function ($q) use ($roleName) {
-                $q->whereNull('target_role')
-                    ->orWhere('target_role', '')
-                    ->orWhere('target_role', 'all')
-                    ->orWhere('target_role', $roleName);
-            })
-            ->latest()
-            ->get()
-            ->map(fn ($a) => [
-                'id' => 'global_'.$a->id,
-                'judul' => $a->judul,
-                'isi' => $a->isi,
-                'type' => $a->type,
-                'source' => 'global_announcements',
-                'created_at' => $a->created_at->format('d M Y'),
-            ]);
-
-        $list = $regular->concat($global)->sortByDesc('created_at')->values();
-
-        return response()->json(['list' => $list]);
+    public function unreadCounts(Request $request)
+    {
+        return response()->json([
+            'unreadCounts' => app(AnnouncementService::class)->unreadCountsForUser($request->user()),
+        ]);
     }
 
     public function stream(Request $request)
@@ -75,16 +31,26 @@ class AnnouncementController extends Controller
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 
-        $response = new StreamedResponse(function () use ($request, $user) {
+        $since = max(0, (int) $request->query('since', 0));
+
+        $response = new StreamedResponse(function () use ($request, $since) {
             set_time_limit(0);
             $request->session()->save();
 
             $lastVersion = Cache::get('announcement_version', 0);
+            $catchUp = $since < $lastVersion;
 
             echo "event: connected\n";
-            echo "data: {}\n\n";
+            echo 'data: {"version": '.$lastVersion."}\n\n";
             ob_flush();
             flush();
+
+            if ($catchUp) {
+                echo "event: refresh\n";
+                echo 'data: {"version": '.$lastVersion."}\n\n";
+                ob_flush();
+                flush();
+            }
 
             while (true) {
                 if (connection_aborted()) {
@@ -96,7 +62,7 @@ class AnnouncementController extends Controller
                 if ($currentVersion > $lastVersion) {
                     $lastVersion = $currentVersion;
                     echo "event: refresh\n";
-                    echo "data: {\"version\": {$currentVersion}}\n\n";
+                    echo 'data: {"version": '.$currentVersion."}\n\n";
                     ob_flush();
                     flush();
                 }

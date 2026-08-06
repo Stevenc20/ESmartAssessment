@@ -20,10 +20,9 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useAnnouncements } from '@/context/announcements-context';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
-
-type UnreadCounts = { pengumuman: number; materi: number; assessment: number };
 
 const kelasLabelMap: Record<string, string> = {
     '10': 'Genesis 10',
@@ -34,10 +33,8 @@ const kelasLabelMap: Record<string, string> = {
 type KelasSiswa = { id: number; nama_kelas: string; tingkat: string } | null;
 
 export function AppSidebarSiswa() {
-    const { kelasSiswa, unreadCounts } = usePage<{
-        kelasSiswa: KelasSiswa;
-        unreadCounts: UnreadCounts;
-    }>().props;
+    const { kelasSiswa } = usePage<{ kelasSiswa: KelasSiswa }>().props;
+    const { unreadCounts } = useAnnouncements();
     const label = kelasSiswa
         ? kelasLabelMap[kelasSiswa.tingkat] ?? kelasSiswa.nama_kelas
         : null;

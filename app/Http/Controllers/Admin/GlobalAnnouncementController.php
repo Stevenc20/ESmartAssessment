@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\GlobalAnnouncement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class GlobalAnnouncementController extends Controller
@@ -45,6 +46,8 @@ class GlobalAnnouncementController extends Controller
 
         GlobalAnnouncement::create($validated);
 
+        Cache::increment('announcement_version');
+
         return back()->with('success', 'Pengumuman global berhasil dibuat');
     }
 
@@ -62,6 +65,8 @@ class GlobalAnnouncementController extends Controller
 
         $globalAnnouncement->update($validated);
 
+        Cache::increment('announcement_version');
+
         return back()->with('success', 'Pengumuman global berhasil diupdate');
     }
 
@@ -69,12 +74,16 @@ class GlobalAnnouncementController extends Controller
     {
         $globalAnnouncement->delete();
 
+        Cache::increment('announcement_version');
+
         return back()->with('success', 'Pengumuman global berhasil dihapus');
     }
 
     public function toggle(GlobalAnnouncement $globalAnnouncement)
     {
         $globalAnnouncement->update(['is_active' => ! $globalAnnouncement->is_active]);
+
+        Cache::increment('announcement_version');
 
         return back()->with('success', 'Status pengumuman berhasil diubah');
     }

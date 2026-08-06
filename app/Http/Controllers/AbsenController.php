@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\AttendanceAlertService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -62,6 +63,8 @@ class AbsenController extends Controller
             'created_by' => $request->user()->id,
         ]);
 
+        Cache::increment('announcement_version');
+
         $qrUrl = route('absen.scan', $session->token);
 
         $attendees = Absensi::where('pertemuan_id', $pertemuan->id)
@@ -94,6 +97,8 @@ class AbsenController extends Controller
         GlobalAnnouncement::where('judul', 'Absen Dibuka - '.$pertemuan->judul)
             ->where('is_active', true)
             ->update(['is_active' => false, 'ends_at' => now()]);
+
+        Cache::increment('announcement_version');
 
         if ($pertemuan->roadmap_id) {
             app(AttendanceAlertService::class)->checkRoadmap($pertemuan->roadmap_id);

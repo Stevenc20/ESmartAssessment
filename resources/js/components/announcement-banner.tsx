@@ -1,15 +1,9 @@
-import { usePage } from '@inertiajs/react';
 import { AlertTriangle, Info, X, Wrench } from 'lucide-react';
 import { useState } from 'react';
-
-type AnnouncementItem = {
-    id: string;
-    judul: string;
-    isi: string;
-    type: 'info' | 'warning' | 'maintenance';
-    source: 'announcements' | 'global_announcements';
-    created_at: string;
-};
+import {
+    useAnnouncements,
+    type AnnouncementItem,
+} from '@/context/announcements-context';
 
 const typeConfig = {
     info: {
@@ -56,9 +50,7 @@ function loadDismissed(): string[] {
 }
 
 export default function AnnouncementBanner() {
-    const { announcements } = usePage().props as {
-        announcements: AnnouncementItem[];
-    };
+    const { announcements } = useAnnouncements();
     const [dismissed, setDismissed] = useState<string[]>(loadDismissed);
 
     if (!announcements || announcements.length === 0) {

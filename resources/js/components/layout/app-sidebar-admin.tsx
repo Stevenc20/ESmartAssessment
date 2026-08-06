@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import {
     Activity,
     Archive,
@@ -24,12 +24,11 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useAnnouncements } from '@/context/announcements-context';
 import type { NavItem } from '@/types';
 
-type UnreadCounts = { pengumuman: number; materi: number; assessment: number };
-
 export function AppSidebarAdmin() {
-    const { unreadCounts } = usePage<{ unreadCounts: UnreadCounts }>().props;
+    const { unreadCounts } = useAnnouncements();
 
     const items: NavItem[] = [
         { title: 'Dashboard', href: '/admin/dashboard', icon: LayoutGrid },

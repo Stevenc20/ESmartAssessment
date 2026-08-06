@@ -3,6 +3,7 @@ import { AppContent } from '@/components/layout/app-content';
 import { AppShell } from '@/components/layout/app-shell';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { AppSidebarHeader } from '@/components/layout/app-sidebar-header';
+import { AnnouncementsProvider } from '@/context/announcements-context';
 import type { AppLayoutProps } from '@/types';
 
 export default function AppSidebarLayout({
@@ -11,12 +12,14 @@ export default function AppSidebarLayout({
 }: AppLayoutProps) {
     return (
         <AppShell variant="sidebar">
-            <AppSidebar />
-            <AppContent variant="sidebar" className="overflow-x-hidden">
-                <AppSidebarHeader breadcrumbs={breadcrumbs} />
-                <AnnouncementBanner />
-                {children}
-            </AppContent>
+            <AnnouncementsProvider>
+                <AppSidebar />
+                <AppContent variant="sidebar" className="overflow-x-hidden">
+                    <AppSidebarHeader breadcrumbs={breadcrumbs} />
+                    <AnnouncementBanner />
+                    {children}
+                </AppContent>
+            </AnnouncementsProvider>
         </AppShell>
     );
 }

@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import {
     BarChart3,
     BookOpen,
@@ -20,13 +20,12 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useAnnouncements } from '@/context/announcements-context';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
-type UnreadCounts = { pengumuman: number; materi: number; assessment: number };
-
 export function AppSidebarGuru() {
-    const { unreadCounts } = usePage<{ unreadCounts: UnreadCounts }>().props;
+    const { unreadCounts } = useAnnouncements();
 
     const items: NavItem[] = [
         { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
