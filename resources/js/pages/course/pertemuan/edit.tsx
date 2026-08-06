@@ -218,7 +218,7 @@ function PertemuanInfoForm({
                     <div>
                         <Label>Gambar Saat Ini</Label>
                         <div className="mt-1">
-                            <img src={gambar} alt="" className="h-20 w-36 rounded-lg object-cover" />
+                            <img src={gambar} alt="" className="h-20 w-36 rounded-lg object-contain bg-slate-100" />
                         </div>
                     </div>
                 )}

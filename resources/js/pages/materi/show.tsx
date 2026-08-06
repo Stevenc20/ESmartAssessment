@@ -106,7 +106,7 @@ export default function MateriShow({
                                 <img
                                     src={materi.thumbnail}
                                     alt={materi.judul}
-                                    className="h-full w-full object-cover"
+                                    className="h-full w-full object-contain"
                                 />
                             </div>
                         )}

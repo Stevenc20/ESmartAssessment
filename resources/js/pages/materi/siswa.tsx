@@ -134,7 +134,7 @@ function MateriCard({
                 <img
                     src={materi.thumbnail}
                     alt=""
-                    className="h-10 w-14 shrink-0 rounded-lg object-cover"
+                    className="h-10 w-14 shrink-0 rounded-lg object-contain bg-slate-100"
                 />
             ) : (
                 <div
