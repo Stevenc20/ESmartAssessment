@@ -498,7 +498,7 @@ class MateriController extends Controller
             ?? $user->kelas()->first()?->tingkat;
 
         $roadmaps = Roadmap::with(['pertemuan' => function ($query) {
-            $query->where('status', 'published')->orderBy('urutan');
+            $query->whereIn('status', ['published', 'completed'])->orderBy('urutan');
         }, 'pertemuan.materi' => function ($query) use ($tingkat) {
             if ($tingkat) {
                 $query->where('tingkat', $tingkat)->orWhereNull('tingkat');
@@ -583,7 +583,9 @@ class MateriController extends Controller
             }
         })->pluck('id');
 
-        $pertemuanIds = Pertemuan::whereIn('roadmap_id', $tingkatRoadmapIds)->pluck('id');
+        $pertemuanIds = Pertemuan::whereIn('roadmap_id', $tingkatRoadmapIds)
+            ->whereIn('status', ['published', 'completed'])
+            ->pluck('id');
         $materiIdsByTingkat = Materi::whereIn('pertemuan_id', $pertemuanIds)
             ->where(function ($q) use ($tingkat) {
                 if ($tingkat) {
@@ -1162,7 +1164,7 @@ class MateriController extends Controller
         $siswa = $request->user();
         $siswaId = $siswa->id;
 
-        $pertemuanList = Pertemuan::where('status', 'published')
+        $pertemuanList = Pertemuan::whereIn('status', ['published', 'completed'])
             ->with(['roadmap', 'materi.quiz', 'materi.tugas'])
             ->orderBy('urutan')
             ->get();
