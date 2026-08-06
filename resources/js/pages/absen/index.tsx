@@ -123,12 +123,26 @@ return;
         setAutoScanning(false);
 
         try {
+            // First attempt explicit getUserMedia to trigger browser permission popup if promptable
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'environment' },
+                    });
+                    stream.getTracks().forEach((track) => track.stop());
+                } catch (permErr: any) {
+                    if (permErr?.name === 'NotAllowedError' || permErr?.name === 'PermissionDeniedError') {
+                        throw new Error('Akses kamera diblokir. Silakan berikan izin akses kamera di browser HP Anda.');
+                    }
+                }
+            }
+
             const { Html5Qrcode } = await import('html5-qrcode');
 
             const cameras = await Html5Qrcode.getCameras();
 
             if (!cameras || cameras.length === 0) {
-                throw new Error('Tidak ada kamera yang terdeteksi');
+                throw new Error('Tidak ada kamera yang terdeteksi pada perangkat ini');
             }
 
             const isBackCamera = (label: string) => {
@@ -195,6 +209,27 @@ return;
             setScannerActive(false);
         }
     }, []);
+
+    const requestCameraPermission = useCallback(async () => {
+        try {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' },
+                });
+                stream.getTracks().forEach((track) => track.stop());
+            }
+            setCameraError(null);
+            startScanner();
+        } catch (err: any) {
+            const isDenied = err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError';
+            setCameraError(
+                isDenied
+                    ? 'Akses kamera diblokir. Silakan aktifkan izin kamera di pengaturan browser HP Anda (ikon gembok 🔒 / tanda titik tiga di dekat alamat website).'
+                    : (err?.message || 'Kamera tidak dapat diakses'),
+            );
+            setScannerActive(false);
+        }
+    }, [startScanner]);
 
     useEffect(() => {
         startScannerRef.current = startScanner;
@@ -370,23 +405,32 @@ return;
                         </div>
                     )}
 
-                    {/* Camera Error */}
+                    {/* Camera Error / Permission Request Card */}
                     {cameraError && (
-                        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="rounded-xl border border-red-200 bg-red-50 p-4 space-y-3">
                             <div className="flex items-start gap-3">
                                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
-                                <div>
-                                    <p className="text-sm font-bold text-red-700">
-                                        Kamera tidak tersedia
+                                <div className="space-y-1 flex-1">
+                                    <p className="text-sm font-bold text-red-800">
+                                        Akses Kamera Diperlukan
                                     </p>
-                                    <p className="mt-1 text-xs text-red-600">
+                                    <p className="text-xs text-red-700 leading-relaxed">
                                         {cameraError}
                                     </p>
-                                    <p className="mt-1 text-xs text-red-500">
-                                        Gunakan daftar sesi aktif di bawah untuk
-                                        absen tanpa kamera.
-                                    </p>
                                 </div>
+                            </div>
+
+                            <div className="pt-2 border-t border-red-200/60 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+                                <button
+                                    type="button"
+                                    onClick={requestCameraPermission}
+                                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700"
+                                >
+                                    <Camera className="h-4 w-4" /> Izinkan Akses Kamera
+                                </button>
+                                <p className="text-[11px] text-red-600 italic">
+                                    Tips: Tekan ikon 🔒 Gembok di dekat alamat website untuk mengizinkan kamera.
+                                </p>
                             </div>
                         </div>
                     )}
