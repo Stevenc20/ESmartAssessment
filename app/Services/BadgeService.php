@@ -37,6 +37,7 @@ class BadgeService
                 StudentPoint::create([
                     'siswa_id' => $siswa->id,
                     'point' => 100,
+                    'source' => 'badge',
                     'description' => 'Mendapatkan Badge: '.$badge->badge_name,
                 ]);
 
