@@ -23,6 +23,7 @@ import MateriPollWidget, { type PollData } from '@/components/materi/materi-poll
 type QuizItem = {
     id: number;
     soal: string;
+    gambar?: string | null;
     opsi: string[];
     jawaban_benar: string;
     urutan: number;
@@ -785,6 +786,15 @@ export default function MateriSiswaDetail({
                                                     </span>{' '}
                                                     {q.soal}
                                                 </p>
+                                                {q.gambar && (
+                                                    <div className="mb-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 max-w-lg">
+                                                        <img
+                                                            src={q.gambar}
+                                                            alt={`Gambar Soal Nomor ${idx + 1}`}
+                                                            className="max-h-72 w-auto object-contain"
+                                                        />
+                                                    </div>
+                                                )}
                                                 <div className="space-y-2">
                                                     {q.opsi.map((o, i) => (
                                                         <label

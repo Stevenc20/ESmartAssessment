@@ -15,12 +15,14 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import TiptapEditor from '@/components/editor/tiptap-editor';
 import MateriFolderUpload, { type PickedFile, type PickedFolder } from '@/components/materi/materi-folder-upload';
+import QuizPasteParserModal from '@/components/materi/quiz-paste-parser-modal';
 
 type PertemuanItem = { id: number; judul: string; tingkat: string | null };
 
 type QuizItem = {
     id: number;
     soal: string;
+    gambar?: string | null;
     opsi: string[];
     jawaban_benar: string;
     urutan: number;
@@ -81,8 +83,12 @@ export default function MateriEdit({
     const [files, setFiles] = useState<PickedFile[]>([]);
 
     const [showQuizForm, setShowQuizForm] = useState(false);
+    const [showPasteModal, setShowPasteModal] = useState(false);
     const [editingQuizId, setEditingQuizId] = useState<number | null>(null);
     const [quizSoal, setQuizSoal] = useState('');
+    const [quizGambar, setQuizGambar] = useState<File | null>(null);
+    const [quizGambarPreview, setQuizGambarPreview] = useState<string | null>(null);
+    const [removeQuizGambar, setRemoveQuizGambar] = useState(false);
     const [quizOpsi, setQuizOpsi] = useState<string[]>(['', '']);
     const [quizJawaban, setQuizJawaban] = useState('');
 
@@ -165,11 +171,17 @@ export default function MateriEdit({
         if (quiz) {
             setEditingQuizId(quiz.id);
             setQuizSoal(quiz.soal);
+            setQuizGambar(null);
+            setQuizGambarPreview(quiz.gambar ?? null);
+            setRemoveQuizGambar(false);
             setQuizOpsi([...quiz.opsi]);
             setQuizJawaban(quiz.jawaban_benar);
         } else {
             setEditingQuizId(null);
             setQuizSoal('');
+            setQuizGambar(null);
+            setQuizGambarPreview(null);
+            setRemoveQuizGambar(false);
             setQuizOpsi(['', '']);
             setQuizJawaban('');
         }
@@ -180,26 +192,55 @@ export default function MateriEdit({
         setShowQuizForm(false);
         setEditingQuizId(null);
         setQuizSoal('');
+        setQuizGambar(null);
+        setQuizGambarPreview(null);
+        setRemoveQuizGambar(false);
         setQuizOpsi(['', '']);
         setQuizJawaban('');
     }
 
+    function handleQuizGambarChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (file) {
+            setQuizGambar(file);
+            setQuizGambarPreview(URL.createObjectURL(file));
+            setRemoveQuizGambar(false);
+        }
+    }
+
+    function handleRemoveQuizGambar() {
+        setQuizGambar(null);
+        setQuizGambarPreview(null);
+        setRemoveQuizGambar(true);
+    }
+
     function submitQuiz(e: React.FormEvent) {
         e.preventDefault();
-        const payload = {
-            soal: quizSoal,
-            opsi: quizOpsi.filter(o => o.trim() !== ''),
-            jawaban_benar: quizJawaban,
-        };
+        const form = new FormData();
+        form.append('soal', quizSoal);
+        quizOpsi.filter(o => o.trim() !== '').forEach((o, i) => {
+            form.append(`opsi[${i}]`, o);
+        });
+        form.append('jawaban_benar', quizJawaban);
+
+        if (quizGambar) {
+            form.append('gambar', quizGambar);
+        }
+        if (removeQuizGambar) {
+            form.append('remove_gambar', '1');
+        }
 
         if (editingQuizId) {
-            router.put(`/materi/${materi.id}/quiz/${editingQuizId}`, payload, {
+            form.append('_method', 'PUT');
+            router.post(`/materi/${materi.id}/quiz/${editingQuizId}`, form, {
                 preserveScroll: true,
+                forceFormData: true,
                 onFinish: () => closeQuizForm(),
             });
         } else {
-            router.post(`/materi/${materi.id}/quiz`, payload, {
+            router.post(`/materi/${materi.id}/quiz`, form, {
                 preserveScroll: true,
+                forceFormData: true,
                 onFinish: () => closeQuizForm(),
             });
         }
@@ -555,18 +596,34 @@ export default function MateriEdit({
 
                     <Card>
                         <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <CardTitle>Quiz / Kuis</CardTitle>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <CardTitle>Quiz / Kuis</CardTitle>
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                        Kelola soal pilihan ganda & lampiran gambar
+                                    </p>
+                                </div>
                                 {!showQuizForm && (
-                                    <Button
-                                        type="button"
-                                        onClick={() => openQuizForm()}
-                                        variant="outline"
-                                        size="sm"
-                                        className="gap-1"
-                                    >
-                                        <Plus className="h-4 w-4" /> Tambah Soal
-                                    </Button>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <Button
+                                            type="button"
+                                            onClick={() => setShowPasteModal(true)}
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-1.5 border-indigo-200 bg-indigo-50/50 text-indigo-700 hover:bg-indigo-100 font-semibold"
+                                        >
+                                            📋 Import Massal (GForms)
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            onClick={() => openQuizForm()}
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-1 bg-white font-semibold"
+                                        >
+                                            <Plus className="h-4 w-4" /> Tambah Soal
+                                        </Button>
+                                    </div>
                                 )}
                             </div>
                         </CardHeader>
@@ -578,7 +635,7 @@ export default function MateriEdit({
                             {showQuizForm && (
                                 <form
                                     onSubmit={submitQuiz}
-                                    className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4"
+                                    className="space-y-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4"
                                 >
                                     <div>
                                         <Label>Soal</Label>
@@ -587,9 +644,44 @@ export default function MateriEdit({
                                             onChange={(e) =>
                                                 setQuizSoal(e.target.value)
                                             }
-                                            placeholder="Masukkan soal"
-                                            rows={2}
+                                            placeholder="Masukkan pertanyaan soal"
+                                            rows={3}
                                         />
+                                    </div>
+
+                                    {/* Lampiran Gambar Soal (Opsional) */}
+                                    <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
+                                        <Label className="text-xs font-bold text-slate-700">
+                                            Gambar Lampiran Soal (Opsional)
+                                        </Label>
+                                        
+                                        {quizGambarPreview ? (
+                                            <div className="space-y-2">
+                                                <div className="relative max-w-xs overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                                                    <img
+                                                        src={quizGambarPreview}
+                                                        alt="Pratinjau Gambar Soal"
+                                                        className="max-h-48 w-auto object-contain"
+                                                    />
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={handleRemoveQuizGambar}
+                                                    className="text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                >
+                                                    Hapus Gambar Soal
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <Input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleQuizGambarChange}
+                                                className="text-xs file:mr-2 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
+                                            />
+                                        )}
                                     </div>
 
                                     <div className="space-y-2">
@@ -703,13 +795,25 @@ export default function MateriEdit({
                                             className="rounded-lg border border-slate-200 bg-white p-4"
                                         >
                                             <div className="flex items-start justify-between gap-3">
-                                                <div className="min-w-0 flex-1">
+                                                <div className="min-w-0 flex-1 space-y-2">
                                                     <p className="text-sm font-semibold text-slate-900">
                                                         <span className="mr-1 text-slate-400">
                                                             {idx + 1}.
                                                         </span>{' '}
                                                         {q.soal}
                                                     </p>
+
+                                                    {/* Gambar Soal (Jika ada) */}
+                                                    {q.gambar && (
+                                                        <div className="overflow-hidden rounded-lg border border-slate-200 max-w-md bg-slate-50 my-2">
+                                                            <img
+                                                                src={q.gambar}
+                                                                alt={`Gambar Soal ${idx + 1}`}
+                                                                className="max-h-60 w-auto object-contain"
+                                                            />
+                                                        </div>
+                                                    )}
+
                                                     <ul className="mt-2 space-y-1">
                                                         {q.opsi.map((o, i) => (
                                                             <li
@@ -775,6 +879,13 @@ export default function MateriEdit({
                             )}
                         </CardContent>
                     </Card>
+
+                    {/* Modal Paste Parser Massal */}
+                    <QuizPasteParserModal
+                        open={showPasteModal}
+                        onOpenChange={setShowPasteModal}
+                        materiId={materi.id}
+                    />
                 </div>
             </div>
         </>

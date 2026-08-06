@@ -12,6 +12,7 @@ class MateriQuiz extends Model
     protected $fillable = [
         'materi_id',
         'soal',
+        'gambar',
         'opsi',
         'jawaban_benar',
         'urutan',

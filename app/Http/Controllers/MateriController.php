@@ -286,6 +286,7 @@ class MateriController extends Controller
         $quiz = $materi->quiz()->get()->map(fn ($q) => [
             'id' => $q->id,
             'soal' => $q->soal,
+            'gambar' => $q->gambar ? Storage::url($q->gambar) : null,
             'opsi' => $q->opsi,
             'jawaban_benar' => $q->jawaban_benar,
             'urutan' => $q->urutan,
@@ -447,6 +448,7 @@ class MateriController extends Controller
     {
         $validated = $request->validate([
             'soal' => 'required|string',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'opsi' => 'required|array|min:2|max:5',
             'opsi.*' => 'required|string',
             'jawaban_benar' => 'required|string',
@@ -454,9 +456,15 @@ class MateriController extends Controller
 
         $maxUrutan = $materi->quiz()->max('urutan') ?? 0;
 
+        $gambarPath = null;
+        if ($request->hasFile('gambar')) {
+            $gambarPath = $request->file('gambar')->store('quiz-images', 'public');
+        }
+
         MateriQuiz::create([
             'materi_id' => $materi->id,
             'soal' => $validated['soal'],
+            'gambar' => $gambarPath,
             'opsi' => $validated['opsi'],
             'jawaban_benar' => $validated['jawaban_benar'],
             'urutan' => $maxUrutan + 1,
@@ -470,10 +478,24 @@ class MateriController extends Controller
     {
         $validated = $request->validate([
             'soal' => 'required|string',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'opsi' => 'required|array|min:2|max:5',
             'opsi.*' => 'required|string',
             'jawaban_benar' => 'required|string',
+            'remove_gambar' => 'nullable|boolean',
         ]);
+
+        if ($request->boolean('remove_gambar') && $quiz->gambar) {
+            Storage::disk('public')->delete($quiz->gambar);
+            $validated['gambar'] = null;
+        } elseif ($request->hasFile('gambar')) {
+            if ($quiz->gambar) {
+                Storage::disk('public')->delete($quiz->gambar);
+            }
+            $validated['gambar'] = $request->file('gambar')->store('quiz-images', 'public');
+        } else {
+            unset($validated['gambar']);
+        }
 
         $quiz->update($validated);
 
@@ -483,10 +505,39 @@ class MateriController extends Controller
 
     public function quizDestroy(Materi $materi, MateriQuiz $quiz)
     {
+        if ($quiz->gambar) {
+            Storage::disk('public')->delete($quiz->gambar);
+        }
         $quiz->delete();
 
         return redirect()->route('materi.edit', $materi->id)
             ->with('success', 'Soal quiz berhasil dihapus.');
+    }
+
+    public function batchStoreQuiz(Request $request, Materi $materi)
+    {
+        $validated = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.soal' => 'required|string',
+            'items.*.opsi' => 'required|array|min:2|max:5',
+            'items.*.opsi.*' => 'required|string',
+            'items.*.jawaban_benar' => 'required|string',
+        ]);
+
+        $maxUrutan = $materi->quiz()->max('urutan') ?? 0;
+
+        foreach ($validated['items'] as $idx => $item) {
+            MateriQuiz::create([
+                'materi_id' => $materi->id,
+                'soal' => $item['soal'],
+                'opsi' => $item['opsi'],
+                'jawaban_benar' => $item['jawaban_benar'],
+                'urutan' => $maxUrutan + $idx + 1,
+            ]);
+        }
+
+        return redirect()->route('materi.edit', $materi->id)
+            ->with('success', count($validated['items']).' soal quiz berhasil diimpor.');
     }
 
     public function siswa(Request $request)
@@ -652,6 +703,7 @@ class MateriController extends Controller
         $quizList = $materi->quiz->map(fn ($q) => [
             'id' => $q->id,
             'soal' => $q->soal,
+            'gambar' => $q->gambar ? Storage::url($q->gambar) : null,
             'opsi' => $q->opsi,
             'jawaban_benar' => $q->jawaban_benar,
             'urutan' => $q->urutan,

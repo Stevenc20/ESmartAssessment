@@ -42,6 +42,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('materi', MateriController::class);
 
     Route::post('/materi/{materi}/quiz', [MateriController::class, 'quizStore'])->name('materi.quiz.store');
+    Route::post('/materi/{materi}/quiz/batch', [MateriController::class, 'batchStoreQuiz'])->name('materi.quiz.batch');
     Route::put('/materi/{materi}/quiz/{quiz}', [MateriController::class, 'quizUpdate'])->name('materi.quiz.update');
     Route::delete('/materi/{materi}/quiz/{quiz}', [MateriController::class, 'quizDestroy'])->name('materi.quiz.destroy');
     Route::post('/materi/{materi}/upload-image', [MateriController::class, 'uploadImage'])->name('materi.upload-image');
