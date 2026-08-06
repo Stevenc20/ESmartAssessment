@@ -50,42 +50,44 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
     const [polledSessions, setPolledSessions] =
         useState<ActiveSession[]>(active_sessions);
     const [autoScanning, setAutoScanning] = useState(false);
-    const [zoomAvailable, setZoomAvailable] = useState(false);
     const [zoomLevel, setZoomLevel] = useState(1);
     const [zoomMin, setZoomMin] = useState(1);
-    const [zoomMax, setZoomMax] = useState(1);
+    const [zoomMax, setZoomMax] = useState(4);
+    const zoomModeRef = useRef<'optical' | 'css'>('css');
     const scannerRef = useRef<HTMLDivElement>(null);
     const html5QrCodeRef = useRef<any>(null);
     const scannerStartedRef = useRef(false);
     const autoStartDoneRef = useRef(false);
     const startScannerRef = useRef<() => void>(() => {});
 
-    const applyCameraZoom = useCallback(async (nextZoom: number) => {
-        const scanner = html5QrCodeRef.current;
-        if (!scanner) return;
+    const applyCameraZoom = useCallback(
+        async (nextZoom: number) => {
+            const scanner = html5QrCodeRef.current;
+            if (!scanner) return;
 
-        try {
-            const zoomFeature = scanner
-                .getRunningTrackCameraCapabilities()
-                .zoomFeature();
-
-            if (!zoomFeature.isSupported()) {
-                setZoomAvailable(false);
-                return;
-            }
-
-            const min = zoomFeature.min();
-            const max = zoomFeature.max();
+            const max = zoomModeRef.current === 'optical' ? zoomMax : 4;
+            const min = zoomModeRef.current === 'optical' ? zoomMin : 1;
             const clamped = Math.min(max, Math.max(min, nextZoom));
 
-            await scanner.applyVideoConstraints({ advanced: [{ zoom: clamped }] });
-            setZoomMin(min);
-            setZoomMax(max);
+            if (zoomModeRef.current === 'optical') {
+                try {
+                    await scanner.applyVideoConstraints({
+                        advanced: [{ zoom: clamped }],
+                    });
+                } catch {
+                    return;
+                }
+            } else {
+                const el = scannerRef.current;
+                if (el) {
+                    el.style.transform = clamped > 1 ? `scale(${clamped})` : '';
+                }
+            }
+
             setZoomLevel(clamped);
-        } catch {
-            setZoomAvailable(false);
-        }
-    }, []);
+        },
+        [zoomMin, zoomMax],
+    );
 
     const stopScanner = useCallback(async () => {
         if (html5QrCodeRef.current) {
@@ -100,9 +102,15 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
             html5QrCodeRef.current = null;
         }
 
+        if (scannerRef.current) {
+            scannerRef.current.style.transform = '';
+        }
+
         scannerStartedRef.current = false;
-        setZoomAvailable(false);
+        zoomModeRef.current = 'css';
         setZoomLevel(1);
+        setZoomMin(1);
+        setZoomMax(4);
     }, []);
 
     const startScanner = useCallback(async () => {
@@ -123,16 +131,45 @@ return;
                 throw new Error('Tidak ada kamera yang terdeteksi');
             }
 
-            const backCamera = cameras.find(
-                (c) =>
-                    c.label.toLowerCase().includes('back') ||
-                    c.label.toLowerCase().includes('environment'),
-            );
-            const selectedCamera = backCamera ?? cameras[0];
+            const isBackCamera = (label: string) => {
+                const l = label.toLowerCase();
+                return ['back', 'environment', 'rear', '0'].some((k) =>
+                    l.includes(k),
+                );
+            };
+            const backCamera = cameras.find((c) => isBackCamera(c.label));
+            const selectedCamera =
+                backCamera ?? cameras[cameras.length - 1] ?? cameras[0];
 
             const scanner = new Html5Qrcode('qr-scanner-viewfinder');
             html5QrCodeRef.current = scanner;
             scannerStartedRef.current = true;
+
+            const probeZoom = () => {
+                try {
+                    const zoomFeature = scanner
+                        .getRunningTrackCameraCapabilities()
+                        .zoomFeature();
+
+                    if (zoomFeature.isSupported()) {
+                        zoomModeRef.current = 'optical';
+                        setZoomMin(zoomFeature.min());
+                        setZoomMax(zoomFeature.max());
+                        setZoomLevel(1);
+                        scanner
+                            .applyVideoConstraints({
+                                advanced: [{ zoom: zoomFeature.min() }],
+                            } as any)
+                            .catch(() => {});
+                        return;
+                    }
+                } catch { /* capabilities not ready yet */ }
+
+                zoomModeRef.current = 'css';
+                setZoomMin(1);
+                setZoomMax(4);
+                setZoomLevel(1);
+            };
 
             await scanner.start(
                 { deviceId: { exact: selectedCamera.id } },
@@ -151,12 +188,13 @@ return;
                 () => {},
             );
 
-            await applyCameraZoom(1);
+            probeZoom();
+            setTimeout(probeZoom, 400);
         } catch (err: any) {
             setCameraError(err?.message || 'Kamera tidak dapat diakses');
             setScannerActive(false);
         }
-    }, [applyCameraZoom]);
+    }, []);
 
     useEffect(() => {
         startScannerRef.current = startScanner;
@@ -277,12 +315,23 @@ return;
 
                     {/* QR Scanner Viewfinder */}
                     {scannerActive && (
-                        <div className="overflow-hidden rounded-xl border-2 border-dashed border-indigo-300 bg-black">
+                        <div
+                            className={`relative rounded-xl border-2 border-dashed border-indigo-300 bg-black ${
+                                zoomLevel > 1
+                                    ? 'overflow-visible'
+                                    : 'overflow-hidden'
+                            }`}
+                        >
                             <div
                                 id="qr-scanner-viewfinder"
                                 ref={scannerRef}
                                 className="mx-auto flex items-center justify-center"
-                                style={{ maxWidth: 400, minHeight: 300 }}
+                                style={{
+                                    maxWidth: 400,
+                                    minHeight: 300,
+                                    transformOrigin: 'center top',
+                                    transition: 'transform 150ms ease-out',
+                                }}
                             />
                             <div className="flex items-center justify-center gap-2 bg-black/80 px-4 py-2.5 text-center">
                                 <Smartphone className="h-4 w-4 text-indigo-300" />
@@ -291,16 +340,15 @@ return;
                                     guru
                                 </p>
                             </div>
-                            {zoomAvailable && (
-                                <div className="flex items-center justify-center gap-3 border-t border-white/10 bg-black/80 px-4 py-2.5">
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            applyCameraZoom(zoomLevel - 0.5)
-                                        }
-                                        disabled={zoomLevel <= zoomMin}
-                                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
-                                        aria-label="Perkecil kamera"
+                            <div className="flex items-center justify-center gap-3 border-t border-white/10 bg-black/80 px-4 py-2.5">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        applyCameraZoom(zoomLevel - 0.5)
+                                    }
+                                    disabled={zoomLevel <= zoomMin}
+                                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
+                                    aria-label="Perkecil kamera"
                                     >
                                         <ZoomOut className="h-4 w-4" />
                                     </button>
@@ -319,7 +367,6 @@ return;
                                         <ZoomIn className="h-4 w-4" />
                                     </button>
                                 </div>
-                            )}
                         </div>
                     )}
 
