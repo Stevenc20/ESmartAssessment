@@ -157,23 +157,19 @@ class DashboardController extends Controller
 
         $studentDashboard = null;
         if ($user->role?->role_name === 'siswa') {
-            $siswaId = $user->id;
+            // Auto evaluate badges for student on dashboard load
+            $newEarnedBadges = app(\App\Services\BadgeService::class)->evaluateForStudent($user);
+            if (! empty($newEarnedBadges)) {
+                session()->flash('new_badges', $newEarnedBadges);
+            }
 
-            $assessmentSelesai = PengumpulanTugas::where('siswa_id', $siswaId)
-                ->whereHas('penilaian')
-                ->count();
-
-            $rataNilai = PengumpulanTugas::where('siswa_id', $siswaId)
-                ->whereHas('penilaian')
-                ->with('penilaian')
-                ->get()
-                ->avg(fn ($p) => $p->penilaian->nilai);
-
-            $rataNilai = $rataNilai ? round($rataNilai, 2) : null;
+            $badgeStats = app(\App\Services\BadgeService::class)->getStudentStats($user);
+            $rataNilai = $badgeStats['assessment_avg_score'] > 0 ? $badgeStats['assessment_avg_score'] : null;
+            $assessmentSelesai = $badgeStats['materi_count'];
 
             $badgeCount = StudentBadge::where('siswa_id', $siswaId)->count();
 
-            $totalPoints = StudentPoint::where('siswa_id', $siswaId)->sum('point');
+            $totalPoints = (int) StudentPoint::where('siswa_id', $siswaId)->sum('point');
 
             $rataRataSemua = PengumpulanTugas::whereHas('penilaian')
                 ->with('penilaian')

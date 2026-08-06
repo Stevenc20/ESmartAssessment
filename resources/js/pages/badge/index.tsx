@@ -43,18 +43,24 @@ export default function BadgeIndex({
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6 lg:p-8">
                 <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
                     {/* Header */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
                                 <Trophy className="h-5 w-5" />
                             </div>
                             <div>
                                 <h1 className="text-xl font-bold text-slate-900">
-                                    Badge Saya
+                                    Badge & Reward Saya
                                 </h1>
                                 <p className="text-sm text-slate-500">
-                                    {earnedCount} dari {badges.length} badge diraih
+                                    {earnedCount} dari {badges.length} badge diraih • {stats.points_earned} Poin Terkumpul
                                 </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-100/80 border border-amber-200 text-amber-900 font-extrabold text-xs">
+                                <span>⚡</span> {stats.points_earned} Poin
                             </div>
                         </div>
                     </div>

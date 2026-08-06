@@ -4,21 +4,26 @@ namespace App\Services;
 
 use App\Models\Badge;
 use App\Models\PengumpulanTugas;
+use App\Models\ProgressMateri;
+use App\Models\Role;
 use App\Models\StudentBadge;
 use App\Models\StudentPoint;
 use App\Models\User;
 
 class BadgeService
 {
-    public function evaluateForStudent(User $siswa): void
+    public function evaluateForStudent(User $siswa): array
     {
         $earnedBadgeIds = StudentBadge::where('siswa_id', $siswa->id)->pluck('badge_id');
 
         $available = Badge::whereNotNull('conditions')->whereNotIn('id', $earnedBadgeIds)->get();
 
-        if ($available->isEmpty()) return;
+        if ($available->isEmpty()) {
+            return [];
+        }
 
         $stats = $this->getStudentStats($siswa);
+        $newlyEarned = [];
 
         foreach ($available as $badge) {
             if ($this->evaluateConditions($badge->conditions, $stats)) {
@@ -27,50 +32,108 @@ class BadgeService
                     'badge_id' => $badge->id,
                     'earned_at' => now(),
                 ]);
+
+                // Award 100 Reward Points for each earned badge
+                StudentPoint::create([
+                    'siswa_id' => $siswa->id,
+                    'point' => 100,
+                    'description' => 'Mendapatkan Badge: '.$badge->badge_name,
+                ]);
+
+                $newlyEarned[] = [
+                    'id' => $badge->id,
+                    'badge_name' => $badge->badge_name,
+                    'icon' => $badge->icon,
+                    'description' => $badge->description,
+                    'points' => 100,
+                ];
             }
         }
+
+        return $newlyEarned;
+    }
+
+    public function evaluateForAllStudents(): int
+    {
+        $roleSiswa = Role::where('role_name', 'siswa')->first();
+        if (! $roleSiswa) {
+            return 0;
+        }
+
+        $siswaList = User::where('role_id', $roleSiswa->id)->get();
+        $totalAwarded = 0;
+
+        foreach ($siswaList as $siswa) {
+            $newBadges = $this->evaluateForStudent($siswa);
+            $totalAwarded += count($newBadges);
+        }
+
+        return $totalAwarded;
     }
 
     public function getStudentStats(User $siswa): array
     {
+        // Assignment scores
         $assessments = PengumpulanTugas::where('siswa_id', $siswa->id)
             ->whereHas('penilaian')
             ->with('penilaian')
             ->get();
 
-        $gradedCount = $assessments->count();
-        $avgScore = $gradedCount > 0
-            ? round($assessments->avg(fn ($p) => $p->penilaian->nilai), 2)
+        $assignmentScores = $assessments->map(fn ($p) => (float) $p->penilaian->nilai);
+
+        // Quiz scores & completed learning materials
+        $materiProgress = ProgressMateri::where('siswa_id', $siswa->id)->get();
+        $quizScores = $materiProgress->whereNotNull('quiz_score')->map(fn ($p) => (float) $p->quiz_score);
+        $completedMateriCount = $materiProgress->where('status', 'completed')->count();
+
+        // Combined scores
+        $allScores = $assignmentScores->concat($quizScores);
+        $totalItemsCount = max($completedMateriCount, $assessments->count(), $allScores->count());
+
+        $avgScore = $allScores->isNotEmpty()
+            ? round($allScores->avg(), 2)
             : 0;
-        $hasPerfect = $assessments->contains(fn ($p) => $p->penilaian->nilai === 100);
+
+        $hasPerfect = $allScores->contains(fn ($s) => $s >= 100);
         $totalPoints = StudentPoint::where('siswa_id', $siswa->id)->sum('point');
 
         return [
-            'assessment_count' => $gradedCount,
+            'materi_count' => $totalItemsCount,
+            'assessment_count' => $totalItemsCount,
             'assessment_avg_score' => $avgScore,
             'assessment_perfect' => $hasPerfect,
-            'points_earned' => $totalPoints,
+            'points_earned' => (int) $totalPoints,
         ];
     }
 
     public function evaluateConditions(?array $conditions, array $stats): bool
     {
-        if (!$conditions || !isset($conditions['type'])) return false;
+        if (! $conditions || ! isset($conditions['type'])) {
+            return false;
+        }
 
         $type = $conditions['type'];
         $operator = $conditions['operator'] ?? '>=';
         $value = $conditions['value'] ?? 0;
+
+        // Alias mapping for flexible condition types
+        if ($type === 'materi_count' && ! isset($stats['materi_count'])) {
+            $type = 'assessment_count';
+        }
+
         $actual = $stats[$type] ?? null;
 
-        if ($actual === null) return false;
+        if ($actual === null) {
+            return false;
+        }
 
         return match ($operator) {
             '>=' => $actual >= $value,
             '>' => $actual > $value,
-                '<' => $actual < $value,
-                '<=' => $actual <= $value,
-                '==' => $actual == $value,
-                default => false,
+            '<' => $actual < $value,
+            '<=' => $actual <= $value,
+            '==' => $actual == $value,
+            default => false,
         };
     }
 

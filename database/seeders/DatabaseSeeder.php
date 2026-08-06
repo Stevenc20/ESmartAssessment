@@ -11,5 +11,6 @@ class DatabaseSeeder extends Seeder
         $this->call(RoleAndUserSeeder::class);
         $this->call(KelasSeeder::class);
         $this->call(FeatureToggleSeeder::class);
+        $this->call(BadgeSeeder::class);
     }
 }

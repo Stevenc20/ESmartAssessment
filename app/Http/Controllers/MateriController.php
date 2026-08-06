@@ -906,6 +906,11 @@ class MateriController extends Controller
         $progress->quiz_score = max($progress->quiz_score ?? 0, $score);
         $progress->save();
 
+        $newBadges = app(\App\Services\BadgeService::class)->evaluateForStudent($user);
+        if (! empty($newBadges)) {
+            session()->flash('new_badges', $newBadges);
+        }
+
         return back()->with([
             'quiz_results' => [
                 'score' => $score,
@@ -929,13 +934,13 @@ class MateriController extends Controller
 
         $lastSubmission = PengumpulanTugas::where('tugas_id', $tugas->id)
             ->where('siswa_id', $user->id)
-            ->latest()
+            ->orderByDesc('revisi_ke')
             ->first();
 
         $revisiKe = $lastSubmission ? $lastSubmission->revisi_ke + 1 : 1;
 
-        if ($lastSubmission && $revisiKe > ($tugas->max_revisi + 1)) {
-            return back()->with('error', 'Batas revisi tugas telah habis.');
+        if ($tugas->max_revisi > 0 && $revisiKe > $tugas->max_revisi + 1) {
+            return back()->with('error', 'Batas maksimum pengiriman/revisi tugas sudah tercapai.');
         }
 
         $path = $request->file('file_tugas')->store('tugas-submissions', 'public');
@@ -947,6 +952,11 @@ class MateriController extends Controller
             'revisi_ke' => $revisiKe,
             'submitted_at' => now(),
         ]);
+
+        $newBadges = app(\App\Services\BadgeService::class)->evaluateForStudent($user);
+        if (! empty($newBadges)) {
+            session()->flash('new_badges', $newBadges);
+        }
 
         return back()->with('success', 'Tugas berhasil dikumpulkan.');
     }
@@ -964,6 +974,11 @@ class MateriController extends Controller
                 'completed_at' => $data['status'] === 'completed' ? now() : null,
             ]
         );
+
+        $newBadges = app(\App\Services\BadgeService::class)->evaluateForStudent($request->user());
+        if (! empty($newBadges)) {
+            session()->flash('new_badges', $newBadges);
+        }
 
         return back()->with('success', 'Progress berhasil diperbarui.');
     }
