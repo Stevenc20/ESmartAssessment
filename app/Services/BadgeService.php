@@ -16,7 +16,7 @@ class BadgeService
     {
         $earnedBadgeIds = StudentBadge::where('siswa_id', $siswa->id)->pluck('badge_id');
 
-        $available = Badge::whereNotNull('conditions')->whereNotIn('id', $earnedBadgeIds)->get();
+        $available = Badge::whereNotIn('id', $earnedBadgeIds)->get();
 
         if ($available->isEmpty()) {
             return [];
@@ -110,7 +110,7 @@ class BadgeService
     public function evaluateConditions(?array $conditions, array $stats): bool
     {
         if (! $conditions || ! isset($conditions['type'])) {
-            return false;
+            $conditions = ['type' => 'materi_count', 'operator' => '>=', 'value' => 1];
         }
 
         $type = $conditions['type'];

@@ -157,6 +157,8 @@ class DashboardController extends Controller
 
         $studentDashboard = null;
         if ($user->role?->role_name === 'siswa') {
+            $siswaId = $user->id;
+
             // Auto evaluate badges for student on dashboard load
             $newEarnedBadges = app(\App\Services\BadgeService::class)->evaluateForStudent($user);
             if (! empty($newEarnedBadges)) {
