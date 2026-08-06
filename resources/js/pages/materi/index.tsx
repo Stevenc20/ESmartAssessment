@@ -33,6 +33,7 @@ type MateriItem = {
     pdf_file_name: string | null;
     drive_link: string | null;
     folders?: { id: number; nama: string; file_count: number }[];
+    files?: { id: number; nama: string }[];
     pertemuan: string;
     roadmap: string;
     created_by: string;
@@ -178,6 +179,12 @@ export default function MateriIndex({
                                                 >
                                                     <Download className="h-3.5 w-3.5" />
                                                 </a>
+                                            )}
+                                            {(materi.files?.length ?? 0) > 0 && (
+                                                <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600">
+                                                    <FileText className="h-3.5 w-3.5" />
+                                                    {materi.files?.length}
+                                                </span>
                                             )}
                                             {(materi.folders?.length ?? 0) > 0 && (
                                                 <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600">

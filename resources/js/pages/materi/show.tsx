@@ -39,11 +39,24 @@ type MateriDetail = {
         total_size: number;
         download_url: string;
     }[];
+    files?: {
+        id: number;
+        nama: string;
+        size: number;
+        download_url: string;
+    }[];
     pertemuan: string;
     roadmap: string;
     created_by: string;
     created_at: string;
 };
+
+function formatBytes(bytes: number): string {
+    if (!bytes) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
 
 export default function MateriShow({
     materi,
@@ -187,7 +200,8 @@ export default function MateriShow({
                     {/* Resources */}
                     {(materi.pdf_file ||
                         materi.drive_link ||
-                        (materi.folders?.length ?? 0) > 0) && (
+                        (materi.folders?.length ?? 0) > 0 ||
+                        (materi.files?.length ?? 0) > 0) && (
                         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                             <div className="border-b border-slate-100 px-5 py-3">
                                 <div className="flex items-center gap-2">
@@ -244,6 +258,28 @@ export default function MateriShow({
                                         </span>
                                     </a>
                                 )}
+                                {materi.files?.map((f) => (
+                                    <a
+                                        key={f.id}
+                                        href={f.download_url}
+                                        className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-slate-50"
+                                    >
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-600">
+                                            <FileText className="h-5 w-5" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-semibold text-slate-900">
+                                                {f.nama}
+                                            </p>
+                                            <p className="truncate text-xs text-slate-400">
+                                                {formatBytes(f.size)}
+                                            </p>
+                                        </div>
+                                        <span className="text-xs font-semibold text-orange-600">
+                                            Download
+                                        </span>
+                                    </a>
+                                ))}
                                 {materi.folders?.map((f) => (
                                     <a
                                         key={f.id}

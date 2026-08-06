@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, Plus, Pencil, Trash2 } from 'lucide-react';
+import { BookOpen, FileText, Folder, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import TiptapEditor from '@/components/editor/tiptap-editor';
-import MateriFolderUpload, { type PickedFolder } from '@/components/materi/materi-folder-upload';
+import MateriFolderUpload, { type PickedFile, type PickedFolder } from '@/components/materi/materi-folder-upload';
 
 type PertemuanItem = { id: number; judul: string; tingkat: string | null };
 
@@ -45,6 +45,12 @@ type MateriItem = {
         total_size: number;
         download_url: string;
     }[];
+    files?: {
+        id: number;
+        nama: string;
+        size: number;
+        download_url: string;
+    }[];
 };
 
 export default function MateriEdit({
@@ -71,6 +77,7 @@ export default function MateriEdit({
     const [processing, setProcessing] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [folders, setFolders] = useState<PickedFolder[]>([]);
+    const [files, setFiles] = useState<PickedFile[]>([]);
 
     const [showQuizForm, setShowQuizForm] = useState(false);
     const [editingQuizId, setEditingQuizId] = useState<number | null>(null);
@@ -126,6 +133,10 @@ export default function MateriEdit({
             });
         });
 
+        files.forEach((f) => {
+            form.append('files[]', f.file, f.file.name);
+        });
+
         router.post(`/materi/${materi.id}`, form, {
             preserveScroll: true,
             forceFormData: true,
@@ -139,6 +150,12 @@ export default function MateriEdit({
 
     function deleteFolder(folderId: number) {
         router.delete(`/materi/folders/${folderId}`, {
+            preserveScroll: true,
+        });
+    }
+
+    function deleteFile(fileId: number) {
+        router.delete(`/materi/files/${fileId}`, {
             preserveScroll: true,
         });
     }
@@ -414,6 +431,37 @@ export default function MateriEdit({
 
                                 {/* Folder Materi Section */}
                                 <div className="col-span-2 space-y-3">
+                                    {(materi.files?.length ?? 0) > 0 && (
+                                        <div className="rounded-xl border border-amber-100 bg-amber-50/40 p-4 space-y-2">
+                                            <h3 className="text-sm font-bold text-amber-900">
+                                                File Terpasang
+                                            </h3>
+                                            <ul className="space-y-2">
+                                                {materi.files?.map((f) => (
+                                                    <li
+                                                        key={f.id}
+                                                        className="flex items-center justify-between gap-2 rounded-lg border border-amber-200 bg-white px-3 py-2 text-xs"
+                                                    >
+                                                        <span className="flex min-w-0 items-center gap-2">
+                                                            <FileText className="h-4 w-4 shrink-0 text-amber-600" />
+                                                            <span className="truncate font-semibold text-slate-700">
+                                                                {f.nama}
+                                                            </span>
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                deleteFile(f.id)
+                                                            }
+                                                            className="shrink-0 text-red-500 hover:text-red-700"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
                                     {(materi.folders?.length ?? 0) > 0 && (
                                         <div className="rounded-xl border border-amber-100 bg-amber-50/40 p-4 space-y-2">
                                             <h3 className="text-sm font-bold text-amber-900">
@@ -450,11 +498,18 @@ export default function MateriEdit({
                                     )}
                                     <MateriFolderUpload
                                         folders={folders}
-                                        onChange={setFolders}
+                                        files={files}
+                                        onFoldersChange={setFolders}
+                                        onFilesChange={setFiles}
                                     />
                                     {errors.folders && (
                                         <p className="mt-1 text-sm text-red-500">
                                             {errors.folders}
+                                        </p>
+                                    )}
+                                    {errors.files && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.files}
                                         </p>
                                     )}
                                 </div>

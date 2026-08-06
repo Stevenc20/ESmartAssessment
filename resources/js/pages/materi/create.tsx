@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import MateriFolderUpload, { type PickedFolder } from '@/components/materi/materi-folder-upload';
+import MateriFolderUpload, { type PickedFile, type PickedFolder } from '@/components/materi/materi-folder-upload';
 
 type PertemuanItem = { id: number; judul: string; tingkat: string | null };
 
@@ -36,6 +36,7 @@ export default function MateriCreate({
     const [processing, setProcessing] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [folders, setFolders] = useState<PickedFolder[]>([]);
+    const [files, setFiles] = useState<PickedFile[]>([]);
 
     const addOpsi = () => setPollOpsi([...pollOpsi, '']);
     const removeOpsi = (idx: number) => setPollOpsi(pollOpsi.filter((_, i) => i !== idx));
@@ -87,6 +88,10 @@ export default function MateriCreate({
                 form.append(`folders[${idx}][files][]`, file, file.name);
                 form.append(`folders[${idx}][names][]`, file.webkitRelativePath);
             });
+        });
+
+        files.forEach((f) => {
+            form.append('files[]', f.file, f.file.name);
         });
 
         if (pollPertanyaan.trim()) {
@@ -342,11 +347,18 @@ export default function MateriCreate({
                                 <div className="col-span-2">
                                     <MateriFolderUpload
                                         folders={folders}
-                                        onChange={setFolders}
+                                        files={files}
+                                        onFoldersChange={setFolders}
+                                        onFilesChange={setFiles}
                                     />
                                     {errors.folders && (
                                         <p className="mt-1 text-sm text-red-500">
                                             {errors.folders}
+                                        </p>
+                                    )}
+                                    {errors.files && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.files}
                                         </p>
                                     )}
                                 </div>
