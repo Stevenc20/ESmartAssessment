@@ -86,7 +86,7 @@ class LaporanController extends Controller
 
     private function absensiRoadmap(Request $request, float $threshold)
     {
-        $roadmapId = (int) $request->input('roadmap_id', 0);
+        $requestedRoadmapId = (int) $request->input('roadmap_id', 0);
 
         $roadmaps = Roadmap::with(['pertemuan' => fn ($q) => $q->orderBy('urutan')])
             ->orderBy('tahun', 'desc')
@@ -106,8 +106,17 @@ class LaporanController extends Controller
                     ->count(),
             ]);
 
+        $roadmapId = $requestedRoadmapId;
+        if ($roadmapId === 0 && $roadmaps->isNotEmpty()) {
+            $roadmapId = (int) $roadmaps->first()['id'];
+        }
+
         $roadmap = Roadmap::with(['pertemuan' => fn ($q) => $q->where(fn ($qq) => $qq->where('status', 'published')->orWhereHas('absensi'))->orderBy('urutan')])
             ->find($roadmapId);
+
+        if ($roadmapId !== $requestedRoadmapId) {
+            return redirect()->route('laporan.absensi', ['mode' => 'roadmap', 'roadmap_id' => $roadmapId]);
+        }
 
         if (! $roadmap) {
             return Inertia::render('laporan/absensi', [
