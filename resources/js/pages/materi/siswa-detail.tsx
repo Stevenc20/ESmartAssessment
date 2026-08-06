@@ -8,6 +8,7 @@ import {
     Download,
     ExternalLink,
     FileText,
+    Folder,
     HelpCircle,
     PlayCircle,
     Upload,
@@ -60,6 +61,14 @@ type TugasItem = {
     revisi_ke: number;
 };
 
+type FolderItem = {
+    id: number;
+    nama: string;
+    file_count: number;
+    total_size: number;
+    download_url: string;
+};
+
 type MateriDetail = {
     id: number;
     judul: string;
@@ -71,6 +80,7 @@ type MateriDetail = {
     pdf_file: string | null;
     pdf_file_name: string | null;
     drive_link: string | null;
+    folders: FolderItem[];
     created_by: string;
     progress_status: 'not_started' | 'in_progress' | 'completed';
     completed_at: string | null;
@@ -125,6 +135,16 @@ const tugasStatusConfig = {
     dinilai: { label: 'Dinilai', color: '#059669', bg: '#ecfdf5' },
     terlewat: { label: 'Terlewat', color: '#dc2626', bg: '#fef2f2' },
 };
+
+function formatBytes(bytes: number): string {
+    if (!bytes) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.min(
+        Math.floor(Math.log(bytes) / Math.log(1024)),
+        units.length - 1,
+    );
+    return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
 
 /* ── Tugas Card ── */
 function TugasCard({ tugas }: { tugas: TugasItem }) {
@@ -491,7 +511,9 @@ export default function MateriSiswaDetail({
                     )}
 
                     {/* Resources */}
-                    {(materi.pdf_file || materi.drive_link) && (
+                    {(materi.pdf_file ||
+                        materi.drive_link ||
+                        (materi.folders?.length ?? 0) > 0) && (
                         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                             <div className="border-b border-slate-100 px-5 py-3">
                                 <div className="flex items-center gap-2">
@@ -542,6 +564,28 @@ export default function MateriSiswaDetail({
                                         </div>
                                     </a>
                                 )}
+                                {materi.folders?.map((f) => (
+                                    <a
+                                        key={f.id}
+                                        href={f.download_url}
+                                        className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-slate-50"
+                                    >
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+                                            <Folder className="h-5 w-5" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-semibold text-slate-900">
+                                                Download Folder · {f.nama}
+                                            </p>
+                                            <p className="truncate text-xs text-slate-400">
+                                                {f.file_count} file ·{' '}
+                                                {formatBytes(f.total_size)} ·
+                                                .zip
+                                            </p>
+                                        </div>
+                                        <Download className="h-4 w-4 shrink-0 text-slate-300" />
+                                    </a>
+                                ))}
                             </div>
                         </div>
                     )}

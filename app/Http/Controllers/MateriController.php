@@ -2,7 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Absensi;
+use App\Models\Kelas;
 use App\Models\Materi;
+use App\Models\MateriDiscussion;
+use App\Models\MateriFolder;
+use App\Models\MateriPoll;
+use App\Models\MateriPollOption;
+use App\Models\MateriPollVote;
 use App\Models\MateriQuiz;
 use App\Models\NotificationRead;
 use App\Models\PengumpulanTugas;
@@ -10,10 +17,12 @@ use App\Models\Pertemuan;
 use App\Models\ProgressMateri;
 use App\Models\Roadmap;
 use App\Models\Tugas;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use ZipArchive;
 
 class MateriController extends Controller
 {
@@ -27,9 +36,66 @@ class MateriController extends Controller
         return $match ? 'https://www.youtube.com/embed/'.$match[1] : null;
     }
 
+    private function folderData(MateriFolder $folder): array
+    {
+        return [
+            'id' => $folder->id,
+            'nama' => $folder->nama,
+            'file_count' => $folder->file_count,
+            'total_size' => $folder->total_size,
+            'download_url' => route('materi.folder.download', $folder->id),
+        ];
+    }
+
+    private function storeFolderUploads(Materi $materi, Request $request): void
+    {
+        foreach ($request->input('folders', []) as $idx => $folderData) {
+            $files = $request->file("folders.$idx.files") ?? [];
+            $names = $request->input("folders.$idx.names") ?? [];
+            $nama = trim($folderData['nama'] ?? '');
+
+            if ($nama === '' || empty($files)) {
+                continue;
+            }
+
+            $folder = MateriFolder::create([
+                'materi_id' => $materi->id,
+                'nama' => $nama,
+                'file_count' => 0,
+                'total_size' => 0,
+            ]);
+
+            $totalSize = 0;
+            $count = 0;
+
+            foreach ($files as $k => $file) {
+                $relative = $names[$k] ?? $file->getClientOriginalName();
+                $relative = ltrim((string) str_replace(['\\', '..'], ['/', ''], $relative), '/');
+
+                if ($relative === '') {
+                    continue;
+                }
+
+                if ($file->storeAs("materi-folders/{$folder->id}", $relative, 'public')) {
+                    $totalSize += $file->getSize();
+                    $count++;
+                }
+            }
+
+            $folder->update(['file_count' => $count, 'total_size' => $totalSize]);
+        }
+    }
+
+    private function sanitizeZipName(string $name): string
+    {
+        $clean = preg_replace('/[\\\\\/:*?"<>|]+/', '-', $name);
+
+        return trim($clean, " \t\n\r\0\x0B.");
+    }
+
     public function index()
     {
-        $materiList = Materi::with(['pertemuan.roadmap', 'creator'])
+        $materiList = Materi::with(['pertemuan.roadmap', 'creator', 'folders'])
             ->orderBy('created_at')
             ->get()
             ->map(fn ($m) => [
@@ -42,6 +108,8 @@ class MateriController extends Controller
                 'pdf_file' => $m->pdf_file ? Storage::url($m->pdf_file) : null,
                 'pdf_file_name' => $m->pdf_file ? basename($m->pdf_file) : null,
                 'drive_link' => $m->drive_link,
+                'folders' => $m->folders->map(fn ($f) => $this->folderData($f))->values(),
+                'folder_count' => $m->folders->count(),
                 'pertemuan' => $m->pertemuan?->judul ?? '-',
                 'roadmap' => $m->pertemuan?->roadmap?->judul ?? '-',
                 'created_by' => $m->creator?->name ?? '-',
@@ -59,7 +127,7 @@ class MateriController extends Controller
 
     public function show(Materi $materi)
     {
-        $materi->load(['pertemuan.roadmap', 'creator']);
+        $materi->load(['pertemuan.roadmap', 'creator', 'folders']);
 
         return Inertia::render('materi/show', [
             'materi' => [
@@ -72,6 +140,7 @@ class MateriController extends Controller
                 'pdf_file' => $materi->pdf_file ? Storage::url($materi->pdf_file) : null,
                 'pdf_file_name' => $materi->pdf_file ? basename($materi->pdf_file) : null,
                 'drive_link' => $materi->drive_link,
+                'folders' => $materi->folders->map(fn ($f) => $this->folderData($f))->values(),
                 'pertemuan' => $materi->pertemuan?->judul ?? '-',
                 'roadmap' => $materi->pertemuan?->roadmap?->judul ?? '-',
                 'created_by' => $materi->creator?->name ?? '-',
@@ -111,6 +180,12 @@ class MateriController extends Controller
             'video_url' => 'nullable|string|max:255',
             'drive_link' => 'nullable|string|max:255',
             'tingkat' => 'nullable|string|in:10,11',
+            'folders' => 'nullable|array',
+            'folders.*.nama' => 'required|string|max:255',
+            'folders.*.files' => 'required|array|max:200',
+            'folders.*.files.*' => 'file|max:51200',
+            'folders.*.names' => 'nullable|array',
+            'folders.*.names.*' => 'nullable|string|max:1024',
         ]);
 
         $data['tingkat'] = $data['tingkat'] ?? null;
@@ -130,8 +205,10 @@ class MateriController extends Controller
 
         $materi = Materi::create($data);
 
+        $this->storeFolderUploads($materi, $request);
+
         if ($request->filled('poll_pertanyaan') && is_array($request->input('poll_opsi'))) {
-            $poll = \App\Models\MateriPoll::create([
+            $poll = MateriPoll::create([
                 'materi_id' => $materi->id,
                 'pertanyaan' => $request->input('poll_pertanyaan'),
                 'is_active' => true,
@@ -139,7 +216,7 @@ class MateriController extends Controller
 
             foreach ($request->input('poll_opsi') as $idx => $opsiText) {
                 if (! empty(trim($opsiText))) {
-                    \App\Models\MateriPollOption::create([
+                    MateriPollOption::create([
                         'poll_id' => $poll->id,
                         'opsi_text' => trim($opsiText),
                         'urutan' => $idx + 1,
@@ -154,7 +231,7 @@ class MateriController extends Controller
 
     public function edit(Materi $materi)
     {
-        $materi->load('poll.options');
+        $materi->load(['poll.options', 'folders']);
 
         $pertemuanList = Pertemuan::with('roadmap')
             ->orderBy('judul')
@@ -186,6 +263,7 @@ class MateriController extends Controller
                 'pdf_file_name' => $materi->pdf_file ? basename($materi->pdf_file) : null,
                 'drive_link' => $materi->drive_link,
                 'tingkat' => $materi->tingkat,
+                'folders' => $materi->folders->map(fn ($f) => $this->folderData($f))->values(),
                 'poll_pertanyaan' => $materi->poll?->pertanyaan ?? '',
                 'poll_opsi' => $materi->poll ? $materi->poll->options->pluck('opsi_text')->toArray() : ['', ''],
             ],
@@ -210,6 +288,12 @@ class MateriController extends Controller
             'video_url' => 'nullable|string|max:255',
             'drive_link' => 'nullable|string|max:255',
             'tingkat' => 'nullable|string|in:10,11',
+            'folders' => 'nullable|array',
+            'folders.*.nama' => 'required|string|max:255',
+            'folders.*.files' => 'required|array|max:200',
+            'folders.*.files.*' => 'file|max:51200',
+            'folders.*.names' => 'nullable|array',
+            'folders.*.names.*' => 'nullable|string|max:1024',
         ]);
 
         $data['tingkat'] = $data['tingkat'] ?? null;
@@ -237,8 +321,10 @@ class MateriController extends Controller
 
         $materi->update($data);
 
+        $this->storeFolderUploads($materi, $request);
+
         if ($request->filled('poll_pertanyaan') && is_array($request->input('poll_opsi'))) {
-            $poll = \App\Models\MateriPoll::updateOrCreate(
+            $poll = MateriPoll::updateOrCreate(
                 ['materi_id' => $materi->id],
                 ['pertanyaan' => $request->input('poll_pertanyaan'), 'is_active' => true]
             );
@@ -246,7 +332,7 @@ class MateriController extends Controller
             $poll->options()->delete();
             foreach ($request->input('poll_opsi') as $idx => $opsiText) {
                 if (! empty(trim($opsiText))) {
-                    \App\Models\MateriPollOption::create([
+                    MateriPollOption::create([
                         'poll_id' => $poll->id,
                         'opsi_text' => trim($opsiText),
                         'urutan' => $idx + 1,
@@ -257,6 +343,40 @@ class MateriController extends Controller
 
         return redirect()->route('materi.index')
             ->with('success', 'Materi berhasil diperbarui.');
+    }
+
+    public function downloadFolder(MateriFolder $folder)
+    {
+        $disk = Storage::disk('public');
+        $base = "materi-folders/{$folder->id}";
+        $files = $disk->allFiles($base);
+
+        if (empty($files)) {
+            return back()->with('error', 'Folder ini kosong atau tidak ditemukan.');
+        }
+
+        $zipName = $this->sanitizeZipName($folder->nama).'.zip';
+        $prefix = $folder->nama.'/';
+
+        return response()->streamDownload(function () use ($disk, $files, $base, $prefix) {
+            $zip = new ZipArchive;
+            $zip->open('php://output', ZipArchive::CREATE);
+
+            foreach ($files as $file) {
+                $relative = substr($file, strlen($base) + 1);
+                $zip->addFromString($prefix.$relative, $disk->get($file));
+            }
+
+            $zip->close();
+        }, $zipName, ['Content-Type' => 'application/zip']);
+    }
+
+    public function deleteFolder(MateriFolder $folder)
+    {
+        Storage::disk('public')->deleteDirectory("materi-folders/{$folder->id}");
+        $folder->delete();
+
+        return back()->with('success', 'Folder berhasil dihapus.');
     }
 
     public function quizStore(Request $request, Materi $materi)
@@ -320,7 +440,7 @@ class MateriController extends Controller
             if ($tingkat) {
                 $query->where('tingkat', $tingkat)->orWhereNull('tingkat');
             }
-        }, 'pertemuan.materi.tugas.pengumpulan' => function ($q) use ($user) {
+        }, 'pertemuan.materi.folders', 'pertemuan.materi.tugas.pengumpulan' => function ($q) use ($user) {
             $q->where('siswa_id', $user->id);
         }, 'pertemuan.materi.tugas.pengumpulan.penilaian'])
             ->where(function ($q) use ($tingkat) {
@@ -380,6 +500,7 @@ class MateriController extends Controller
                             'pdf_file' => $m->pdf_file ? Storage::url($m->pdf_file) : null,
                             'pdf_file_name' => $m->pdf_file ? basename($m->pdf_file) : null,
                             'drive_link' => $m->drive_link,
+                            'folders' => $m->folders->map(fn ($f) => $this->folderData($f))->values(),
                             'created_by' => $m->creator?->name ?? '-',
                             'progress_status' => $progress?->status ?? 'not_started',
                             'completed_at' => $progress?->completed_at,
@@ -429,7 +550,7 @@ class MateriController extends Controller
     {
         $user = $request->user();
 
-        $materi->load(['pertemuan.roadmap', 'creator', 'tugas.pengumpulan.penilaian', 'progress', 'quiz']);
+        $materi->load(['pertemuan.roadmap', 'creator', 'tugas.pengumpulan.penilaian', 'progress', 'quiz', 'folders']);
 
         $progress = $materi->progress->firstWhere('siswa_id', $user->id);
 
@@ -543,6 +664,7 @@ class MateriController extends Controller
                 'pdf_file' => $materi->pdf_file ? Storage::url($materi->pdf_file) : null,
                 'pdf_file_name' => $materi->pdf_file ? basename($materi->pdf_file) : null,
                 'drive_link' => $materi->drive_link,
+                'folders' => $materi->folders->map(fn ($f) => $this->folderData($f))->values(),
                 'created_by' => $materi->creator?->name ?? '-',
                 'progress_status' => $progress?->status ?? 'not_started',
                 'completed_at' => $progress?->completed_at,
@@ -571,7 +693,7 @@ class MateriController extends Controller
             'option_id' => 'required|exists:materi_poll_options,id',
         ]);
 
-        \App\Models\MateriPollVote::updateOrCreate(
+        MateriPollVote::updateOrCreate(
             ['poll_id' => $poll->id, 'siswa_id' => $user->id],
             ['option_id' => $validated['option_id']]
         );
@@ -588,7 +710,7 @@ class MateriController extends Controller
             'parent_id' => 'nullable|exists:materi_discussions,id',
         ]);
 
-        \App\Models\MateriDiscussion::create([
+        MateriDiscussion::create([
             'materi_id' => $materi->id,
             'user_id' => $user->id,
             'parent_id' => $validated['parent_id'] ?? null,
@@ -598,7 +720,7 @@ class MateriController extends Controller
         return back()->with('success', 'Pesan diskusi berhasil dikirim.');
     }
 
-    public function deleteDiscussion(\App\Models\MateriDiscussion $discussion)
+    public function deleteDiscussion(MateriDiscussion $discussion)
     {
         $user = auth()->user();
 
@@ -630,7 +752,7 @@ class MateriController extends Controller
             return back()->withErrors(['quiz' => 'Kesempatan mengerjakan quiz sudah habis (maksimal 2x).']);
         }
 
-        if (!$progress->status || $progress->status === 'not_started') {
+        if (! $progress->status || $progress->status === 'not_started') {
             $progress->status = 'in_progress';
         }
 
@@ -641,7 +763,9 @@ class MateriController extends Controller
         foreach ($quizQuestions as $q) {
             $userAnswer = $validated['answers'][$q->id] ?? '';
             $isCorrect = $userAnswer === $q->jawaban_benar;
-            if ($isCorrect) $correct++;
+            if ($isCorrect) {
+                $correct++;
+            }
             $results[] = [
                 'id' => $q->id,
                 'soal' => $q->soal,
@@ -666,7 +790,7 @@ class MateriController extends Controller
                 'attempts' => $progress->quiz_attempts,
                 'max_attempts' => 2,
             ],
-            'success' => 'Quiz selesai! Nilai pengerjaan ini: ' . $score . ' (Nilai Tertinggi: ' . $progress->quiz_score . ')',
+            'success' => 'Quiz selesai! Nilai pengerjaan ini: '.$score.' (Nilai Tertinggi: '.$progress->quiz_score.')',
         ]);
     }
 
@@ -736,7 +860,7 @@ class MateriController extends Controller
             ->orderBy('urutan')
             ->get();
 
-        $query = \App\Models\User::whereHas('role', function ($q) {
+        $query = User::whereHas('role', function ($q) {
             $q->where('role_name', 'siswa');
         })->with(['progressMateri', 'pengumpulanTugas.penilaian']);
 
@@ -744,9 +868,9 @@ class MateriController extends Controller
             $kelasFilter = $request->kelas_id;
             $query->where(function ($q) use ($kelasFilter) {
                 $q->where('kelas', $kelasFilter)
-                  ->orWhereHas('kelas', function ($k) use ($kelasFilter) {
-                      $k->where('kelas.id', $kelasFilter);
-                  });
+                    ->orWhereHas('kelas', function ($k) use ($kelasFilter) {
+                        $k->where('kelas.id', $kelasFilter);
+                    });
             });
         }
 
@@ -763,7 +887,7 @@ class MateriController extends Controller
 
         $matrix = $students->map(function ($siswa) use ($pertemuanList) {
             $namaKelas = '-';
-            if (is_string($siswa->kelas) && !empty($siswa->kelas)) {
+            if (is_string($siswa->kelas) && ! empty($siswa->kelas)) {
                 $namaKelas = $siswa->kelas;
             } elseif (method_exists($siswa, 'kelas')) {
                 $kelasObj = $siswa->kelas()->first();
@@ -829,7 +953,7 @@ class MateriController extends Controller
                 'nama' => $siswa->name,
                 'email' => $siswa->email,
                 'no_hp' => $siswa->no_hp ?? '-',
-                'foto' => $siswa->foto ? \Illuminate\Support\Facades\Storage::url($siswa->foto) : null,
+                'foto' => $siswa->foto ? Storage::url($siswa->foto) : null,
                 'kelas' => $namaKelas,
                 'jurusan' => $jurusan,
                 'status' => $siswa->status ?? 'active',
@@ -839,7 +963,7 @@ class MateriController extends Controller
             ];
         });
 
-        $kelasList = \App\Models\Kelas::orderBy('nama_kelas')->get(['id', 'nama_kelas']);
+        $kelasList = Kelas::orderBy('nama_kelas')->get(['id', 'nama_kelas']);
 
         return Inertia::render('materi/penilaian', [
             'pertemuanList' => $pertemuanList->map(fn ($p) => [
@@ -857,7 +981,7 @@ class MateriController extends Controller
     {
         $pertemuanList = Pertemuan::with('materi.tugas')->orderBy('urutan')->get();
 
-        $query = \App\Models\User::whereHas('role', function ($q) {
+        $query = User::whereHas('role', function ($q) {
             $q->where('role_name', 'siswa');
         })->with(['progressMateri', 'pengumpulanTugas.penilaian']);
 
@@ -865,31 +989,31 @@ class MateriController extends Controller
             $kelasFilter = $request->kelas_id;
             $query->where(function ($q) use ($kelasFilter) {
                 $q->where('kelas', $kelasFilter)
-                  ->orWhereHas('kelas', function ($k) use ($kelasFilter) {
-                      $k->where('kelas.id', $kelasFilter);
-                  });
+                    ->orWhereHas('kelas', function ($k) use ($kelasFilter) {
+                        $k->where('kelas.id', $kelasFilter);
+                    });
             });
         }
 
         $students = $query->get();
 
-        $filename = 'rekap_penilaian_siswa_' . date('Y-m-d_H-i-s') . '.csv';
+        $filename = 'rekap_penilaian_siswa_'.date('Y-m-d_H-i-s').'.csv';
 
         $headers = [
             'Content-Type' => 'text/csv; charset=utf-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ];
 
         $callback = function () use ($students, $pertemuanList) {
             $file = fopen('php://output', 'w');
 
-            fputs($file, "\xEF\xBB\xBF");
+            fwrite($file, "\xEF\xBB\xBF");
 
             $columns = ['No', 'Nama Siswa', 'Email', 'No. HP', 'Kelas', 'Jurusan'];
             foreach ($pertemuanList as $p) {
-                $columns[] = $p->judul . ' (Quiz)';
-                $columns[] = $p->judul . ' (Tugas)';
-                $columns[] = $p->judul . ' (Nilai Akhir)';
+                $columns[] = $p->judul.' (Quiz)';
+                $columns[] = $p->judul.' (Tugas)';
+                $columns[] = $p->judul.' (Nilai Akhir)';
             }
             $columns[] = 'Rata-Rata Akhir';
 
@@ -898,7 +1022,7 @@ class MateriController extends Controller
             $no = 1;
             foreach ($students as $siswa) {
                 $namaKelas = '-';
-                if (is_string($siswa->kelas) && !empty($siswa->kelas)) {
+                if (is_string($siswa->kelas) && ! empty($siswa->kelas)) {
                     $namaKelas = $siswa->kelas;
                 } elseif (method_exists($siswa, 'kelas')) {
                     $kelasObj = $siswa->kelas()->first();
@@ -936,8 +1060,8 @@ class MateriController extends Controller
                     $avgTugasScore = $tugasNilai->isNotEmpty() ? round($tugasNilai->avg(), 2) : '-';
 
                     $combinedScore = '-';
-                    $numericQuiz = is_numeric($maxQuizScore) ? (float)$maxQuizScore : null;
-                    $numericTugas = is_numeric($avgTugasScore) ? (float)$avgTugasScore : null;
+                    $numericQuiz = is_numeric($maxQuizScore) ? (float) $maxQuizScore : null;
+                    $numericTugas = is_numeric($avgTugasScore) ? (float) $avgTugasScore : null;
 
                     if ($numericQuiz !== null && $numericTugas !== null) {
                         $combinedScore = round(($numericQuiz + $numericTugas) / 2, 2);
@@ -948,7 +1072,7 @@ class MateriController extends Controller
                     }
 
                     if (is_numeric($combinedScore)) {
-                        $totalScoreSum += (float)$combinedScore;
+                        $totalScoreSum += (float) $combinedScore;
                         $countEvaluated++;
                     }
 
@@ -978,7 +1102,7 @@ class MateriController extends Controller
             ->orderBy('urutan')
             ->get();
 
-        $absensiRecords = \App\Models\Absensi::where('siswa_id', $siswaId)->get()->keyBy('pertemuan_id');
+        $absensiRecords = Absensi::where('siswa_id', $siswaId)->get()->keyBy('pertemuan_id');
 
         $pertemuanProgress = [];
         $totalScoreSum = 0;
@@ -1066,6 +1190,10 @@ class MateriController extends Controller
 
         if ($materi->pdf_file) {
             Storage::disk('public')->delete($materi->pdf_file);
+        }
+
+        foreach ($materi->folders as $folder) {
+            Storage::disk('public')->deleteDirectory("materi-folders/{$folder->id}");
         }
 
         $materi->delete();

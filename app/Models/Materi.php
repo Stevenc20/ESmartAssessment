@@ -35,6 +35,11 @@ class Materi extends Model
         return $this->hasOne(MateriPoll::class, 'materi_id');
     }
 
+    public function folders()
+    {
+        return $this->hasMany(MateriFolder::class);
+    }
+
     public function discussions()
     {
         return $this->hasMany(MateriDiscussion::class, 'materi_id')->whereNull('parent_id')->with(['user', 'replies.user'])->latest();

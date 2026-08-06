@@ -5,6 +5,7 @@ import {
     Clock,
     Circle,
     FileText,
+    Folder,
     GraduationCap,
     Library,
     PlayCircle,
@@ -26,6 +27,7 @@ type MateriItem = {
     thumbnail: string | null;
     created_by: string;
     progress_status: 'not_started' | 'in_progress' | 'completed';
+    folders?: { id: number; nama: string; file_count: number }[];
     tugas: TugasItem[];
 };
 
@@ -161,6 +163,13 @@ function MateriCard({
             </div>
 
             {/* Tugas indicator */}
+            {(materi.folders?.length ?? 0) > 0 && (
+                <span className="hidden shrink-0 items-center gap-1 rounded-lg bg-violet-50 px-2 py-1 text-[10px] font-bold text-violet-700 sm:inline-flex">
+                    <Folder className="h-3 w-3" />
+                    {materi.folders?.length} folder
+                </span>
+            )}
+
             {materi.tugas.length > 0 && (
                 <span className="hidden shrink-0 items-center gap-1 rounded-lg bg-orange-50 px-2 py-1 text-[10px] font-bold text-orange-700 sm:inline-flex">
                     <Clock className="h-3 w-3" />

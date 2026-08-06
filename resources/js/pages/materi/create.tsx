@@ -13,6 +13,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import MateriFolderUpload, { type PickedFolder } from '@/components/materi/materi-folder-upload';
 
 type PertemuanItem = { id: number; judul: string; tingkat: string | null };
 
@@ -34,6 +35,7 @@ export default function MateriCreate({
     const [pollOpsi, setPollOpsi] = useState<string[]>(['', '']);
     const [processing, setProcessing] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [folders, setFolders] = useState<PickedFolder[]>([]);
 
     const addOpsi = () => setPollOpsi([...pollOpsi, '']);
     const removeOpsi = (idx: number) => setPollOpsi(pollOpsi.filter((_, i) => i !== idx));
@@ -78,6 +80,14 @@ export default function MateriCreate({
 
         form.append('video_url', videoUrl);
         form.append('drive_link', driveLink);
+
+        folders.forEach((folder, idx) => {
+            form.append(`folders[${idx}][nama]`, folder.nama);
+            folder.files.forEach((file) => {
+                form.append(`folders[${idx}][files][]`, file, file.name);
+                form.append(`folders[${idx}][names][]`, file.webkitRelativePath);
+            });
+        });
 
         if (pollPertanyaan.trim()) {
             form.append('poll_pertanyaan', pollPertanyaan.trim());
@@ -326,6 +336,19 @@ export default function MateriCreate({
                                             + Tambah Opsi Jawaban
                                         </Button>
                                     </div>
+                                </div>
+
+                                {/* Folder Materi Section */}
+                                <div className="col-span-2">
+                                    <MateriFolderUpload
+                                        folders={folders}
+                                        onChange={setFolders}
+                                    />
+                                    {errors.folders && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.folders}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="col-span-2 flex justify-end gap-2">

@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { BookOpen, Plus, Pencil, Trash2 } from 'lucide-react';
+import { BookOpen, Folder, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import TiptapEditor from '@/components/editor/tiptap-editor';
+import MateriFolderUpload, { type PickedFolder } from '@/components/materi/materi-folder-upload';
 
 type PertemuanItem = { id: number; judul: string; tingkat: string | null };
 
@@ -37,6 +38,13 @@ type MateriItem = {
     pdf_file_name: string | null;
     drive_link: string | null;
     tingkat: string | null;
+    folders?: {
+        id: number;
+        nama: string;
+        file_count: number;
+        total_size: number;
+        download_url: string;
+    }[];
 };
 
 export default function MateriEdit({
@@ -62,6 +70,7 @@ export default function MateriEdit({
     const [driveLink, setDriveLink] = useState(materi.drive_link ?? '');
     const [processing, setProcessing] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [folders, setFolders] = useState<PickedFolder[]>([]);
 
     const [showQuizForm, setShowQuizForm] = useState(false);
     const [editingQuizId, setEditingQuizId] = useState<number | null>(null);
@@ -109,6 +118,14 @@ export default function MateriEdit({
         form.append('video_url', videoUrl);
         form.append('drive_link', driveLink);
 
+        folders.forEach((folder, idx) => {
+            form.append(`folders[${idx}][nama]`, folder.nama);
+            folder.files.forEach((file) => {
+                form.append(`folders[${idx}][files][]`, file, file.name);
+                form.append(`folders[${idx}][names][]`, file.webkitRelativePath);
+            });
+        });
+
         router.post(`/materi/${materi.id}`, form, {
             preserveScroll: true,
             forceFormData: true,
@@ -117,6 +134,12 @@ export default function MateriEdit({
                 setProcessing(false);
                 setUploadProgress(0);
             },
+        });
+    }
+
+    function deleteFolder(folderId: number) {
+        router.delete(`/materi/folders/${folderId}`, {
+            preserveScroll: true,
         });
     }
 
@@ -385,6 +408,53 @@ export default function MateriEdit({
                                     {errors.drive_link && (
                                         <p className="mt-1 text-sm text-red-500">
                                             {errors.drive_link}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Folder Materi Section */}
+                                <div className="col-span-2 space-y-3">
+                                    {(materi.folders?.length ?? 0) > 0 && (
+                                        <div className="rounded-xl border border-amber-100 bg-amber-50/40 p-4 space-y-2">
+                                            <h3 className="text-sm font-bold text-amber-900">
+                                                Folder Terpasang
+                                            </h3>
+                                            <ul className="space-y-2">
+                                                {materi.folders?.map((f) => (
+                                                    <li
+                                                        key={f.id}
+                                                        className="flex items-center justify-between gap-2 rounded-lg border border-amber-200 bg-white px-3 py-2 text-xs"
+                                                    >
+                                                        <span className="flex min-w-0 items-center gap-2">
+                                                            <Folder className="h-4 w-4 shrink-0 text-amber-600" />
+                                                            <span className="truncate font-semibold text-slate-700">
+                                                                {f.nama}
+                                                            </span>
+                                                            <span className="shrink-0 text-slate-400">
+                                                                {f.file_count} file
+                                                            </span>
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                deleteFolder(f.id)
+                                                            }
+                                                            className="shrink-0 text-red-500 hover:text-red-700"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    <MateriFolderUpload
+                                        folders={folders}
+                                        onChange={setFolders}
+                                    />
+                                    {errors.folders && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.folders}
                                         </p>
                                     )}
                                 </div>

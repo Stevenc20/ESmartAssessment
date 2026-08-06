@@ -6,6 +6,7 @@ import {
     Download,
     ExternalLink,
     FileText,
+    Folder,
     Pencil,
     Trash2,
     User,
@@ -31,6 +32,13 @@ type MateriDetail = {
     pdf_file: string | null;
     pdf_file_name: string | null;
     drive_link: string | null;
+    folders?: {
+        id: number;
+        nama: string;
+        file_count: number;
+        total_size: number;
+        download_url: string;
+    }[];
     pertemuan: string;
     roadmap: string;
     created_by: string;
@@ -177,7 +185,9 @@ export default function MateriShow({
                     )}
 
                     {/* Resources */}
-                    {(materi.pdf_file || materi.drive_link) && (
+                    {(materi.pdf_file ||
+                        materi.drive_link ||
+                        (materi.folders?.length ?? 0) > 0) && (
                         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                             <div className="border-b border-slate-100 px-5 py-3">
                                 <div className="flex items-center gap-2">
@@ -234,6 +244,28 @@ export default function MateriShow({
                                         </span>
                                     </a>
                                 )}
+                                {materi.folders?.map((f) => (
+                                    <a
+                                        key={f.id}
+                                        href={f.download_url}
+                                        className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-slate-50"
+                                    >
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+                                            <Folder className="h-5 w-5" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-semibold text-slate-900">
+                                                Download Folder · {f.nama}
+                                            </p>
+                                            <p className="truncate text-xs text-slate-400">
+                                                {f.file_count} file · .zip
+                                            </p>
+                                        </div>
+                                        <span className="text-xs font-semibold text-violet-600">
+                                            Download
+                                        </span>
+                                    </a>
+                                ))}
                             </div>
                         </div>
                     )}
