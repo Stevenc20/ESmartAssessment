@@ -9,6 +9,7 @@ import {
     Filter,
     GraduationCap,
     Mail,
+    Pencil,
     Phone,
     Search,
     User as UserIcon,
@@ -26,6 +27,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -55,6 +57,7 @@ type StudentMatrixItem = {
     no_hp: string;
     foto: string | null;
     kelas: string;
+    kelas_id?: number | null;
     jurusan: string;
     status: string;
     created_at: string;
@@ -66,6 +69,15 @@ type KelasItem = {
     id: number;
     nama_kelas: string;
 };
+
+const JURUSAN_LIST = [
+    { value: 'RPL_PPLG', label: 'RPL/PPLG' },
+    { value: 'DKV_1', label: 'DKV 1' },
+    { value: 'DKV_2', label: 'DKV 2' },
+    { value: 'AKL', label: 'AKL' },
+    { value: 'MPLB', label: 'MPLB' },
+    { value: 'BisnisRitel', label: 'Bisnis Ritel' },
+];
 
 export default function MateriPenilaian({
     pertemuanList,
@@ -81,6 +93,34 @@ export default function MateriPenilaian({
     const [kelasId, setKelasId] = useState(filters.kelas_id ?? 'all');
     const [search, setSearch] = useState(filters.search ?? '');
     const [selectedStudent, setSelectedStudent] = useState<StudentMatrixItem | null>(null);
+    const [editStudent, setEditStudent] = useState<StudentMatrixItem | null>(null);
+    const [editKelasId, setEditKelasId] = useState('');
+    const [editJurusan, setEditJurusan] = useState('');
+    const [savingBiodata, setSavingBiodata] = useState(false);
+
+    function openEditBiodata(s: StudentMatrixItem) {
+        setEditStudent(s);
+        setEditKelasId(s.kelas_id ? String(s.kelas_id) : '');
+        setEditJurusan(s.jurusan && s.jurusan !== '-' ? s.jurusan : '');
+    }
+
+    function submitBiodata(e: React.FormEvent) {
+        e.preventDefault();
+        if (!editStudent) return;
+
+        setSavingBiodata(true);
+        router.put(`/penilaian-materi/siswa/${editStudent.id}/biodata`, {
+            kelas_id: editKelasId,
+            jurusan: editJurusan,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setEditStudent(null);
+                setSavingBiodata(false);
+            },
+            onError: () => setSavingBiodata(false),
+        });
+    }
 
     function handleFilterChange(newKelasId: string) {
         setKelasId(newKelasId);
@@ -419,15 +459,26 @@ export default function MateriPenilaian({
                                                     </span>
                                                 </td>
                                                 <td className="px-3 py-3 text-center">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => setSelectedStudent(s)}
-                                                        className="h-7 px-2 text-xs font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                                                    >
-                                                        <Eye className="h-3.5 w-3.5 mr-1" />
-                                                        Detail
-                                                    </Button>
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => setSelectedStudent(s)}
+                                                            className="h-7 px-2 text-xs font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                                                        >
+                                                            <Eye className="h-3.5 w-3.5 mr-1" />
+                                                            Detail
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => openEditBiodata(s)}
+                                                            className="h-7 px-2 text-xs font-bold text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50"
+                                                        >
+                                                            <Pencil className="h-3.5 w-3.5 mr-1" />
+                                                            Edit
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -541,6 +592,79 @@ export default function MateriPenilaian({
                                 </div>
                             </div>
                         </div>
+                    </DialogContent>
+                )}
+            </Dialog>
+
+            {/* Edit Biodata Dialog */}
+            <Dialog open={!!editStudent} onOpenChange={(open) => !open && setEditStudent(null)}>
+                {editStudent && (
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2 text-base font-bold">
+                                <Pencil className="h-5 w-5 text-emerald-600" />
+                                Edit Biodata Siswa
+                            </DialogTitle>
+                            <DialogDescription className="text-xs">
+                                Perbarui kelas dan jurusan untuk {editStudent.nama}.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <form onSubmit={submitBiodata} className="space-y-4 pt-2">
+                            <div className="grid gap-2">
+                                <Label className="text-xs font-semibold text-slate-600">
+                                    Kelas
+                                </Label>
+                                <Select value={editKelasId} onValueChange={setEditKelasId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih kelas" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {kelasList.map((k) => (
+                                            <SelectItem key={k.id} value={String(k.id)}>
+                                                {k.nama_kelas}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label className="text-xs font-semibold text-slate-600">
+                                    Jurusan
+                                </Label>
+                                <Select value={editJurusan} onValueChange={setEditJurusan}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih jurusan" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {JURUSAN_LIST.map((j) => (
+                                            <SelectItem key={j.value} value={j.value}>
+                                                {j.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setEditStudent(null)}
+                                    className="text-xs font-bold"
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={savingBiodata || !editKelasId || !editJurusan}
+                                    className="bg-emerald-600 text-xs font-bold hover:bg-emerald-700"
+                                >
+                                    {savingBiodata ? 'Menyimpan...' : 'Simpan'}
+                                </Button>
+                            </div>
+                        </form>
                     </DialogContent>
                 )}
             </Dialog>

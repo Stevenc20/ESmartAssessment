@@ -959,14 +959,13 @@ class MateriController extends Controller
         $students = $query->get();
 
         $matrix = $students->map(function ($siswa) use ($pertemuanList) {
-            $namaKelas = '-';
-            if (is_string($siswa->kelas) && ! empty($siswa->kelas)) {
+            $kelasObj = $siswa->kelas()
+                ->whereNull('siswa_kelas.tanggal_keluar')
+                ->first() ?? $siswa->kelas()->latest('siswa_kelas.tanggal_masuk')->first();
+            $kelasId = $kelasObj?->id;
+            $namaKelas = $kelasObj?->nama_kelas;
+            if (! $namaKelas && is_string($siswa->kelas) && ! empty($siswa->kelas)) {
                 $namaKelas = $siswa->kelas;
-            } elseif (method_exists($siswa, 'kelas')) {
-                $kelasObj = $siswa->kelas()->first();
-                if ($kelasObj) {
-                    $namaKelas = $kelasObj->nama_kelas;
-                }
             }
 
             $jurusan = $siswa->jurusan ?? '-';
@@ -1028,6 +1027,7 @@ class MateriController extends Controller
                 'no_hp' => $siswa->no_hp ?? '-',
                 'foto' => $siswa->foto ? Storage::url($siswa->foto) : null,
                 'kelas' => $namaKelas,
+                'kelas_id' => $kelasId,
                 'jurusan' => $jurusan,
                 'status' => $siswa->status ?? 'active',
                 'created_at' => $siswa->created_at ? $siswa->created_at->format('d M Y H:i') : '-',
@@ -1048,6 +1048,38 @@ class MateriController extends Controller
             'kelasList' => $kelasList,
             'filters' => $request->only(['kelas_id', 'search']),
         ]);
+    }
+
+    public function updateSiswaBiodata(Request $request, User $siswa)
+    {
+        abort_unless(in_array($request->user()->role?->role_name, ['guru', 'admin'], true), 403);
+
+        $validated = $request->validate([
+            'kelas_id' => 'required|integer|exists:kelas,id',
+            'jurusan' => 'required|string|max:255',
+        ]);
+
+        $kelas = Kelas::find($validated['kelas_id']);
+
+        $siswa->update([
+            'kelas' => $kelas->tingkat,
+            'jurusan' => $validated['jurusan'],
+        ]);
+
+        $active = $siswa->kelas()
+            ->whereNull('siswa_kelas.tanggal_keluar')
+            ->first();
+
+        if ($active) {
+            if ($active->id !== $kelas->id) {
+                $siswa->kelas()->updateExistingPivot($active->id, ['tanggal_keluar' => now()->toDateString()]);
+                $siswa->kelas()->attach($kelas->id, ['tanggal_masuk' => now()->toDateString()]);
+            }
+        } else {
+            $siswa->kelas()->attach($kelas->id, ['tanggal_masuk' => now()->toDateString()]);
+        }
+
+        return back()->with('success', 'Biodata '.$siswa->name.' berhasil diperbarui.');
     }
 
     public function penilaianExport(Request $request)

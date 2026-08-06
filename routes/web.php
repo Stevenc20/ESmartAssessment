@@ -37,6 +37,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('penilaian-materi', [MateriController::class, 'penilaianIndex'])->name('materi.penilaian.index');
     Route::get('penilaian-materi/export', [MateriController::class, 'penilaianExport'])->name('materi.penilaian.export');
+    Route::put('penilaian-materi/siswa/{siswa}/biodata', [MateriController::class, 'updateSiswaBiodata'])->name('materi.penilaian.biodata');
 
     Route::resource('materi', MateriController::class);
 
