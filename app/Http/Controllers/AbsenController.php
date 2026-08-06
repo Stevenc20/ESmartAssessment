@@ -67,6 +67,15 @@ class AbsenController extends Controller
 
         $qrUrl = route('absen.scan', $session->token);
 
+        app(\App\Services\AnnouncementService::class)->sendEmailNotifications(
+            'Absen Dibuka - '.$pertemuan->judul,
+            'Absen untuk "'.$pertemuan->judul.'" telah dibuka. Silakan klik tombol di bawah untuk melakukan absensi.',
+            'siswa',
+            'info',
+            'Absen Dibuka',
+            $qrUrl
+        );
+
         $attendees = Absensi::where('pertemuan_id', $pertemuan->id)
             ->with('siswa:id,name')
             ->get()

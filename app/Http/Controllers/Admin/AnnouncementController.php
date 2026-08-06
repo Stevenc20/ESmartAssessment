@@ -38,6 +38,14 @@ class AnnouncementController extends Controller
 
         Cache::increment('announcement_version');
 
+        app(\App\Services\AnnouncementService::class)->sendEmailNotifications(
+            $validated['judul'],
+            $validated['isi'],
+            $validated['target_role'] ?? 'all',
+            'info',
+            'Pengumuman'
+        );
+
         return back()->with('success', 'Pengumuman berhasil ditambahkan.');
     }
 

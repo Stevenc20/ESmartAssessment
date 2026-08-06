@@ -219,4 +219,34 @@ class AnnouncementService
             ?? $user->kelas()->latest('siswa_kelas.tanggal_masuk')->first()
             ?? $user->kelas()->first();
     }
+
+    /**
+     * Kirim email notifikasi pengumuman/absensi ke pengguna target
+     */
+    public function sendEmailNotifications(
+        string $judul,
+        string $isi,
+        ?string $targetRole = 'all',
+        string $type = 'info',
+        string $source = 'Pengumuman',
+        ?string $actionUrl = null
+    ): void {
+        $query = User::where('status', 'active')->whereNotNull('email')->where('email', '!=', '');
+
+        if ($targetRole && $targetRole !== 'all') {
+            $query->whereHas('role', fn ($q) => $q->where('role_name', $targetRole));
+        }
+
+        $query->chunk(100, function ($users) use ($judul, $isi, $type, $source, $actionUrl) {
+            foreach ($users as $user) {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($user->email)->queue(
+                        new \App\Mail\AnnouncementMail($judul, $isi, $type, $source, $actionUrl)
+                    );
+                } catch (\Throwable $e) {
+                    // Ignore individual email exception to prevent breaking batch
+                }
+            }
+        });
+    }
 }

@@ -48,6 +48,14 @@ class GlobalAnnouncementController extends Controller
 
         Cache::increment('announcement_version');
 
+        app(\App\Services\AnnouncementService::class)->sendEmailNotifications(
+            $validated['judul'],
+            $validated['isi'],
+            $validated['target_role'] ?? 'all',
+            $validated['type'],
+            'Pengumuman Global'
+        );
+
         return back()->with('success', 'Pengumuman global berhasil dibuat');
     }
 
