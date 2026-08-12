@@ -8,6 +8,31 @@ type LiveSessionInfo = {
     started_at: string | null;
 };
 
+function getCsrfToken(): string {
+    // Try meta tag first (Inertia standard)
+    const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null;
+    if (meta?.content) return meta.content;
+    // Fallback: read from XSRF-TOKEN cookie (Laravel default)
+    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : '';
+}
+
+async function apiFetch(url: string, method: 'POST' | 'GET' = 'POST', body?: object) {
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': getCsrfToken(),
+    };
+
+    return fetch(url, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+        credentials: 'same-origin',
+    });
+}
+
 export function useLiveScreenBroadcaster(pertemuanId: number | null) {
     const [isBroadcasting, setIsBroadcasting] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -34,15 +59,7 @@ export function useLiveScreenBroadcaster(pertemuanId: number | null) {
 
             // Notify backend stop
             if (pertemuanId) {
-                await fetch(`/pertemuan/${pertemuanId}/live-screen/stop`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN':
-                            (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
-                    },
-                });
+                await apiFetch(`/pertemuan/${pertemuanId}/live-screen/stop`);
             }
         } catch (err: any) {
             console.error('Failed to stop live screen:', err);
@@ -84,17 +101,16 @@ export function useLiveScreenBroadcaster(pertemuanId: number | null) {
             };
 
             // 2. Call backend start endpoint to get unique room_name
-            const response = await fetch(`/pertemuan/${pertemuanId}/live-screen/start`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN':
-                        (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
-                },
-            });
+            const response = await apiFetch(`/pertemuan/${pertemuanId}/live-screen/start`);
 
-            const data = await response.json();
+            const text = await response.text();
+            let data: any;
+            try {
+                data = JSON.parse(text);
+            } catch {
+                console.error('Non-JSON response from server:', text.substring(0, 300));
+                throw new Error(`Server error (${response.status}): Pastikan sudah login dan coba refresh halaman.`);
+            }
 
             if (!response.ok || data.status !== 'success') {
                 throw new Error(data.message || 'Gagal memulai Sesi Live Screen.');
@@ -124,9 +140,6 @@ export function useLiveScreenBroadcaster(pertemuanId: number | null) {
 
             peer.on('error', (err: any) => {
                 console.error('PeerJS Broadcaster error:', err);
-                if (err.type === 'unavailable-id') {
-                    // ID already taken, peer reconnect or handle
-                }
             });
         } catch (err: any) {
             console.error('Start broadcasting error:', err);
