@@ -42,13 +42,17 @@ class AnnouncementController extends Controller
 
             echo "event: connected\n";
             echo 'data: {"version": '.$lastVersion."}\n\n";
-            ob_flush();
+            if (ob_get_level() > 0) {
+                ob_flush();
+            }
             flush();
 
             if ($catchUp) {
                 echo "event: refresh\n";
                 echo 'data: {"version": '.$lastVersion."}\n\n";
-                ob_flush();
+                if (ob_get_level() > 0) {
+                    ob_flush();
+                }
                 flush();
             }
 
@@ -63,7 +67,9 @@ class AnnouncementController extends Controller
                     $lastVersion = $currentVersion;
                     echo "event: refresh\n";
                     echo 'data: {"version": '.$currentVersion."}\n\n";
-                    ob_flush();
+                    if (ob_get_level() > 0) {
+                        ob_flush();
+                    }
                     flush();
                 }
 
