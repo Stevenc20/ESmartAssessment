@@ -122,6 +122,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{pertemuan}/absen/status', [AbsenController::class, 'status'])->name('absen.status');
         Route::get('/{pertemuan}/absen/rekap', [AbsenController::class, 'rekap'])->name('absen.rekap');
         Route::post('/{pertemuan}/absen/manual', [AbsenController::class, 'manual'])->name('absen.manual');
+        Route::post('/{pertemuan}/live-screen/start', [LiveSessionController::class, 'start'])->name('live-screen.start');
+        Route::post('/{pertemuan}/live-screen/stop', [LiveSessionController::class, 'stop'])->name('live-screen.stop');
+        Route::get('/{pertemuan}/live-screen/status', [LiveSessionController::class, 'status'])->name('live-screen.status');
     });
 
     Route::get('/absen', [AbsenController::class, 'siswaIndex'])->name('absen.siswa.index');

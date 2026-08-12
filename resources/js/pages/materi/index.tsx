@@ -38,6 +38,7 @@ type MateriItem = {
     roadmap: string;
     created_by: string;
     created_at: string;
+    is_live?: boolean;
 };
 
 type Stats = { total: number };
@@ -147,9 +148,17 @@ export default function MateriIndex({
 
                                         {/* Title & meta */}
                                         <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm font-semibold text-slate-900">
-                                                {materi.judul}
-                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <p className="truncate text-sm font-semibold text-slate-900">
+                                                    {materi.judul}
+                                                </p>
+                                                {materi.is_live && (
+                                                    <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-extrabold text-red-700 animate-pulse shrink-0">
+                                                        <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-ping" />
+                                                        LIVE
+                                                    </span>
+                                                )}
+                                            </div>
                                             <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">
                                                 {materi.pertemuan} ·{' '}
                                                 {materi.roadmap} · oleh{' '}

@@ -33,4 +33,14 @@ class Pertemuan extends Model
     {
         return $this->hasMany(Absensi::class);
     }
+
+    public function liveSessions()
+    {
+        return $this->hasMany(LiveSession::class);
+    }
+
+    public function activeLiveSession()
+    {
+        return $this->hasOne(LiveSession::class)->where('status', 'live');
+    }
 }

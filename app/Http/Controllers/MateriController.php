@@ -129,6 +129,8 @@ class MateriController extends Controller
 
     public function index()
     {
+        $liveMeetingIds = \App\Models\LiveSession::where('status', 'live')->pluck('pertemuan_id')->toArray();
+
         $materiList = Materi::with(['pertemuan.roadmap', 'creator', 'folders', 'files'])
             ->orderBy('created_at')
             ->get()
@@ -151,6 +153,7 @@ class MateriController extends Controller
                 'created_by' => $m->creator?->name ?? '-',
                 'created_at' => $m->created_at->format('d M Y'),
                 'has_quiz' => $m->quiz()->exists(),
+                'is_live' => $m->pertemuan_id ? in_array($m->pertemuan_id, $liveMeetingIds) : false,
             ]);
 
         $stats = ['total' => $materiList->count()];
@@ -165,9 +168,23 @@ class MateriController extends Controller
     {
         $materi->load(['pertemuan.roadmap', 'creator', 'folders', 'files', 'discussions.user', 'discussions.replies.user']);
 
+        $activeSession = $materi->pertemuan_id
+            ? \App\Models\LiveSession::where('pertemuan_id', $materi->pertemuan_id)->where('status', 'live')->with('host')->first()
+            : null;
+
+        $liveSessionData = $activeSession ? [
+            'id' => $activeSession->id,
+            'room_name' => $activeSession->room_name,
+            'host_id' => $activeSession->host_id,
+            'host_name' => $activeSession->host?->name ?? 'Guru',
+            'status' => $activeSession->status,
+            'started_at' => $activeSession->started_at?->toIso8601String(),
+        ] : null;
+
         return Inertia::render('materi/show', [
             'materi' => [
                 'id' => $materi->id,
+                'pertemuan_id' => $materi->pertemuan_id,
                 'judul' => $materi->judul,
                 'deskripsi' => $materi->deskripsi,
                 'thumbnail' => $materi->thumbnail ? Storage::url($materi->thumbnail) : null,
@@ -183,6 +200,7 @@ class MateriController extends Controller
                 'created_by' => $materi->creator?->name ?? '-',
                 'created_at' => $materi->created_at->format('d M Y'),
                 'discussions' => $this->discussionData($materi, $request->user()),
+                'live_session' => $liveSessionData,
             ],
         ]);
     }
@@ -750,9 +768,23 @@ class MateriController extends Controller
 
         $discussionsData = $this->discussionData($materi, $user);
 
+        $activeSession = $materi->pertemuan_id
+            ? \App\Models\LiveSession::where('pertemuan_id', $materi->pertemuan_id)->where('status', 'live')->with('host')->first()
+            : null;
+
+        $liveSessionData = $activeSession ? [
+            'id' => $activeSession->id,
+            'room_name' => $activeSession->room_name,
+            'host_id' => $activeSession->host_id,
+            'host_name' => $activeSession->host?->name ?? 'Guru',
+            'status' => $activeSession->status,
+            'started_at' => $activeSession->started_at?->toIso8601String(),
+        ] : null;
+
         return Inertia::render('materi/siswa-detail', [
             'materi' => [
                 'id' => $materi->id,
+                'pertemuan_id' => $materi->pertemuan_id,
                 'judul' => $materi->judul,
                 'deskripsi' => $materi->deskripsi,
                 'konten' => $materi->konten,
@@ -773,6 +805,7 @@ class MateriController extends Controller
                 'quiz' => $quizList,
                 'poll' => $pollData,
                 'discussions' => $discussionsData,
+                'live_session' => $liveSessionData,
             ],
             'pertemuan' => $materi->pertemuan?->judul ?? '-',
             'roadmap' => $materi->pertemuan?->roadmap?->judul ?? '-',

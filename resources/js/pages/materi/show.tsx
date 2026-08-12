@@ -23,8 +23,12 @@ import {
 } from '@/components/ui/dialog';
 import MateriForumChat, { type DiscussionItem } from '@/components/materi/materi-forum-chat';
 
+import LiveScreenCard from '@/components/materi/live-screen-card';
+import { useLiveScreenBroadcaster } from '@/hooks/use-live-screen-broadcaster';
+
 type MateriDetail = {
     id: number;
+    pertemuan_id?: number | null;
     judul: string;
     deskripsi: string | null;
     thumbnail: string | null;
@@ -51,6 +55,7 @@ type MateriDetail = {
     created_by: string;
     created_at: string;
     discussions?: DiscussionItem[];
+    live_session?: any;
 };
 
 function formatBytes(bytes: number): string {
@@ -67,6 +72,17 @@ export default function MateriShow({
 }) {
     const { errors } = usePage().props;
     const [deleteOpen, setDeleteOpen] = useState(false);
+
+    const {
+        isBroadcasting,
+        isLoading: isLiveLoading,
+        liveSession,
+        error: liveError,
+        startBroadcasting,
+        stopBroadcasting,
+    } = useLiveScreenBroadcaster(materi.pertemuan_id ?? null);
+
+    const currentLiveSession = liveSession || materi.live_session;
 
     function executeDelete() {
         router.delete(`/materi/${materi.id}`, {
@@ -98,6 +114,21 @@ export default function MateriShow({
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
                             {errors.success}
                         </div>
+                    )}
+
+                    {/* Live Screen Card Section */}
+                    {materi.pertemuan_id && (
+                        <LiveScreenCard
+                            pertemuanId={materi.pertemuan_id}
+                            isTeacher={true}
+                            liveSession={currentLiveSession}
+                            isBroadcasting={isBroadcasting}
+                            isLoading={isLiveLoading}
+                            error={liveError}
+                            onStartShare={startBroadcasting}
+                            onStopShare={stopBroadcasting}
+                            onOpenViewer={() => {}}
+                        />
                     )}
 
                     {/* Header Card */}
