@@ -82,6 +82,9 @@ const cameraErrorMessage = (err: any): string => {
 export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
     const [scannerActive, setScannerActive] = useState(false);
     const [cameraError, setCameraError] = useState<string | null>(null);
+    const [cameraErrorDetail, setCameraErrorDetail] = useState<string | null>(
+        null,
+    );
     const [polledSessions, setPolledSessions] =
         useState<ActiveSession[]>(active_sessions);
     const [autoScanning, setAutoScanning] = useState(false);
@@ -154,6 +157,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
         }
 
         setCameraError(null);
+        setCameraErrorDetail(null);
         setAutoScanning(false);
 
         try {
@@ -183,10 +187,17 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                 html5QrCodeRef.current = null;
             }
 
-            const scanner = new Html5Qrcode('qr-scanner-viewfinder');
-            html5QrCodeRef.current = scanner;
             scannerStartedRef.current = true;
             setScannerActive(true);
+
+            // Give React a tick to render the (now visible) viewfinder so
+            // Html5Qrcode measures a non-zero container before start().
+            // Without this, on an already-granted camera the stream resolves
+            // faster than the render commit and start() fails instantly.
+            await new Promise((r) => setTimeout(r, 120));
+
+            const scanner = new Html5Qrcode('qr-scanner-viewfinder');
+            html5QrCodeRef.current = scanner;
 
             const onDecoded = (decodedText: string) => {
                 const match = decodedText.match(/\/absen\/([a-zA-Z0-9]+)/);
@@ -275,6 +286,11 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                 name === 'PermissionDeniedError' ||
                 name === 'SecurityError';
 
+            setCameraErrorDetail(
+                `${name || 'UnknownError'}: ${err?.message || ''}`,
+            );
+            console.error('[absen-camera]', err);
+
             setCameraError(
                 isDenied && !fromUserGesture
                     ? 'Untuk membuka kamera, ketuk tombol "Izinkan Akses Kamera" di bawah ini.'
@@ -285,6 +301,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
 
     const requestCameraPermission = useCallback(async () => {
         setCameraError(null);
+        setCameraErrorDetail(null);
         await stopScanner();
         await startScanner(true);
     }, [stopScanner, startScanner]);
@@ -475,6 +492,11 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                                     <p className="text-xs text-red-700 leading-relaxed">
                                         {cameraError}
                                     </p>
+                                    {cameraErrorDetail && (
+                                        <p className="text-[10px] text-red-400 font-mono break-all leading-relaxed">
+                                            {cameraErrorDetail}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
