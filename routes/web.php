@@ -9,6 +9,7 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseSiswaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\LiveSessionController;
 use App\Http\Controllers\MateriController;
 use App\Http\Controllers\PengumumanController;
 use App\Http\Controllers\PertemuanController;
