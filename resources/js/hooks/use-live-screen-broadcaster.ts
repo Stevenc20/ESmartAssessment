@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { peerConnectionOptions } from '../lib/peer-connection';
 
 type LiveSessionInfo = {
@@ -139,6 +139,9 @@ export function useLiveScreenBroadcaster(pertemuanId: number | null) {
 
             peer.on('error', (err: any) => {
                 console.error('PeerJS Broadcaster error:', err);
+                setError(err.message || 'Gagal membuat koneksi share screen.');
+                setIsLoading(false);
+                setIsBroadcasting(false);
             });
         } catch (err: any) {
             console.error('Start broadcasting error:', err);
@@ -150,6 +153,12 @@ export function useLiveScreenBroadcaster(pertemuanId: number | null) {
             setIsLoading(false);
         }
     }, [pertemuanId, stopBroadcasting]);
+
+    useEffect(() => {
+        return () => {
+            stopBroadcasting();
+        };
+    }, [stopBroadcasting]);
 
     return {
         isBroadcasting,

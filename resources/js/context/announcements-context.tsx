@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
-import { useAnnouncementsSse } from '@/hooks/use-announcements-sse';
+import { useAnnouncementsPolling } from '@/hooks/use-announcements-polling';
 
 export type AnnouncementItem = {
     id: string;
@@ -54,7 +54,7 @@ export function AnnouncementsProvider({
         setUnreadCounts(props.unreadCounts ?? EMPTY_UNREAD);
     }, [props.announcements, props.unreadCounts]);
 
-    useAnnouncementsSse(async () => {
+    useAnnouncementsPolling(async () => {
         try {
             const [announcementRes, unreadRes] = await Promise.all([
                 fetch('/api/announcements'),

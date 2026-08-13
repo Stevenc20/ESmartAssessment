@@ -348,8 +348,36 @@ export default function MateriSiswaDetail({
     const [startQuiz, setStartQuiz] = useState(false);
     const [confirmRetake, setConfirmRetake] = useState(false);
     const [viewerModalOpen, setViewerModalOpen] = useState(false);
+    const [liveSession, setLiveSession] = useState(materi.live_session ?? null);
 
-    const activeLiveSession = materi.live_session;
+    useEffect(() => {
+        if (!materi.pertemuan_id) return;
+        let cancelled = false;
+
+        const poll = async () => {
+            try {
+                const res = await fetch(`/pertemuan/${materi.pertemuan_id}/live-screen/status`, {
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (cancelled) return;
+                setLiveSession(data.live_session ?? null);
+            } catch {
+                /* transient error; next poll retries */
+            }
+        };
+
+        poll();
+        const timer = window.setInterval(poll, 10000);
+        return () => {
+            cancelled = true;
+            window.clearInterval(timer);
+        };
+    }, [materi.pertemuan_id]);
+
+    const activeLiveSession = liveSession;
 
     const cfg = progressConfig[materi.progress_status];
     const StatusIcon = cfg.icon;

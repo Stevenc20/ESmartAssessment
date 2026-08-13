@@ -2,6 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { peerConnectionOptions } from '../lib/peer-connection';
 
 const CONNECT_TIMEOUT_MS = 25000;
+const MAX_AUTO_RETRIES = 5;
+const AUTO_RETRY_DELAY_MS = 5000;
+
+function stopTracks(stream: MediaStream | null) {
+    if (!stream) return;
+    stream.getTracks().forEach((track) => track.stop());
+}
 
 export function useLiveScreenViewer(roomName: string | null, active: boolean) {
     const [stream, setStream] = useState<MediaStream | null>(null);
@@ -12,6 +19,7 @@ export function useLiveScreenViewer(roomName: string | null, active: boolean) {
     const peerRef = useRef<any>(null);
     const callRef = useRef<any>(null);
     const timeoutRef = useRef<number | null>(null);
+    const retryCountRef = useRef(0);
 
     const clearConnectTimeout = useCallback(() => {
         if (timeoutRef.current !== null) {
@@ -20,23 +28,26 @@ export function useLiveScreenViewer(roomName: string | null, active: boolean) {
         }
     }, []);
 
+    const teardown = useCallback(() => {
+        clearConnectTimeout();
+        if (callRef.current) {
+            callRef.current.close();
+            callRef.current = null;
+        }
+        if (peerRef.current) {
+            peerRef.current.destroy();
+            peerRef.current = null;
+        }
+    }, [clearConnectTimeout]);
+
     const connectToBroadcaster = useCallback(async () => {
         if (!roomName || !active) return;
 
         setIsConnecting(true);
         setError(null);
-        clearConnectTimeout();
+        teardown();
 
         try {
-            if (callRef.current) {
-                callRef.current.close();
-                callRef.current = null;
-            }
-            if (peerRef.current) {
-                peerRef.current.destroy();
-                peerRef.current = null;
-            }
-
             const { default: Peer } = await import('peerjs');
 
             // Initialize student peer (random ID)
@@ -44,14 +55,7 @@ export function useLiveScreenViewer(roomName: string | null, active: boolean) {
             peerRef.current = peer;
 
             timeoutRef.current = window.setTimeout(() => {
-                if (callRef.current) {
-                    callRef.current.close();
-                    callRef.current = null;
-                }
-                if (peerRef.current) {
-                    peerRef.current.destroy();
-                    peerRef.current = null;
-                }
+                teardown();
                 setIsConnecting(false);
                 setError('Waktu koneksi habis. Periksa jaringanmu, lalu tekan Hubungkan Ulang.');
             }, CONNECT_TIMEOUT_MS);
@@ -64,6 +68,7 @@ export function useLiveScreenViewer(roomName: string | null, active: boolean) {
 
                 call.on('stream', (remoteStream: MediaStream) => {
                     clearConnectTimeout();
+                    retryCountRef.current = 0;
                     setStream(remoteStream);
                     setIsConnected(true);
                     setIsConnecting(false);
@@ -85,10 +90,22 @@ export function useLiveScreenViewer(roomName: string | null, active: boolean) {
             });
 
             peer.on('error', (err: any) => {
-                clearConnectTimeout();
                 console.error('PeerJS Viewer error:', err);
+                const retryable = err?.type === 'peer-unavailable' || err?.type === 'network';
+
+                if (retryable && retryCountRef.current < MAX_AUTO_RETRIES) {
+                    retryCountRef.current += 1;
+                    teardown();
+                    clearConnectTimeout();
+                    timeoutRef.current = window.setTimeout(() => {
+                        connectToBroadcaster();
+                    }, AUTO_RETRY_DELAY_MS);
+                    return;
+                }
+
+                clearConnectTimeout();
                 setIsConnecting(false);
-                if (err.type === 'peer-unavailable') {
+                if (err?.type === 'peer-unavailable') {
                     setError('Pengajar belum memulai tayangan atau koneksi terputus.');
                 } else {
                     setError('Koneksi terputus. Mencoba reconnect...');
@@ -100,25 +117,19 @@ export function useLiveScreenViewer(roomName: string | null, active: boolean) {
             setError('Gagal menghubungkan ke tayangan layar.');
             setIsConnecting(false);
         }
-    }, [roomName, active, clearConnectTimeout]);
+    }, [roomName, active, clearConnectTimeout, teardown]);
 
     const disconnect = useCallback(() => {
-        clearConnectTimeout();
-        if (callRef.current) {
-            callRef.current.close();
-            callRef.current = null;
-        }
-        if (peerRef.current) {
-            peerRef.current.destroy();
-            peerRef.current = null;
-        }
+        teardown();
+        stopTracks(stream);
         setStream(null);
         setIsConnected(false);
         setIsConnecting(false);
-    }, [clearConnectTimeout]);
+    }, [teardown, stream]);
 
     useEffect(() => {
         if (active && roomName) {
+            retryCountRef.current = 0;
             connectToBroadcaster();
         } else {
             disconnect();
