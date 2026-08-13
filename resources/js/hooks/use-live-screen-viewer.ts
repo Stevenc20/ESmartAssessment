@@ -18,6 +18,7 @@ export function useLiveScreenViewer(roomName: string | null, active: boolean) {
 
     const peerRef = useRef<any>(null);
     const callRef = useRef<any>(null);
+    const streamRef = useRef<MediaStream | null>(null);
     const timeoutRef = useRef<number | null>(null);
     const retryCountRef = useRef(0);
 
@@ -38,6 +39,8 @@ export function useLiveScreenViewer(roomName: string | null, active: boolean) {
             peerRef.current.destroy();
             peerRef.current = null;
         }
+        stopTracks(streamRef.current);
+        streamRef.current = null;
     }, [clearConnectTimeout]);
 
     const connectToBroadcaster = useCallback(async () => {
@@ -69,13 +72,14 @@ export function useLiveScreenViewer(roomName: string | null, active: boolean) {
                 call.on('stream', (remoteStream: MediaStream) => {
                     clearConnectTimeout();
                     retryCountRef.current = 0;
+                    streamRef.current = remoteStream;
                     setStream(remoteStream);
                     setIsConnected(true);
                     setIsConnecting(false);
                 });
 
                 call.on('close', () => {
-                    clearConnectTimeout();
+                    teardown();
                     setStream(null);
                     setIsConnected(false);
                     setIsConnecting(false);
@@ -121,11 +125,10 @@ export function useLiveScreenViewer(roomName: string | null, active: boolean) {
 
     const disconnect = useCallback(() => {
         teardown();
-        stopTracks(stream);
         setStream(null);
         setIsConnected(false);
         setIsConnecting(false);
-    }, [teardown, stream]);
+    }, [teardown]);
 
     useEffect(() => {
         if (active && roomName) {
