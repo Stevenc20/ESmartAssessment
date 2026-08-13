@@ -12,6 +12,9 @@ export class ErrorBoundary extends React.Component<
 
     render() {
         if (this.state.hasError) {
+            const message = this.state.error?.message;
+            const stack = this.state.error?.stack;
+
             return (
                 this.props.fallback || (
                     <div
@@ -30,6 +33,54 @@ export class ErrorBoundary extends React.Component<
                         <p style={{ fontSize: '1rem', color: '#4a5568' }}>
                             Terjadi kesalahan. Silakan muat ulang halaman.
                         </p>
+                        {message && (
+                            <p
+                                style={{
+                                    maxWidth: '640px',
+                                    fontSize: '0.875rem',
+                                    color: '#c53030',
+                                    fontFamily:
+                                        'ui-monospace, SFMono-Regular, Menlo, monospace',
+                                    wordBreak: 'break-word',
+                                    whiteSpace: 'pre-wrap',
+                                }}
+                            >
+                                {message}
+                            </p>
+                        )}
+                        {stack && (
+                            <details
+                                style={{ maxWidth: '640px', width: '100%' }}
+                            >
+                                <summary
+                                    style={{
+                                        cursor: 'pointer',
+                                        fontSize: '0.75rem',
+                                        color: '#718096',
+                                    }}
+                                >
+                                    Lihat detail teknis
+                                </summary>
+                                <pre
+                                    style={{
+                                        overflowX: 'auto',
+                                        marginTop: '0.5rem',
+                                        background: '#f7fafc',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '8px',
+                                        padding: '1rem',
+                                        fontSize: '0.7rem',
+                                        lineHeight: 1.5,
+                                        color: '#2d3748',
+                                        textAlign: 'left',
+                                        maxHeight: '50vh',
+                                        overflowY: 'auto',
+                                    }}
+                                >
+                                    {stack}
+                                </pre>
+                            </details>
+                        )}
                         <button
                             onClick={() => window.location.reload()}
                             style={{

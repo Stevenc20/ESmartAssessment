@@ -14,7 +14,7 @@ import {
     Upload,
     X,
 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import MateriForumChat, { type DiscussionItem } from '@/components/materi/materi-forum-chat';
 import MateriPollWidget, { type PollData } from '@/components/materi/materi-poll-widget';
