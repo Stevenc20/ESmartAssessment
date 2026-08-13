@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import { peerConnectionOptions } from '../lib/peer-connection';
 
 type LiveSessionInfo = {
     id: number;
@@ -122,9 +123,7 @@ export function useLiveScreenBroadcaster(pertemuanId: number | null) {
             // 3. Dynamically import PeerJS and create Host Peer with roomName as peer ID
             const { default: Peer } = await import('peerjs');
 
-            const peer = new Peer(roomName, {
-                debug: 1,
-            });
+            const peer = new Peer(roomName, peerConnectionOptions());
 
             peerRef.current = peer;
 

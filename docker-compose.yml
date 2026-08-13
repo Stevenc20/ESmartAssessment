@@ -17,6 +17,32 @@ services:
     volumes:
       - .:/var/www/html
       - storage:/var/www/html/storage
+      - ./nginx/default.conf:/etc/nginx/sites-available/default:ro
+
+  peerjs:
+    image: peerjs/peerjs-server:latest
+    container_name: esmart-peerjs
+    restart: unless-stopped
+    command: ["--port", "9000", "--path", "/peerjs", "--key", "peerjs", "--proxied"]
+    networks:
+      - esmart
+
+  coturn:
+    image: coturn/coturn:latest
+    container_name: esmart-coturn
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -n
+      - --log-file=stdout
+      - --listening-port=3478
+      - --min-port=49152
+      - --max-port=65535
+      - --realm=esmart.tantechstev.com
+      - --lt-cred-mech
+      - --user=esmart:${TURN_PASSWORD:-CHANGE_ME_TURN_PASSWORD}
+      - --fingerprint
+      - --no-multicast-peers
 
   mysql:
     image: mysql:8.0

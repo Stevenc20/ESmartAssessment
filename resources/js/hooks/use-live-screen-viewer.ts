@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { peerConnectionOptions } from '../lib/peer-connection';
 
 export function useLiveScreenViewer(roomName: string | null, active: boolean) {
     const [stream, setStream] = useState<MediaStream | null>(null);
@@ -19,7 +20,7 @@ export function useLiveScreenViewer(roomName: string | null, active: boolean) {
             const { default: Peer } = await import('peerjs');
 
             // Initialize student peer (random ID)
-            const peer = new Peer();
+            const peer = new Peer(peerConnectionOptions());
             peerRef.current = peer;
 
             peer.on('open', () => {
