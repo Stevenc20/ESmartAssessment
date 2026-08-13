@@ -151,7 +151,8 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
         setZoomMax(4);
     }, []);
 
-    const startScanner = useCallback(async (fromUserGesture = false) => {
+    const startScanner = useCallback(
+        async (fromUserGesture = false, preferredDeviceId?: string) => {
         if (scannerStartedRef.current) {
             return;
         }
@@ -237,13 +238,13 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                 setZoomLevel(1);
             };
 
-            // Prefer the back/environment camera, fall back to the default camera.
-            // Using facingMode directly (not a cached deviceId) avoids
-            // OverconstrainedError from stale device ids.
-            const attempts: any[] = [
-                { facingMode: 'environment' },
-                {},
-            ];
+            // Prefer the camera already chosen by the gesture prompt (real deviceId),
+            // then the back/environment camera, then the default camera.
+            const attempts: any[] = [];
+            if (preferredDeviceId) {
+                attempts.push({ deviceId: { exact: preferredDeviceId } });
+            }
+            attempts.push({ facingMode: 'environment' }, {});
 
             let lastErr: any = null;
             for (const config of attempts) {
@@ -299,12 +300,40 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
         }
     }, []);
 
-    const requestCameraPermission = useCallback(async () => {
+    // Called from a real user tap. getUserMedia MUST be triggered here, before any
+    // dynamic import/await, so iOS Safari keeps the user gesture and shows the
+    // permission prompt. Once granted we remember the real deviceId and hand it to
+    // the scanner (which reopens that camera instantly, no second prompt).
+    const acquireAndStart = useCallback(async () => {
         setCameraError(null);
         setCameraErrorDetail(null);
+
+        let deviceId: string | undefined;
+        try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error(
+                    'Perangkat ini tidak mendukung akses kamera (mediaDevices tidak tersedia).',
+                );
+            }
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' },
+            });
+            deviceId = stream.getVideoTracks()[0]?.getSettings()?.deviceId;
+            stream.getTracks().forEach((track) => track.stop());
+        } catch (err: any) {
+            setCameraErrorDetail(
+                `${err?.name || 'UnknownError'}: ${err?.message || ''}`,
+            );
+            console.error('[absen-camera]', err);
+            setCameraError(cameraErrorMessage(err));
+            return;
+        }
+
         await stopScanner();
-        await startScanner(true);
-    }, [stopScanner, startScanner]);
+        await startScanner(true, deviceId);
+    }, [startScanner, stopScanner]);
+
+    const requestCameraPermission = acquireAndStart;
 
     useEffect(() => {
         startScannerRef.current = startScanner;
@@ -316,9 +345,9 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
             setScannerActive(false);
         } else {
             autoStartDoneRef.current = true;
-            startScanner(true);
+            acquireAndStart();
         }
-    }, [scannerActive, startScanner, stopScanner]);
+    }, [scannerActive, acquireAndStart, stopScanner]);
 
     useEffect(() => {
         if (active_sessions.length > 0 && !autoStartDoneRef.current) {
