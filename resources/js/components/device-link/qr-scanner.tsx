@@ -44,7 +44,6 @@ return;
                             const payload = JSON.parse(decodedText);
 
                             if (payload?.type === 'esmart-device-link' && payload?.token) {
-                                scanner.stop().catch(() => {});
                                 onDecoded(payload);
                             } else {
                                 decodedRef.current = false;
@@ -76,9 +75,22 @@ setStarting(false);
         return () => {
             cancelled = true;
 
-            if (scannerRef.current) {
-                scannerRef.current.stop().catch(() => {});
-                scannerRef.current.clear();
+            const scanner = scannerRef.current;
+
+            if (scanner) {
+                try {
+                    scanner.stop().catch(() => {});
+                } catch {
+                    // stop() throws synchronously when the scanner is already
+                    // stopping or not running; the dialog is closing anyway
+                }
+
+                try {
+                    scanner.clear();
+                } catch {
+                    // clear() throws while the scanner is still stopping; the
+                    // container element is being removed from the DOM regardless
+                }
             }
         };
     }, [onDecoded]);
