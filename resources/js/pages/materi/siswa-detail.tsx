@@ -103,6 +103,12 @@ type MateriDetail = {
     poll: PollData | null;
     discussions: DiscussionItem[];
     live_session?: any;
+    linked_to?: {
+        id: number;
+        judul: string;
+        pertemuan: string;
+        roadmap: string;
+    } | null;
 };
 
 /* ── Config ── */
@@ -441,6 +447,20 @@ export default function MateriSiswaDetail({
                     {errors.error && (
                         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
                             {errors.error}
+                        </div>
+                    )}
+
+                    {materi.linked_to && (
+                        <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                            Materi ini menampilkan materi{' '}
+                            <span className="font-semibold">
+                                {materi.linked_to.judul}
+                            </span>{' '}
+                            dari pertemuan{' '}
+                            <span className="font-semibold">
+                                {materi.linked_to.pertemuan}
+                            </span>
+                            .
                         </div>
                     )}
 

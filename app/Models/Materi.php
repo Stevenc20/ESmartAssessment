@@ -8,11 +8,26 @@ class Materi extends Model
 {
     protected $table = 'materi';
 
-    protected $fillable = ['pertemuan_id', 'judul', 'thumbnail', 'deskripsi', 'konten', 'video_url', 'pdf_file', 'drive_link', 'created_by', 'tingkat'];
+    protected $fillable = ['pertemuan_id', 'linked_materi_id', 'judul', 'thumbnail', 'deskripsi', 'konten', 'video_url', 'pdf_file', 'drive_link', 'created_by', 'tingkat'];
 
     public function pertemuan()
     {
         return $this->belongsTo(Pertemuan::class);
+    }
+
+    public function linkedMateri()
+    {
+        return $this->belongsTo(Materi::class, 'linked_materi_id');
+    }
+
+    public function isLink(): bool
+    {
+        return $this->linked_materi_id !== null;
+    }
+
+    public function source(): Materi
+    {
+        return $this->isLink() ? ($this->linkedMateri ?? $this) : $this;
     }
 
     public function tugas()

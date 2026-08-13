@@ -1,6 +1,11 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { BookOpen } from 'lucide-react';
 import { useRef, useState } from 'react';
+import type {
+    PickedFile,
+    PickedFolder,
+} from '@/components/materi/materi-folder-upload';
+import MateriFolderUpload from '@/components/materi/materi-folder-upload';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,22 +18,33 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import MateriFolderUpload, { type PickedFile, type PickedFolder } from '@/components/materi/materi-folder-upload';
 
 type PertemuanItem = { id: number; judul: string; tingkat: string | null };
 
+type MateriLinkItem = {
+    id: number;
+    judul: string;
+    pertemuan: string;
+    roadmap: string;
+    tingkat: string | null;
+};
+
 export default function MateriCreate({
     pertemuanList,
+    materiList,
 }: {
     pertemuanList: PertemuanItem[];
+    materiList: MateriLinkItem[];
 }) {
     const { errors } = usePage().props;
     const thumbRef = useRef<HTMLInputElement>(null);
     const fileRef = useRef<HTMLInputElement>(null);
+    const [mode, setMode] = useState<'new' | 'link'>('new');
     const [thumbPreview, setThumbPreview] = useState<string | null>(null);
     const [judul, setJudul] = useState('');
     const [deskripsi, setDeskripsi] = useState('');
     const [pertemuanId, setPertemuanId] = useState('');
+    const [linkMateriId, setLinkMateriId] = useState('');
     const [tingkat, setTingkat] = useState('');
     const [videoUrl, setVideoUrl] = useState('');
     const [driveLink, setDriveLink] = useState('');
@@ -51,13 +67,40 @@ export default function MateriCreate({
         ? pertemuanList.filter(p => p.tingkat === tingkat || p.tingkat === null)
         : pertemuanList;
 
+    const filteredLinkMateri = tingkat
+        ? materiList.filter(m => m.tingkat === tingkat || m.tingkat === null)
+        : materiList;
+
     function handleTingkatChange(v: string) {
         setTingkat(v);
+
         if (pertemuanId) {
             const stillValid = v
                 ? pertemuanList.some(p => String(p.id) === pertemuanId && (p.tingkat === v || p.tingkat === null))
                 : true;
-            if (!stillValid) setPertemuanId('');
+
+            if (!stillValid) {
+                setPertemuanId('');
+            }
+        }
+
+        if (linkMateriId) {
+            const stillValid = v
+                ? materiList.some(m => String(m.id) === linkMateriId && (m.tingkat === v || m.tingkat === null))
+                : true;
+
+            if (!stillValid) {
+                setLinkMateriId('');
+            }
+        }
+    }
+
+    function handleLinkMateriChange(v: string) {
+        setLinkMateriId(v);
+        const source = materiList.find(m => String(m.id) === v);
+
+        if (source) {
+            setJudul(source.judul);
         }
     }
 
@@ -66,11 +109,33 @@ export default function MateriCreate({
         setProcessing(true);
         setUploadProgress(0);
 
+        if (mode === 'link') {
+            const form = new FormData();
+            form.append('pertemuan_id', pertemuanId);
+            form.append('linked_materi_id', linkMateriId);
+            form.append('judul', judul);
+
+            if (tingkat) {
+                form.append('tingkat', tingkat);
+            }
+
+            router.post('/materi', form, {
+                preserveScroll: true,
+                forceFormData: true,
+                onFinish: () => setProcessing(false),
+            });
+
+            return;
+        }
+
         const form = new FormData();
         form.append('pertemuan_id', pertemuanId);
         form.append('judul', judul);
         form.append('deskripsi', deskripsi);
-        if (tingkat) form.append('tingkat', tingkat);
+
+        if (tingkat) {
+            form.append('tingkat', tingkat);
+        }
 
         if (thumbRef.current?.files?.[0]) {
             form.append('thumbnail', thumbRef.current.files[0]);
@@ -128,13 +193,178 @@ export default function MateriCreate({
                             <h1 className="text-xl font-bold text-slate-900">
                                 Tambah Materi
                             </h1>
-                            <p className="text-sm text-slate-500">
-                                Buat materi pembelajaran baru
-                            </p>
-                        </div>
+                        <p className="text-sm text-slate-500">
+                            Buat materi pembelajaran baru
+                        </p>
                     </div>
+                </div>
 
+                <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-1">
+                    <button
+                        type="button"
+                        onClick={() => setMode('new')}
+                        className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${
+                            mode === 'new'
+                                ? 'bg-white text-slate-900 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                        Buat Materi Baru
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setMode('link')}
+                        className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${
+                            mode === 'link'
+                                ? 'bg-white text-slate-900 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                        Tautkan Materi Sebelumnya
+                    </button>
+                </div>
+
+                {mode === 'link' && (
                     <Card>
+                        <CardHeader>
+                            <CardTitle>Link Materi Sebelumnya</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <form
+                                onSubmit={submit}
+                                className="grid grid-cols-2 gap-4"
+                            >
+                                <div className="col-span-2 rounded-xl border border-blue-100 bg-blue-50/40 p-4 text-xs text-blue-700">
+                                    Materi yang dibuat akan menampilkan konten,
+                                    file, quiz, dan tugas dari materi sumber.
+                                    Perubahan pada materi sumber akan otomatis
+                                    terlihat di sini. Progress siswa tetap
+                                    dicatat terpisah per pertemuan.
+                                </div>
+
+                                <div>
+                                    <Label>Kelas</Label>
+                                    <Select
+                                        value={tingkat}
+                                        onValueChange={handleTingkatChange}
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Semua kelas" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="">Semua kelas</SelectItem>
+                                            <SelectItem value="10">Genesis 10</SelectItem>
+                                            <SelectItem value="11">Ascend 11</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div>
+                                    <Label>Pertemuan Tujuan</Label>
+                                    {filteredPertemuan.length > 0 ? (
+                                        <Select
+                                            value={pertemuanId}
+                                            onValueChange={(v) =>
+                                                setPertemuanId(v)
+                                            }
+                                        >
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Pilih pertemuan" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {filteredPertemuan.map((p) => (
+                                                    <SelectItem
+                                                        key={p.id}
+                                                        value={String(p.id)}
+                                                    >
+                                                        {p.judul}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    ) : (
+                                        <p className="text-sm text-slate-400 italic">
+                                            Tidak ada pertemuan tersedia
+                                        </p>
+                                    )}
+                                    {errors.pertemuan_id && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.pertemuan_id}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="col-span-2">
+                                    <Label>Materi Sumber</Label>
+                                    {filteredLinkMateri.length > 0 ? (
+                                        <Select
+                                            value={linkMateriId}
+                                            onValueChange={handleLinkMateriChange}
+                                        >
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Pilih materi sebelumnya" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {filteredLinkMateri.map((m) => (
+                                                    <SelectItem
+                                                        key={m.id}
+                                                        value={String(m.id)}
+                                                    >
+                                                        {m.pertemuan} · {m.judul}
+                                                        {m.roadmap !== '-' ? ` (${m.roadmap})` : ''}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    ) : (
+                                        <p className="text-sm text-slate-400 italic">
+                                            Tidak ada materi yang bisa ditautkan
+                                        </p>
+                                    )}
+                                    {errors.linked_materi_id && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.linked_materi_id}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="col-span-2">
+                                    <Label>Judul Materi</Label>
+                                    <Input
+                                        value={judul}
+                                        onChange={(e) =>
+                                            setJudul(e.target.value)
+                                        }
+                                        placeholder="Terisi otomatis dari materi sumber"
+                                    />
+                                    {errors.judul && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.judul}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="col-span-2 flex justify-end gap-2">
+                                    <Link href="/materi">
+                                        <Button type="button" variant="outline">
+                                            Batal
+                                        </Button>
+                                    </Link>
+                                    <Button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="bg-orange-600 text-white hover:bg-orange-700 min-w-[160px]"
+                                    >
+                                        {processing ? 'Menyimpan...' : 'Tautkan Materi'}
+                                    </Button>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {mode === 'new' && (
+                <Card>
                         <CardHeader>
                             <CardTitle>Detail Materi</CardTitle>
                         </CardHeader>
@@ -240,9 +470,11 @@ export default function MateriCreate({
                                         accept="image/*"
                                         onChange={(e) => {
                                             const file = e.target.files?.[0];
+
                                             if (thumbPreview) {
                                                 URL.revokeObjectURL(thumbPreview);
                                             }
+
                                             setThumbPreview(file ? URL.createObjectURL(file) : null);
                                         }}
                                         className="file:mr-2 file:rounded-lg file:border-0 file:bg-orange-50 file:px-3 file:py-1 file:text-xs file:font-bold file:text-orange-700 hover:file:bg-orange-100"
@@ -401,6 +633,7 @@ export default function MateriCreate({
                             </form>
                         </CardContent>
                     </Card>
+                )}
                 </div>
             </div>
         </>

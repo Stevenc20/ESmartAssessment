@@ -131,30 +131,49 @@ class MateriController extends Controller
     {
         $liveMeetingIds = \App\Models\LiveSession::where('status', 'live')->pluck('pertemuan_id')->toArray();
 
-        $materiList = Materi::with(['pertemuan.roadmap', 'creator', 'folders', 'files'])
+        $materiList = Materi::with([
+            'pertemuan.roadmap',
+            'creator',
+            'folders',
+            'files',
+            'linkedMateri.pertemuan.roadmap',
+            'linkedMateri.creator',
+            'linkedMateri.folders',
+            'linkedMateri.files',
+        ])
             ->orderBy('created_at')
             ->get()
-            ->map(fn ($m) => [
-                'id' => $m->id,
-                'judul' => $m->judul,
-                'deskripsi' => $m->deskripsi,
-                'thumbnail' => $m->thumbnail ? Storage::url($m->thumbnail) : null,
-                'video_url' => $m->video_url,
-                'video_embed_url' => $this->getYoutubeEmbedUrl($m->video_url),
-                'pdf_file' => $m->pdf_file ? Storage::url($m->pdf_file) : null,
-                'pdf_file_name' => $m->pdf_file ? basename($m->pdf_file) : null,
-                'drive_link' => $m->drive_link,
-                'folders' => $m->folders->map(fn ($f) => $this->folderData($f))->values(),
-                'folder_count' => $m->folders->count(),
-                'files' => $m->files->map(fn ($f) => $this->fileData($f))->values(),
-                'file_count' => $m->files->count(),
-                'pertemuan' => $m->pertemuan?->judul ?? '-',
-                'roadmap' => $m->pertemuan?->roadmap?->judul ?? '-',
-                'created_by' => $m->creator?->name ?? '-',
-                'created_at' => $m->created_at->format('d M Y'),
-                'has_quiz' => $m->quiz()->exists(),
-                'is_live' => $m->pertemuan_id ? in_array($m->pertemuan_id, $liveMeetingIds) : false,
-            ]);
+            ->map(function ($m) use ($liveMeetingIds) {
+                $src = $m->source();
+
+                return [
+                    'id' => $m->id,
+                    'judul' => $m->judul,
+                    'deskripsi' => $src->deskripsi,
+                    'thumbnail' => $src->thumbnail ? Storage::url($src->thumbnail) : null,
+                    'video_url' => $src->video_url,
+                    'video_embed_url' => $this->getYoutubeEmbedUrl($src->video_url),
+                    'pdf_file' => $src->pdf_file ? Storage::url($src->pdf_file) : null,
+                    'pdf_file_name' => $src->pdf_file ? basename($src->pdf_file) : null,
+                    'drive_link' => $src->drive_link,
+                    'folders' => $src->folders->map(fn ($f) => $this->folderData($f))->values(),
+                    'folder_count' => $src->folders->count(),
+                    'files' => $src->files->map(fn ($f) => $this->fileData($f))->values(),
+                    'file_count' => $src->files->count(),
+                    'pertemuan' => $m->pertemuan?->judul ?? '-',
+                    'roadmap' => $m->pertemuan?->roadmap?->judul ?? '-',
+                    'created_by' => $m->creator?->name ?? '-',
+                    'created_at' => $m->created_at->format('d M Y'),
+                    'has_quiz' => $src->quiz()->exists(),
+                    'linked_to' => $m->isLink() ? [
+                        'id' => $src->id,
+                        'judul' => $src->judul,
+                        'pertemuan' => $src->pertemuan?->judul ?? '-',
+                        'roadmap' => $src->pertemuan?->roadmap?->judul ?? '-',
+                    ] : null,
+                    'is_live' => $m->pertemuan_id ? in_array($m->pertemuan_id, $liveMeetingIds) : false,
+                ];
+            });
 
         $stats = ['total' => $materiList->count()];
 
@@ -166,7 +185,22 @@ class MateriController extends Controller
 
     public function show(Request $request, Materi $materi)
     {
-        $materi->load(['pertemuan.roadmap', 'creator', 'folders', 'files', 'discussions.user', 'discussions.replies.user']);
+        $materi->load([
+            'pertemuan.roadmap',
+            'creator',
+            'folders',
+            'files',
+            'discussions.user',
+            'discussions.replies.user',
+            'linkedMateri.pertemuan.roadmap',
+            'linkedMateri.creator',
+            'linkedMateri.folders',
+            'linkedMateri.files',
+            'linkedMateri.discussions.user',
+            'linkedMateri.discussions.replies.user',
+        ]);
+
+        $src = $materi->source();
 
         $activeSession = $materi->pertemuan_id
             ? \App\Models\LiveSession::where('pertemuan_id', $materi->pertemuan_id)->where('status', 'live')->with('host')->first()
@@ -187,20 +221,26 @@ class MateriController extends Controller
                 'id' => $materi->id,
                 'pertemuan_id' => $materi->pertemuan_id,
                 'judul' => $materi->judul,
-                'deskripsi' => $materi->deskripsi,
-                'thumbnail' => $materi->thumbnail ? Storage::url($materi->thumbnail) : null,
-                'video_url' => $materi->video_url,
-                'video_embed_url' => $this->getYoutubeEmbedUrl($materi->video_url),
-                'pdf_file' => $materi->pdf_file ? Storage::url($materi->pdf_file) : null,
-                'pdf_file_name' => $materi->pdf_file ? basename($materi->pdf_file) : null,
-                'drive_link' => $materi->drive_link,
-                'folders' => $materi->folders->map(fn ($f) => $this->folderData($f))->values(),
-                'files' => $materi->files->map(fn ($f) => $this->fileData($f))->values(),
+                'deskripsi' => $src->deskripsi,
+                'thumbnail' => $src->thumbnail ? Storage::url($src->thumbnail) : null,
+                'video_url' => $src->video_url,
+                'video_embed_url' => $this->getYoutubeEmbedUrl($src->video_url),
+                'pdf_file' => $src->pdf_file ? Storage::url($src->pdf_file) : null,
+                'pdf_file_name' => $src->pdf_file ? basename($src->pdf_file) : null,
+                'drive_link' => $src->drive_link,
+                'folders' => $src->folders->map(fn ($f) => $this->folderData($f))->values(),
+                'files' => $src->files->map(fn ($f) => $this->fileData($f))->values(),
                 'pertemuan' => $materi->pertemuan?->judul ?? '-',
                 'roadmap' => $materi->pertemuan?->roadmap?->judul ?? '-',
                 'created_by' => $materi->creator?->name ?? '-',
                 'created_at' => $materi->created_at->format('d M Y'),
-                'discussions' => $this->discussionData($materi, $request->user()),
+                'linked_to' => $materi->isLink() ? [
+                    'id' => $src->id,
+                    'judul' => $src->judul,
+                    'pertemuan' => $src->pertemuan?->judul ?? '-',
+                    'roadmap' => $src->pertemuan?->roadmap?->judul ?? '-',
+                ] : null,
+                'discussions' => $this->discussionData($src, $request->user()),
                 'live_session' => $liveSessionData,
             ],
         ]);
@@ -217,8 +257,21 @@ class MateriController extends Controller
                 'tingkat' => $p->roadmap?->tingkat,
             ]);
 
+        $materiList = Materi::with('pertemuan.roadmap')
+            ->whereNull('linked_materi_id')
+            ->orderBy('created_at')
+            ->get()
+            ->map(fn ($m) => [
+                'id' => $m->id,
+                'judul' => $m->judul,
+                'pertemuan' => $m->pertemuan?->judul ?? '-',
+                'roadmap' => $m->pertemuan?->roadmap?->judul ?? '-',
+                'tingkat' => $m->tingkat,
+            ]);
+
         return Inertia::render('materi/create', [
             'pertemuanList' => $pertemuanList,
+            'materiList' => $materiList,
         ]);
     }
 
@@ -230,6 +283,7 @@ class MateriController extends Controller
 
         $data = $request->validate([
             'pertemuan_id' => 'nullable|integer|exists:pertemuan,id',
+            'linked_materi_id' => 'nullable|integer|exists:materi,id',
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:102400',
@@ -251,6 +305,35 @@ class MateriController extends Controller
         if (empty($data['pertemuan_id'])) {
             $data['pertemuan_id'] = null;
         }
+
+        if (! empty($data['linked_materi_id'])) {
+            $source = Materi::findOrFail($data['linked_materi_id']);
+
+            if ($source->isLink()) {
+                return back()->withErrors([
+                    'linked_materi_id' => 'Materi sumber tidak dapat berupa materi yang sudah menautkan materi lain.',
+                ])->withInput();
+            }
+
+            if (! $data['pertemuan_id']) {
+                return back()->withErrors([
+                    'pertemuan_id' => 'Pilih pertemuan untuk materi tautan.',
+                ])->withInput();
+            }
+
+            Materi::create([
+                'pertemuan_id' => $data['pertemuan_id'],
+                'linked_materi_id' => $source->id,
+                'judul' => $data['judul'],
+                'tingkat' => $data['tingkat'] ?? $source->tingkat,
+                'created_by' => $request->user()->id,
+            ]);
+
+            return redirect()->route('materi.index')
+                ->with('success', 'Materi berhasil ditautkan.');
+        }
+
+        $data['linked_materi_id'] = null;
 
         if ($request->hasFile('thumbnail')) {
             $data['thumbnail'] = $request->file('thumbnail')->store('thumbnails', 'public');
@@ -291,6 +374,11 @@ class MateriController extends Controller
 
     public function edit(Materi $materi)
     {
+        if ($materi->isLink()) {
+            return redirect()->route('materi.index')
+                ->with('error', 'Materi ini menautkan materi lain. Ubah konten pada materi sumber.');
+        }
+
         $materi->load(['poll.options', 'folders', 'files']);
 
         $pertemuanList = Pertemuan::with('roadmap')
@@ -576,7 +664,9 @@ class MateriController extends Controller
             }
         }, 'pertemuan.materi.folders', 'pertemuan.materi.files', 'pertemuan.materi.tugas.pengumpulan' => function ($q) use ($user) {
             $q->where('siswa_id', $user->id);
-        }, 'pertemuan.materi.tugas.pengumpulan.penilaian'])
+        }, 'pertemuan.materi.tugas.pengumpulan.penilaian', 'pertemuan.materi.linkedMateri.folders', 'pertemuan.materi.linkedMateri.files', 'pertemuan.materi.linkedMateri.tugas.pengumpulan' => function ($q) use ($user) {
+            $q->where('siswa_id', $user->id);
+        }, 'pertemuan.materi.linkedMateri.tugas.pengumpulan.penilaian'])
             ->where(function ($q) use ($tingkat) {
                 if ($tingkat) {
                     $q->where('tingkat', $tingkat)->orWhereNull('tingkat');
@@ -595,8 +685,9 @@ class MateriController extends Controller
                     'judul' => $p->judul,
                     'urutan' => $p->urutan,
                     'materi' => $p->materi->map(function ($m) use ($user) {
+                        $src = $m->source();
                         $progress = $m->progress->firstWhere('siswa_id', $user->id);
-                        $tugasList = $m->tugas->map(function ($t) use ($user) {
+                        $tugasList = $src->tugas->map(function ($t) use ($user) {
                             $submission = $t->pengumpulan
                                 ->where('siswa_id', $user->id)
                                 ->sortByDesc('created_at')
@@ -627,19 +718,19 @@ class MateriController extends Controller
                         return [
                             'id' => $m->id,
                             'judul' => $m->judul,
-                            'deskripsi' => $m->deskripsi,
-                            'thumbnail' => $m->thumbnail ? Storage::url($m->thumbnail) : null,
-                            'video_url' => $m->video_url,
-                            'video_embed_url' => $this->getYoutubeEmbedUrl($m->video_url),
-                            'pdf_file' => $m->pdf_file ? Storage::url($m->pdf_file) : null,
-                            'pdf_file_name' => $m->pdf_file ? basename($m->pdf_file) : null,
-                            'drive_link' => $m->drive_link,
-                            'folders' => $m->folders->map(fn ($f) => $this->folderData($f))->values(),
-                            'files' => $m->files->map(fn ($f) => $this->fileData($f))->values(),
-                            'created_by' => $m->creator?->name ?? '-',
+                            'deskripsi' => $src->deskripsi,
+                            'thumbnail' => $src->thumbnail ? Storage::url($src->thumbnail) : null,
+                            'video_url' => $src->video_url,
+                            'video_embed_url' => $this->getYoutubeEmbedUrl($src->video_url),
+                            'pdf_file' => $src->pdf_file ? Storage::url($src->pdf_file) : null,
+                            'pdf_file_name' => $src->pdf_file ? basename($src->pdf_file) : null,
+                            'drive_link' => $src->drive_link,
+                            'folders' => $src->folders->map(fn ($f) => $this->folderData($f))->values(),
+                            'files' => $src->files->map(fn ($f) => $this->fileData($f))->values(),
+                            'created_by' => $src->creator?->name ?? '-',
                             'progress_status' => $progress?->status ?? 'not_started',
                             'completed_at' => $progress?->completed_at,
-                            'has_quiz' => $m->quiz()->exists(),
+                            'has_quiz' => $src->quiz()->exists(),
                             'quiz_score' => $progress?->quiz_score,
                             'quiz_attempts' => $progress?->quiz_attempts ?? 0,
                             'tugas' => $tugasList,
@@ -687,11 +778,25 @@ class MateriController extends Controller
     {
         $user = $request->user();
 
-        $materi->load(['pertemuan.roadmap', 'creator', 'tugas.pengumpulan.penilaian', 'progress', 'quiz', 'folders', 'files']);
+        $materi->load([
+            'pertemuan.roadmap',
+            'creator',
+            'tugas.pengumpulan.penilaian',
+            'progress',
+            'quiz',
+            'folders',
+            'files',
+            'linkedMateri.tugas.pengumpulan.penilaian',
+            'linkedMateri.quiz',
+            'linkedMateri.folders',
+            'linkedMateri.files',
+        ]);
+
+        $src = $materi->source();
 
         $progress = $materi->progress->firstWhere('siswa_id', $user->id);
 
-        $tugasList = $materi->tugas->map(function ($t) use ($user) {
+        $tugasList = $src->tugas->map(function ($t) use ($user) {
             $submission = $t->pengumpulan
                 ->where('siswa_id', $user->id)
                 ->sortByDesc('created_at')
@@ -719,7 +824,7 @@ class MateriController extends Controller
             ];
         });
 
-        $quizList = $materi->quiz->map(fn ($q) => [
+        $quizList = $src->quiz->map(fn ($q) => [
             'id' => $q->id,
             'soal' => $q->soal,
             'gambar' => $q->gambar ? Storage::url($q->gambar) : null,
@@ -737,11 +842,11 @@ class MateriController extends Controller
             ['read_at' => now()]
         );
 
-        $materi->load(['poll.options.votes', 'discussions.user', 'discussions.replies.user']);
+        $src->load(['poll.options.votes', 'discussions.user', 'discussions.replies.user']);
 
         $pollData = null;
-        if ($materi->poll) {
-            $poll = $materi->poll;
+        if ($src->poll) {
+            $poll = $src->poll;
             $totalVotes = $poll->votes()->count();
             $myVoteOptionId = $poll->votes()->where('siswa_id', $user->id)->first()?->option_id;
 
@@ -767,7 +872,7 @@ class MateriController extends Controller
             ];
         }
 
-        $discussionsData = $this->discussionData($materi, $user);
+        $discussionsData = $this->discussionData($src, $user);
 
         $activeSession = $materi->pertemuan_id
             ? \App\Models\LiveSession::where('pertemuan_id', $materi->pertemuan_id)->where('status', 'live')->with('host')->first()
@@ -788,17 +893,17 @@ class MateriController extends Controller
                 'id' => $materi->id,
                 'pertemuan_id' => $materi->pertemuan_id,
                 'judul' => $materi->judul,
-                'deskripsi' => $materi->deskripsi,
-                'konten' => $materi->konten,
-                'thumbnail' => $materi->thumbnail ? Storage::url($materi->thumbnail) : null,
-                'video_url' => $materi->video_url,
-                'video_embed_url' => $this->getYoutubeEmbedUrl($materi->video_url),
-                'pdf_file' => $materi->pdf_file ? Storage::url($materi->pdf_file) : null,
-                'pdf_file_name' => $materi->pdf_file ? basename($materi->pdf_file) : null,
-                'drive_link' => $materi->drive_link,
-                'folders' => $materi->folders->map(fn ($f) => $this->folderData($f))->values(),
-                'files' => $materi->files->map(fn ($f) => $this->fileData($f))->values(),
-                'created_by' => $materi->creator?->name ?? '-',
+                'deskripsi' => $src->deskripsi,
+                'konten' => $src->konten,
+                'thumbnail' => $src->thumbnail ? Storage::url($src->thumbnail) : null,
+                'video_url' => $src->video_url,
+                'video_embed_url' => $this->getYoutubeEmbedUrl($src->video_url),
+                'pdf_file' => $src->pdf_file ? Storage::url($src->pdf_file) : null,
+                'pdf_file_name' => $src->pdf_file ? basename($src->pdf_file) : null,
+                'drive_link' => $src->drive_link,
+                'folders' => $src->folders->map(fn ($f) => $this->folderData($f))->values(),
+                'files' => $src->files->map(fn ($f) => $this->fileData($f))->values(),
+                'created_by' => $src->creator?->name ?? '-',
                 'progress_status' => $progress?->status ?? 'not_started',
                 'completed_at' => $progress?->completed_at,
                 'quiz_score' => $progress?->quiz_score,
@@ -808,6 +913,12 @@ class MateriController extends Controller
                 'poll' => $pollData,
                 'discussions' => $discussionsData,
                 'live_session' => $liveSessionData,
+                'linked_to' => $materi->isLink() ? [
+                    'id' => $src->id,
+                    'judul' => $src->judul,
+                    'pertemuan' => $src->pertemuan?->judul ?? '-',
+                    'roadmap' => $src->pertemuan?->roadmap?->judul ?? '-',
+                ] : null,
             ],
             'pertemuan' => $materi->pertemuan?->judul ?? '-',
             'roadmap' => $materi->pertemuan?->roadmap?->judul ?? '-',
@@ -817,7 +928,7 @@ class MateriController extends Controller
     public function votePoll(Request $request, Materi $materi)
     {
         $user = $request->user();
-        $poll = $materi->poll;
+        $poll = $materi->source()->poll;
 
         if (! $poll || ! $poll->is_active) {
             return back()->with('error', 'Polling tidak aktif.');
@@ -845,7 +956,7 @@ class MateriController extends Controller
         ]);
 
         MateriDiscussion::create([
-            'materi_id' => $materi->id,
+            'materi_id' => $materi->source()->id,
             'user_id' => $user->id,
             'parent_id' => $validated['parent_id'] ?? null,
             'pesan' => $validated['pesan'],
@@ -896,7 +1007,7 @@ class MateriController extends Controller
     public function quizSubmit(Request $request, Materi $materi)
     {
         $user = $request->user();
-        $quizQuestions = $materi->quiz()->get();
+        $quizQuestions = $materi->source()->quiz()->get();
 
         $validated = $request->validate([
             'answers' => 'required|array',
@@ -1031,7 +1142,7 @@ class MateriController extends Controller
 
     public function penilaianIndex(Request $request)
     {
-        $pertemuanList = Pertemuan::with(['roadmap', 'materi.quiz', 'materi.tugas'])
+        $pertemuanList = Pertemuan::with(['roadmap', 'materi.quiz', 'materi.tugas', 'materi.linkedMateri.quiz', 'materi.linkedMateri.tugas'])
             ->orderBy('urutan')
             ->get();
 
@@ -1079,6 +1190,7 @@ class MateriController extends Controller
             foreach ($pertemuanList as $p) {
                 $materiList = $p->materi;
                 $materiIds = $materiList->pluck('id');
+                $srcMateri = $materiList->map(fn ($m) => $m->source());
 
                 $quizScores = ProgressMateri::where('siswa_id', $siswa->id)
                     ->whereIn('materi_id', $materiIds)
@@ -1087,7 +1199,7 @@ class MateriController extends Controller
 
                 $maxQuizScore = $quizScores->isNotEmpty() ? round($quizScores->max(), 2) : null;
 
-                $tugasIds = $materiList->flatMap(fn ($m) => $m->tugas)->pluck('id');
+                $tugasIds = $srcMateri->flatMap(fn ($m) => $m->tugas)->pluck('id');
                 $tugasNilai = PengumpulanTugas::where('siswa_id', $siswa->id)
                     ->whereIn('tugas_id', $tugasIds)
                     ->whereHas('penilaian')
@@ -1186,7 +1298,7 @@ class MateriController extends Controller
 
     public function penilaianExport(Request $request)
     {
-        $pertemuanList = Pertemuan::with('materi.tugas')->orderBy('urutan')->get();
+        $pertemuanList = Pertemuan::with(['materi.tugas', 'materi.linkedMateri.tugas'])->orderBy('urutan')->get();
 
         $query = User::whereHas('role', function ($q) {
             $q->where('role_name', 'siswa');
@@ -1248,6 +1360,7 @@ class MateriController extends Controller
                 foreach ($pertemuanList as $p) {
                     $materiList = $p->materi;
                     $materiIds = $materiList->pluck('id');
+                    $srcMateri = $materiList->map(fn ($m) => $m->source());
 
                     $quizScores = ProgressMateri::where('siswa_id', $siswa->id)
                         ->whereIn('materi_id', $materiIds)
@@ -1256,7 +1369,7 @@ class MateriController extends Controller
 
                     $maxQuizScore = $quizScores->isNotEmpty() ? round($quizScores->max(), 2) : '-';
 
-                    $tugasIds = $materiList->flatMap(fn ($m) => $m->tugas)->pluck('id');
+                    $tugasIds = $srcMateri->flatMap(fn ($m) => $m->tugas)->pluck('id');
                     $tugasNilai = PengumpulanTugas::where('siswa_id', $siswa->id)
                         ->whereIn('tugas_id', $tugasIds)
                         ->whereHas('penilaian')
@@ -1305,7 +1418,7 @@ class MateriController extends Controller
         $siswaId = $siswa->id;
 
         $pertemuanList = Pertemuan::whereIn('status', ['published', 'completed'])
-            ->with(['roadmap', 'materi.quiz', 'materi.tugas'])
+            ->with(['roadmap', 'materi.quiz', 'materi.tugas', 'materi.linkedMateri.quiz', 'materi.linkedMateri.tugas'])
             ->orderBy('urutan')
             ->get();
 
@@ -1320,6 +1433,7 @@ class MateriController extends Controller
         foreach ($pertemuanList as $p) {
             $materiList = $p->materi;
             $materiIds = $materiList->pluck('id');
+            $srcMateri = $materiList->map(fn ($m) => $m->source());
 
             $progressRecords = ProgressMateri::where('siswa_id', $siswaId)
                 ->whereIn('materi_id', $materiIds)
@@ -1333,7 +1447,7 @@ class MateriController extends Controller
                 $completedQuizzesCount++;
             }
 
-            $tugasIds = $materiList->flatMap(fn ($m) => $m->tugas)->pluck('id');
+            $tugasIds = $srcMateri->flatMap(fn ($m) => $m->tugas)->pluck('id');
             $pengumpulanList = PengumpulanTugas::where('siswa_id', $siswaId)
                 ->whereIn('tugas_id', $tugasIds)
                 ->with('penilaian')
@@ -1391,6 +1505,13 @@ class MateriController extends Controller
 
     public function destroy(Materi $materi)
     {
+        $linkedCount = Materi::where('linked_materi_id', $materi->id)->count();
+
+        if ($linkedCount > 0) {
+            return redirect()->route('materi.index')
+                ->with('error', "Materi ini ditautkan oleh {$linkedCount} materi lain. Putuskan tautan terlebih dahulu.");
+        }
+
         if ($materi->thumbnail) {
             Storage::disk('public')->delete($materi->thumbnail);
         }

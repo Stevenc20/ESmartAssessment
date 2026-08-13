@@ -56,6 +56,12 @@ type MateriDetail = {
     created_at: string;
     discussions?: DiscussionItem[];
     live_session?: any;
+    linked_to?: {
+        id: number;
+        judul: string;
+        pertemuan: string;
+        roadmap: string;
+    } | null;
 };
 
 function formatBytes(bytes: number): string {
@@ -113,6 +119,24 @@ export default function MateriShow({
                     {errors.success && (
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
                             {errors.success}
+                        </div>
+                    )}
+
+                    {/* Linked materi notice */}
+                    {materi.linked_to && (
+                        <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                            Materi ini menampilkan materi{' '}
+                            <Link
+                                href={`/materi/${materi.linked_to.id}`}
+                                className="font-semibold underline underline-offset-2"
+                            >
+                                {materi.linked_to.judul}
+                            </Link>{' '}
+                            dari pertemuan{' '}
+                            <span className="font-semibold">
+                                {materi.linked_to.pertemuan}
+                            </span>
+                            . Konten diubah pada materi sumber.
                         </div>
                     )}
 

@@ -6,6 +6,7 @@ import {
     FileText,
     Folder,
     Image,
+    Link2,
     Pencil,
     Plus,
     Trash2,
@@ -39,6 +40,12 @@ type MateriItem = {
     created_by: string;
     created_at: string;
     is_live?: boolean;
+    linked_to?: {
+        id: number;
+        judul: string;
+        pertemuan: string;
+        roadmap: string;
+    } | null;
 };
 
 type Stats = { total: number };
@@ -111,6 +118,11 @@ export default function MateriIndex({
                             {errors.success}
                         </div>
                     )}
+                    {errors.error && (
+                        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                            {errors.error}
+                        </div>
+                    )}
 
                     {/* List */}
                     <div className="rounded-xl border border-slate-200 bg-white">
@@ -156,6 +168,12 @@ export default function MateriIndex({
                                                     <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-extrabold text-red-700 animate-pulse shrink-0">
                                                         <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-ping" />
                                                         LIVE
+                                                    </span>
+                                                )}
+                                                {materi.linked_to && (
+                                                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-extrabold text-blue-700 shrink-0">
+                                                        <Link2 className="h-3 w-3" />
+                                                        Menautkan ke {materi.linked_to.judul}
                                                     </span>
                                                 )}
                                             </div>
@@ -217,12 +235,14 @@ export default function MateriIndex({
                                             >
                                                 <Eye className="h-3.5 w-3.5" />
                                             </Link>
-                                            <Link
-                                                href={`/materi/${materi.id}/edit`}
-                                                className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
-                                            >
-                                                <Pencil className="h-3.5 w-3.5" />
-                                            </Link>
+                                            {!materi.linked_to && (
+                                                <Link
+                                                    href={`/materi/${materi.id}/edit`}
+                                                    className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
+                                                >
+                                                    <Pencil className="h-3.5 w-3.5" />
+                                                </Link>
+                                            )}
                                             <button
                                                 onClick={() =>
                                                     setDeleteId(materi.id)
