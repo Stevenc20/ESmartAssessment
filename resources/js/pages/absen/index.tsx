@@ -22,7 +22,7 @@ const html5QrcodeLibPromise = import('html5-qrcode');
 
 // Version badge shown on the page (see header) so we can verify which build is
 // actually running on the phone. Bump this on every camera-related release.
-const BUILD_VERSION = 'v10';
+const BUILD_VERSION = 'v11';
 
 type RiwayatItem = {
     id: number;
@@ -97,6 +97,9 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
     const [cameraErrorDetail, setCameraErrorDetail] = useState<string | null>(
         null,
     );
+    const [cameraErrorKind, setCameraErrorKind] = useState<
+        'permission' | 'notfound' | 'busy' | 'config' | 'generic'
+    >('generic');
     const [polledSessions, setPolledSessions] =
         useState<ActiveSession[]>(active_sessions);
     const [autoScanning, setAutoScanning] = useState(false);
@@ -107,6 +110,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
     const scannerRef = useRef<HTMLDivElement>(null);
     const html5QrCodeRef = useRef<any>(null);
     const cameraCountRef = useRef<number | null>(null);
+    const firstCameraIdRef = useRef<string | null>(null);
     const scannerStartedRef = useRef(false);
     const autoStartDoneRef = useRef(false);
     const startScannerRef = useRef<() => void>(() => {});
@@ -172,6 +176,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
 
         setCameraError(null);
         setCameraErrorDetail(null);
+        setCameraErrorKind('generic');
         setAutoScanning(false);
 
         try {
@@ -256,17 +261,34 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                 setZoomLevel(1);
             };
 
-            // Prefer the back/environment camera, fall back to the default camera.
-            // Using facingMode directly (not a cached deviceId) avoids
-            // OverconstrainedError from stale device ids.
-            const attempts: any[] = [{ facingMode: 'environment' }, {}];
+            // Camera candidates. html5-qrcode REQUIRES the first argument of
+            // start() to be a cameraId (string) or an object with EXACTLY 1 key
+            // (deviceId | facingMode) — passing {} throws "found 0 keys".
+            // 1) { facingMode: 'environment' } → rear camera on phones (an ideal
+            //    constraint; harmless on a single desktop webcam).
+            // 2) exact deviceId from the preflight enumerateDevices → reliable
+            //    on desktop webcams. Never an empty object.
+            const isMobile =
+                /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
+                navigator.maxTouchPoints > 0;
+            const candidates: (string | object)[] = [
+                { facingMode: 'environment' },
+            ];
+            if (firstCameraIdRef.current) {
+                candidates.push(firstCameraIdRef.current);
+            }
 
             let lastErr: any = null;
-            for (const config of attempts) {
+            for (const cameraIdOrConfig of candidates) {
+                console.log('[CAMERA START ARG]', {
+                    mode: isMobile ? 'mobile' : 'desktop',
+                    json: JSON.stringify(cameraIdOrConfig),
+                    cameraCount: cameraCountRef.current,
+                });
                 try {
                     scannerStartedRef.current = true;
                     await scanner.start(
-                        config,
+                        cameraIdOrConfig,
                         { fps: 10, qrbox: { width: 250, height: 250 } },
                         onDecoded,
                         () => {},
@@ -275,6 +297,11 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                     break;
                 } catch (err: any) {
                     lastErr = err;
+                    console.error(
+                        '[CAMERA START FAIL]',
+                        JSON.stringify(cameraIdOrConfig),
+                        err,
+                    );
                     scannerStartedRef.current = false;
                     try { await scanner.stop(); } catch { /* ignore */ }
                     try { await scanner.clear(); } catch { /* ignore */ }
@@ -307,6 +334,26 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                 name === 'NotAllowedError' ||
                 name === 'PermissionDeniedError' ||
                 name === 'SecurityError';
+            const isNotFound =
+                name === 'NotFoundError' ||
+                name === 'DevicesNotFoundError' ||
+                name === 'OverconstrainedError';
+            const isBusy =
+                name === 'NotReadableError' || name === 'TrackStartError';
+            const isConfigBug =
+                typeof rawMessage === 'string' &&
+                rawMessage.includes('cameraIdOrConfig');
+            setCameraErrorKind(
+                isDenied
+                    ? 'permission'
+                    : isNotFound
+                      ? 'notfound'
+                      : isBusy
+                        ? 'busy'
+                        : isConfigBug
+                          ? 'config'
+                          : 'generic',
+            );
 
             let permState = '?';
             try {
@@ -337,6 +384,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
     const acquireAndStart = useCallback(async () => {
         setCameraError(null);
         setCameraErrorDetail(null);
+        setCameraErrorKind('generic');
         await startScanner(true);
     }, [startScanner]);
 
@@ -353,9 +401,9 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                 if (!navigator.mediaDevices?.enumerateDevices) return;
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 if (!alive) return;
-                cameraCountRef.current = devices.filter(
-                    (d) => d.kind === 'videoinput',
-                ).length;
+                const cams = devices.filter((d) => d.kind === 'videoinput');
+                cameraCountRef.current = cams.length;
+                firstCameraIdRef.current = cams[0]?.deviceId || null;
             } catch { /* preflight failed, startScanner will handle */ }
         })();
         return () => {
@@ -546,7 +594,15 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
                                 <div className="space-y-1 flex-1">
                                     <p className="text-sm font-bold text-red-800">
-                                        Akses Kamera Diperlukan
+                                        {cameraErrorKind === 'permission'
+                                            ? 'Akses Kamera Ditolak'
+                                            : cameraErrorKind === 'notfound'
+                                              ? 'Kamera Tidak Ditemukan'
+                                              : cameraErrorKind === 'busy'
+                                                ? 'Kamera Sedang Dipakai'
+                                                : cameraErrorKind === 'config'
+                                                  ? 'Konfigurasi Kamera Gagal'
+                                                  : 'Kamera Tidak Dapat Diakses'}
                                     </p>
                                     <p className="text-xs text-red-700 leading-relaxed">
                                         {cameraError}
