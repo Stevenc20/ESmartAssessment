@@ -143,7 +143,7 @@ class AbsenController extends Controller
             'session' => [
                 'id' => $session->id,
                 'token' => $session->token,
-                'expired_at' => $session->expired_at->format('Y-m-d H:i:s'),
+                'expired_at' => $session->expired_at->toIso8601String(),
                 'expires_in' => now()->diffInSeconds($session->expired_at, false),
             ],
             'attendees' => $attendees,
@@ -378,7 +378,7 @@ class AbsenController extends Controller
                 'pertemuan_id' => $s->pertemuan_id,
                 'pertemuan' => $s->pertemuan?->judul ?? '-',
                 'token' => $s->token,
-                'expired_at' => $s->expired_at->format('Y-m-d H:i:s'),
+                'expired_at' => $s->expired_at->toIso8601String(),
             ]);
     }
 

@@ -44,12 +44,29 @@ type Props = {
     active_sessions: ActiveSession[];
 };
 
+const formatEndTime = (iso: string): string => {
+    try {
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return '-';
+        return d.toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    } catch {
+        return '-';
+    }
+};
+
 export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
     const [scannerActive, setScannerActive] = useState(false);
     const [cameraError, setCameraError] = useState<string | null>(null);
     const [polledSessions, setPolledSessions] =
         useState<ActiveSession[]>(active_sessions);
     const [autoScanning, setAutoScanning] = useState(false);
+    const [cameraPermission, setCameraPermission] = useState<
+        'granted' | 'prompt' | 'denied' | 'unknown'
+    >('unknown');
+    const cameraPermissionRef = useRef(cameraPermission);
     const [zoomLevel, setZoomLevel] = useState(1);
     const [zoomMin, setZoomMin] = useState(1);
     const [zoomMax, setZoomMax] = useState(4);
@@ -115,8 +132,8 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
 
     const startScanner = useCallback(async () => {
         if (scannerStartedRef.current) {
-return;
-}
+            return;
+        }
 
         setCameraError(null);
         setScannerActive(true);
@@ -130,6 +147,7 @@ return;
                         video: { facingMode: 'environment' },
                     });
                     stream.getTracks().forEach((track) => track.stop());
+                    setCameraPermission('granted');
                 } catch (permErr: any) {
                     if (permErr?.name === 'NotAllowedError' || permErr?.name === 'PermissionDeniedError') {
                         throw new Error('Akses kamera diblokir. Silakan berikan izin akses kamera di browser HP Anda.');
@@ -139,11 +157,11 @@ return;
 
             const { Html5Qrcode } = await import('html5-qrcode');
 
-            const cameras = await Html5Qrcode.getCameras();
-
-            if (!cameras || cameras.length === 0) {
-                throw new Error('Tidak ada kamera yang terdeteksi pada perangkat ini');
-            }
+            let cameras: { id: string; label: string }[] = [];
+            try {
+                const result = await Html5Qrcode.getCameras();
+                if (Array.isArray(result)) cameras = result;
+            } catch { /* camera list unavailable — fall back to facingMode */ }
 
             const isBackCamera = (label: string) => {
                 const l = label.toLowerCase();
@@ -155,11 +173,22 @@ return;
             const selectedCamera =
                 backCamera ?? cameras[cameras.length - 1] ?? cameras[0];
 
-            const scanner = new Html5Qrcode('qr-scanner-viewfinder');
-            html5QrCodeRef.current = scanner;
-            scannerStartedRef.current = true;
+            let scanner: any = null;
+
+            const onDecoded = (decodedText: string) => {
+                const match = decodedText.match(/\/absen\/([a-zA-Z0-9]+)/);
+                const token = match ? match[1] : null;
+
+                if (token && scannerStartedRef.current) {
+                    scannerStartedRef.current = false;
+                    scanner.stop().catch(() => {});
+                    setScannerActive(false);
+                    router.visit(`/absen/${token}`);
+                }
+            };
 
             const probeZoom = () => {
+                if (!scanner) return;
                 try {
                     const zoomFeature = scanner
                         .getRunningTrackCameraCapabilities()
@@ -185,26 +214,39 @@ return;
                 setZoomLevel(1);
             };
 
-            await scanner.start(
-                { deviceId: { exact: selectedCamera.id } },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                (decodedText) => {
-                    const match = decodedText.match(/\/absen\/([a-zA-Z0-9]+)/);
-                    const token = match ? match[1] : null;
+            const startWith = async (config: any) => {
+                if (!scanner) {
+                    scanner = new Html5Qrcode('qr-scanner-viewfinder');
+                    html5QrCodeRef.current = scanner;
+                }
+                scannerStartedRef.current = true;
+                await scanner.start(
+                    config,
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    onDecoded,
+                    () => {},
+                );
+            };
 
-                    if (token && scannerStartedRef.current) {
-                        scannerStartedRef.current = false;
-                        scanner.stop().catch(() => {});
-                        setScannerActive(false);
-                        router.visit(`/absen/${token}`);
-                    }
-                },
-                () => {},
-            );
+            if (selectedCamera) {
+                try {
+                    await startWith({ deviceId: { exact: selectedCamera.id } });
+                } catch {
+                    // exact deviceId can fail (OverconstrainedError) → retry generically
+                    try { await scanner?.stop(); } catch { /* ignore */ }
+                    try { await scanner?.clear(); } catch { /* ignore */ }
+                    scannerStartedRef.current = false;
+                    await startWith({ facingMode: 'environment' });
+                }
+            } else {
+                await startWith({ facingMode: 'environment' });
+            }
 
             probeZoom();
             setTimeout(probeZoom, 400);
         } catch (err: any) {
+            scannerStartedRef.current = false;
+            html5QrCodeRef.current = null;
             setCameraError(err?.message || 'Kamera tidak dapat diakses');
             setScannerActive(false);
         }
@@ -218,6 +260,9 @@ return;
                 });
                 stream.getTracks().forEach((track) => track.stop());
             }
+            setCameraPermission('granted');
+            scannerStartedRef.current = false;
+            html5QrCodeRef.current = null;
             setCameraError(null);
             startScanner();
         } catch (err: any) {
@@ -235,6 +280,44 @@ return;
         startScannerRef.current = startScanner;
     }, [startScanner]);
 
+    // Proactive camera permission detection (works in any browser that supports it)
+    useEffect(() => {
+        let cancelled = false;
+
+        const updateFromState = (state: PermissionState) => {
+            if (cancelled) return;
+            if (state === 'granted' || state === 'prompt' || state === 'denied') {
+                setCameraPermission(state);
+            }
+        };
+
+        const query = async () => {
+            try {
+                if (!navigator.permissions || !navigator.permissions.query) {
+                    if (!cancelled) setCameraPermission('unknown');
+                    return;
+                }
+                const status = await navigator.permissions.query({
+                    name: 'camera' as PermissionName,
+                });
+                updateFromState(status.state);
+                status.addEventListener('change', () =>
+                    updateFromState(status.state),
+                );
+            } catch {
+                // Permissions API unsupported (e.g. iOS Safari) — leave as 'unknown',
+                // the auto-start attempt will surface the browser prompt instead.
+                if (!cancelled) setCameraPermission('unknown');
+            }
+        };
+
+        query();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
     const toggleScanner = useCallback(() => {
         if (scannerActive) {
             stopScanner();
@@ -248,14 +331,23 @@ return;
     useEffect(() => {
         if (active_sessions.length > 0 && !autoStartDoneRef.current) {
             autoStartDoneRef.current = true;
-            setAutoScanning(true);
-            const timer = setTimeout(() => {
-                startScannerRef.current();
-            }, 600);
+            if (cameraPermission === 'granted' || cameraPermission === 'unknown') {
+                setAutoScanning(true);
+                const timer = setTimeout(() => {
+                    startScannerRef.current();
+                }, 600);
 
-            return () => clearTimeout(timer);
+                return () => clearTimeout(timer);
+            }
+            // Not granted (prompt/denied) — surface the permission card right away
+            setCameraError('Akses kamera diperlukan untuk scan QR. Klik tombol di bawah untuk mengizinkan.');
+            setScannerActive(false);
         }
-    }, [active_sessions.length]);
+    }, [active_sessions.length, cameraPermission]);
+
+    useEffect(() => {
+        cameraPermissionRef.current = cameraPermission;
+    }, [cameraPermission]);
 
     useEffect(() => {
         const poll = setInterval(async () => {
@@ -270,8 +362,16 @@ return;
                     !autoStartDoneRef.current
                 ) {
                     autoStartDoneRef.current = true;
-                    setAutoScanning(true);
-                    startScannerRef.current();
+                    if (
+                        cameraPermissionRef.current === 'granted' ||
+                        cameraPermissionRef.current === 'unknown'
+                    ) {
+                        setAutoScanning(true);
+                        startScannerRef.current();
+                    } else {
+                        setCameraError('Akses kamera diperlukan untuk scan QR. Klik tombol di bawah untuk mengizinkan.');
+                        setScannerActive(false);
+                    }
                 }
             } catch { /* network error, will retry next interval */ }
         }, 10000);
@@ -478,15 +578,7 @@ return;
                                                     </p>
                                                     <p className="text-xs text-slate-500">
                                                         Berakhir:{' '}
-                                                        {new Date(
-                                                            s.expired_at,
-                                                        ).toLocaleTimeString(
-                                                            'id-ID',
-                                                            {
-                                                                hour: '2-digit',
-                                                                minute: '2-digit',
-                                                            },
-                                                        )}
+                                                        {formatEndTime(s.expired_at)}
                                                     </p>
                                                 </div>
                                                 <button
