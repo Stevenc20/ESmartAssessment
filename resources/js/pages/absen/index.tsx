@@ -15,6 +15,11 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
+// Preload the QR decoder at module scope. When the user taps, `await` on this
+// cached promise resolves in a microtask, so the iOS Safari user-gesture window
+// is preserved all the way into the single getUserMedia() call inside start().
+const html5QrcodeLibPromise = import('html5-qrcode');
+
 type RiwayatItem = {
     id: number;
     pertemuan: string;
@@ -152,7 +157,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
     }, []);
 
     const startScanner = useCallback(
-        async (fromUserGesture = false, preferredDeviceId?: string) => {
+        async (fromUserGesture = false) => {
         if (scannerStartedRef.current) {
             return;
         }
@@ -178,7 +183,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                 );
             }
 
-            const { Html5Qrcode } = await import('html5-qrcode');
+            const { Html5Qrcode } = await html5QrcodeLibPromise;
 
             // Clear any leftover instance/stream from a previous attempt so the
             // camera is not "busy" (NotReadableError) on the next start.
@@ -191,11 +196,10 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
             scannerStartedRef.current = true;
             setScannerActive(true);
 
-            // Give React a tick to render the (now visible) viewfinder so
-            // Html5Qrcode measures a non-zero container before start().
-            // Without this, on an already-granted camera the stream resolves
-            // faster than the render commit and start() fails instantly.
-            await new Promise((r) => setTimeout(r, 120));
+            // Reveal the viewfinder synchronously (no setTimeout) so Html5Qrcode
+            // measures a non-zero container AND the iOS user gesture is preserved.
+            // A macrotask here would end the gesture before getUserMedia() runs.
+            scannerRef.current?.classList.remove('hidden');
 
             const scanner = new Html5Qrcode('qr-scanner-viewfinder');
             html5QrCodeRef.current = scanner;
@@ -238,13 +242,10 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                 setZoomLevel(1);
             };
 
-            // Prefer the camera already chosen by the gesture prompt (real deviceId),
-            // then the back/environment camera, then the default camera.
-            const attempts: any[] = [];
-            if (preferredDeviceId) {
-                attempts.push({ deviceId: { exact: preferredDeviceId } });
-            }
-            attempts.push({ facingMode: 'environment' }, {});
+            // Prefer the back/environment camera, fall back to the default camera.
+            // Using facingMode directly (not a cached deviceId) avoids
+            // OverconstrainedError from stale device ids.
+            const attempts: any[] = [{ facingMode: 'environment' }, {}];
 
             let lastErr: any = null;
             for (const config of attempts) {
@@ -300,38 +301,16 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
         }
     }, []);
 
-    // Called from a real user tap. getUserMedia MUST be triggered here, before any
-    // dynamic import/await, so iOS Safari keeps the user gesture and shows the
-    // permission prompt. Once granted we remember the real deviceId and hand it to
-    // the scanner (which reopens that camera instantly, no second prompt).
+    // Called from a real user tap. Do NOT call getUserMedia() here: html5-qrcode
+    // opens the camera exactly once inside start(), and because the library is
+    // preloaded (microtask) with no setTimeout before start(), the iOS Safari
+    // permission prompt still shows. Opening the camera twice in a row is what
+    // produced the "UnknownError" (camera busy) on iOS.
     const acquireAndStart = useCallback(async () => {
         setCameraError(null);
         setCameraErrorDetail(null);
-
-        let deviceId: string | undefined;
-        try {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error(
-                    'Perangkat ini tidak mendukung akses kamera (mediaDevices tidak tersedia).',
-                );
-            }
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' },
-            });
-            deviceId = stream.getVideoTracks()[0]?.getSettings()?.deviceId;
-            stream.getTracks().forEach((track) => track.stop());
-        } catch (err: any) {
-            setCameraErrorDetail(
-                `${err?.name || 'UnknownError'}: ${err?.message || ''}`,
-            );
-            console.error('[absen-camera]', err);
-            setCameraError(cameraErrorMessage(err));
-            return;
-        }
-
-        await stopScanner();
-        await startScanner(true, deviceId);
-    }, [startScanner, stopScanner]);
+        await startScanner(true);
+    }, [startScanner]);
 
     const requestCameraPermission = acquireAndStart;
 
