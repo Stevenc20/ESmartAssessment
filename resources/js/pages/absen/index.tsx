@@ -106,6 +106,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
     const zoomModeRef = useRef<'optical' | 'css'>('css');
     const scannerRef = useRef<HTMLDivElement>(null);
     const html5QrCodeRef = useRef<any>(null);
+    const cameraCountRef = useRef<number | null>(null);
     const scannerStartedRef = useRef(false);
     const autoStartDoneRef = useRef(false);
     const startScannerRef = useRef<() => void>(() => {});
@@ -187,6 +188,12 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 throw new Error(
                     'Perangkat ini tidak mendukung akses kamera (mediaDevices tidak tersedia).',
+                );
+            }
+
+            if (cameraCountRef.current === 0) {
+                throw new Error(
+                    'Tidak ada kamera terdeteksi pada perangkat ini. Pastikan kamera terhubung, dan izin kamera di sistem diaktifkan (Windows: Setelan > Privasi & keamanan > Kamera > "Akses kamera" AKTIF).',
                 );
             }
 
@@ -289,14 +296,28 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
             }
             setScannerActive(false);
 
-            const name = err?.name ?? '';
+            let rawName = err?.name || err?.constructor?.name || '';
+            let rawMessage = err?.message || '';
+            if (!rawMessage && typeof err === 'string') rawMessage = err;
+            if (!rawMessage) {
+                try { rawMessage = String(err); } catch { /* ignore */ }
+            }
+            const name = rawName;
             const isDenied =
                 name === 'NotAllowedError' ||
                 name === 'PermissionDeniedError' ||
                 name === 'SecurityError';
 
+            let permState = '?';
+            try {
+                const perm: any = await navigator.permissions?.query?.({
+                    name: 'camera',
+                });
+                permState = perm?.state ?? '?';
+            } catch { /* permissions API not available */ }
+
             setCameraErrorDetail(
-                `${name || 'UnknownError'}: ${err?.message || ''} | ${navigator.userAgent}`,
+                `${name || 'UnknownError'}: ${rawMessage || ''} | kamera:${cameraCountRef.current ?? '?'} | izin:${permState} | ${navigator.userAgent}`,
             );
             console.error('[absen-camera]', err);
 
@@ -324,6 +345,23 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
     useEffect(() => {
         startScannerRef.current = startScanner;
     }, [startScanner]);
+
+    useEffect(() => {
+        let alive = true;
+        (async () => {
+            try {
+                if (!navigator.mediaDevices?.enumerateDevices) return;
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                if (!alive) return;
+                cameraCountRef.current = devices.filter(
+                    (d) => d.kind === 'videoinput',
+                ).length;
+            } catch { /* preflight failed, startScanner will handle */ }
+        })();
+        return () => {
+            alive = false;
+        };
+    }, []);
 
     const toggleScanner = useCallback(() => {
         if (scannerActive) {
