@@ -154,7 +154,6 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
         }
 
         setCameraError(null);
-        setScannerActive(true);
         setAutoScanning(false);
 
         try {
@@ -168,29 +167,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                     'Akses kamera hanya tersedia melalui koneksi HTTPS yang aman.',
                 );
             }
-
-            // First attempt explicit getUserMedia to trigger the browser permission prompt.
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: 'environment' },
-                    });
-                    stream.getTracks().forEach((track) => track.stop());
-                } catch (permErr: any) {
-                    const name = permErr?.name ?? '';
-                    if (
-                        fromUserGesture &&
-                        (name === 'NotAllowedError' ||
-                            name === 'PermissionDeniedError' ||
-                            name === 'SecurityError')
-                    ) {
-                        throw new Error(cameraErrorMessage(permErr));
-                    }
-                    throw new Error(
-                        'Untuk membuka kamera, ketuk tombol "Izinkan Akses Kamera" di bawah ini.',
-                    );
-                }
-            } else {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 throw new Error(
                     'Perangkat ini tidak mendukung akses kamera (mediaDevices tidak tersedia).',
                 );
@@ -198,23 +175,18 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
 
             const { Html5Qrcode } = await import('html5-qrcode');
 
-            let cameras: { id: string; label: string }[] = [];
-            try {
-                const result = await Html5Qrcode.getCameras();
-                if (Array.isArray(result)) cameras = result;
-            } catch { /* camera list unavailable — fall back to facingMode */ }
+            // Clear any leftover instance/stream from a previous attempt so the
+            // camera is not "busy" (NotReadableError) on the next start.
+            if (html5QrCodeRef.current) {
+                try { await html5QrCodeRef.current.stop(); } catch { /* ignore */ }
+                try { await html5QrCodeRef.current.clear(); } catch { /* ignore */ }
+                html5QrCodeRef.current = null;
+            }
 
-            const isBackCamera = (label: string) => {
-                const l = label.toLowerCase();
-                return ['back', 'environment', 'rear', '0'].some((k) =>
-                    l.includes(k),
-                );
-            };
-            const backCamera = cameras.find((c) => isBackCamera(c.label));
-            const selectedCamera =
-                backCamera ?? cameras[cameras.length - 1] ?? cameras[0];
-
-            let scanner: any = null;
+            const scanner = new Html5Qrcode('qr-scanner-viewfinder');
+            html5QrCodeRef.current = scanner;
+            scannerStartedRef.current = true;
+            setScannerActive(true);
 
             const onDecoded = (decodedText: string) => {
                 const match = decodedText.match(/\/absen\/([a-zA-Z0-9]+)/);
@@ -229,7 +201,6 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
             };
 
             const probeZoom = () => {
-                if (!scanner) return;
                 try {
                     const zoomFeature = scanner
                         .getRunningTrackCameraCapabilities()
@@ -255,41 +226,60 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                 setZoomLevel(1);
             };
 
-            const startWith = async (config: any) => {
-                if (!scanner) {
-                    scanner = new Html5Qrcode('qr-scanner-viewfinder');
-                    html5QrCodeRef.current = scanner;
-                }
-                scannerStartedRef.current = true;
-                await scanner.start(
-                    config,
-                    { fps: 10, qrbox: { width: 250, height: 250 } },
-                    onDecoded,
-                    () => {},
-                );
-            };
+            // Prefer the back/environment camera, fall back to the default camera.
+            // Using facingMode directly (not a cached deviceId) avoids
+            // OverconstrainedError from stale device ids.
+            const attempts: any[] = [
+                { facingMode: 'environment' },
+                {},
+            ];
 
-            if (selectedCamera) {
+            let lastErr: any = null;
+            for (const config of attempts) {
                 try {
-                    await startWith({ deviceId: { exact: selectedCamera.id } });
-                } catch {
-                    // exact deviceId can fail (OverconstrainedError) → retry generically
-                    try { await scanner?.stop(); } catch { /* ignore */ }
-                    try { await scanner?.clear(); } catch { /* ignore */ }
+                    scannerStartedRef.current = true;
+                    await scanner.start(
+                        config,
+                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        onDecoded,
+                        () => {},
+                    );
+                    lastErr = null;
+                    break;
+                } catch (err: any) {
+                    lastErr = err;
                     scannerStartedRef.current = false;
-                    await startWith({ facingMode: 'environment' });
+                    try { await scanner.stop(); } catch { /* ignore */ }
+                    try { await scanner.clear(); } catch { /* ignore */ }
                 }
-            } else {
-                await startWith({ facingMode: 'environment' });
+            }
+
+            if (lastErr) {
+                throw lastErr;
             }
 
             probeZoom();
             setTimeout(probeZoom, 400);
         } catch (err: any) {
             scannerStartedRef.current = false;
-            html5QrCodeRef.current = null;
-            setCameraError(cameraErrorMessage(err));
+            if (html5QrCodeRef.current) {
+                try { await html5QrCodeRef.current.stop(); } catch { /* ignore */ }
+                try { await html5QrCodeRef.current.clear(); } catch { /* ignore */ }
+                html5QrCodeRef.current = null;
+            }
             setScannerActive(false);
+
+            const name = err?.name ?? '';
+            const isDenied =
+                name === 'NotAllowedError' ||
+                name === 'PermissionDeniedError' ||
+                name === 'SecurityError';
+
+            setCameraError(
+                isDenied && !fromUserGesture
+                    ? 'Untuk membuka kamera, ketuk tombol "Izinkan Akses Kamera" di bawah ini.'
+                    : cameraErrorMessage(err),
+            );
         }
     }, []);
 
@@ -416,26 +406,27 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                             )}
                     </div>
 
-                    {/* QR Scanner Viewfinder */}
-                    {scannerActive && (
+                    {/* QR Scanner Viewfinder (always mounted so Html5Qrcode always finds the element) */}
+                    <div
+                        className={`relative rounded-xl border-2 border-dashed border-indigo-300 bg-black ${
+                            scannerActive ? '' : 'hidden'
+                        } ${
+                            zoomLevel > 1
+                                ? 'overflow-visible'
+                                : 'overflow-hidden'
+                        }`}
+                    >
                         <div
-                            className={`relative rounded-xl border-2 border-dashed border-indigo-300 bg-black ${
-                                zoomLevel > 1
-                                    ? 'overflow-visible'
-                                    : 'overflow-hidden'
-                            }`}
-                        >
-                            <div
-                                id="qr-scanner-viewfinder"
-                                ref={scannerRef}
-                                className="mx-auto flex items-center justify-center"
-                                style={{
-                                    maxWidth: 400,
-                                    minHeight: 300,
-                                    transformOrigin: 'center top',
-                                    transition: 'transform 150ms ease-out',
-                                }}
-                            />
+                            id="qr-scanner-viewfinder"
+                            ref={scannerRef}
+                            className="mx-auto flex items-center justify-center"
+                            style={{
+                                maxWidth: 400,
+                                minHeight: 300,
+                                transformOrigin: 'center top',
+                                transition: 'transform 150ms ease-out',
+                            }}
+                        />
                             <div className="flex items-center justify-center gap-2 bg-black/80 px-4 py-2.5 text-center">
                                 <Smartphone className="h-4 w-4 text-indigo-300" />
                                 <p className="text-xs text-indigo-200">
@@ -470,8 +461,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                                         <ZoomIn className="h-4 w-4" />
                                     </button>
                                 </div>
-                        </div>
-                    )}
+                    </div>
 
                     {/* Camera Error / Permission Request Card */}
                     {cameraError && (
