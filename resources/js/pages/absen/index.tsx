@@ -20,6 +20,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 // is preserved all the way into the single getUserMedia() call inside start().
 const html5QrcodeLibPromise = import('html5-qrcode');
 
+// Version badge shown on the page (see header) so we can verify which build is
+// actually running on the phone. Bump this on every camera-related release.
+const BUILD_VERSION = 'v10';
+
 type RiwayatItem = {
     id: number;
     pertemuan: string;
@@ -80,6 +84,9 @@ const cameraErrorMessage = (err: any): string => {
     }
     if (name === 'NotReadableError' || name === 'TrackStartError') {
         return 'Kamera sedang digunakan oleh aplikasi lain. Tutup aplikasi kamera lain lalu coba lagi.';
+    }
+    if (name === 'UnknownError') {
+        return 'Kamera sedang dipakai aplikasi atau tab lain di HP ini. Tutup aplikasi kamera dan semua tab browser yang memakai kamera, lalu ketuk "Izinkan Akses Kamera" lagi.';
     }
     return err?.message || 'Kamera tidak dapat diakses.';
 };
@@ -289,7 +296,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                 name === 'SecurityError';
 
             setCameraErrorDetail(
-                `${name || 'UnknownError'}: ${err?.message || ''}`,
+                `${name || 'UnknownError'}: ${err?.message || ''} | ${navigator.userAgent}`,
             );
             console.error('[absen-camera]', err);
 
@@ -391,6 +398,12 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                                 </p>
                             </div>
                         </div>
+                        <span
+                            className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600"
+                            title={`Build ${BUILD_VERSION}`}
+                        >
+                            {BUILD_VERSION}
+                        </span>
                     </div>
 
                     {/* Scan QR Button */}
