@@ -13,6 +13,7 @@ class LiveSession extends Model
         'pertemuan_id',
         'host_id',
         'room_name',
+        'meet_url',
         'status',
         'started_at',
         'ended_at',

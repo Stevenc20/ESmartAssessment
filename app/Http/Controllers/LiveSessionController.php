@@ -25,7 +25,16 @@ class LiveSessionController extends Controller
             ], 403);
         }
 
-        // 2. Single active session rule: Check if an active session already exists for this meeting
+        // 2. Normalize & validate optional Google Meet link
+        $meetUrl = $this->normalizeMeetUrl($request->input('meet_url'));
+
+        if ($request->has('meet_url') && $request->filled('meet_url') && $meetUrl === null) {
+            return response()->json([
+                'message' => 'Link Google Meet tidak valid. Gunakan link seperti https://meet.google.com/abc-defg-hij',
+            ], 422);
+        }
+
+        // 3. Single active session rule: Check if an active session already exists for this meeting
         $existingSession = LiveSession::where('pertemuan_id', $pertemuan->id)
             ->where('status', 'live')
             ->first();
@@ -39,6 +48,7 @@ class LiveSessionController extends Controller
                     'live_session' => [
                         'id' => $existingSession->id,
                         'room_name' => $existingSession->room_name,
+                        'meet_url' => $existingSession->meet_url,
                         'host_name' => $existingSession->host?->name ?? 'Guru',
                         'status' => $existingSession->status,
                         'started_at' => $existingSession->started_at?->toIso8601String(),
@@ -51,13 +61,14 @@ class LiveSessionController extends Controller
             ], 422);
         }
 
-        // 3. Generate unique room_name for WebRTC PeerJS connection
+        // 4. Generate unique room_name for the session
         $roomName = 'esmart-live-p'.$pertemuan->id.'-'.Str::random(10);
 
         $session = LiveSession::create([
             'pertemuan_id' => $pertemuan->id,
             'host_id' => $user->id,
             'room_name' => $roomName,
+            'meet_url' => $meetUrl,
             'status' => 'live',
             'started_at' => now(),
         ]);
@@ -68,11 +79,30 @@ class LiveSessionController extends Controller
             'live_session' => [
                 'id' => $session->id,
                 'room_name' => $session->room_name,
+                'meet_url' => $session->meet_url,
                 'host_name' => $user->name,
                 'status' => $session->status,
                 'started_at' => $session->started_at?->toIso8601String(),
             ],
         ]);
+    }
+
+    /**
+     * Normalize a Google Meet URL to its canonical form, stripping any tracking parameters.
+     */
+    private function normalizeMeetUrl(?string $url): ?string
+    {
+        $url = trim((string) $url);
+
+        if ($url === '') {
+            return null;
+        }
+
+        if (! preg_match('#^https?://(?:www\.)?meet\.google\.com/([a-z0-9]{3}-[a-z0-9]{3,4}-[a-z0-9]{3})#i', $url, $matches)) {
+            return null;
+        }
+
+        return 'https://meet.google.com/'.strtolower($matches[1]);
     }
 
     /**
@@ -133,6 +163,7 @@ class LiveSessionController extends Controller
             'live_session' => [
                 'id' => $activeSession->id,
                 'room_name' => $activeSession->room_name,
+                'meet_url' => $activeSession->meet_url,
                 'host_id' => $activeSession->host_id,
                 'host_name' => $activeSession->host?->name ?? 'Guru',
                 'status' => $activeSession->status,

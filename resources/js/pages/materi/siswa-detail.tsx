@@ -78,7 +78,6 @@ type FileItem = {
 };
 
 import LiveScreenCard from '@/components/materi/live-screen-card';
-import LiveScreenViewerModal from '@/components/materi/live-screen-viewer-modal';
 
 type MateriDetail = {
     id: number;
@@ -347,7 +346,6 @@ export default function MateriSiswaDetail({
     const [submittingQuiz, setSubmittingQuiz] = useState(false);
     const [startQuiz, setStartQuiz] = useState(false);
     const [confirmRetake, setConfirmRetake] = useState(false);
-    const [viewerModalOpen, setViewerModalOpen] = useState(false);
     const [liveSession, setLiveSession] = useState(materi.live_session ?? null);
 
     useEffect(() => {
@@ -456,7 +454,6 @@ export default function MateriSiswaDetail({
                             isLoading={false}
                             onStartShare={() => {}}
                             onStopShare={() => {}}
-                            onOpenViewer={() => setViewerModalOpen(true)}
                         />
                     )}
 
@@ -937,16 +934,6 @@ export default function MateriSiswaDetail({
                     <MateriForumChat materiId={materi.id} discussions={materi.discussions ?? []} />
                 </div>
             </div>
-
-            {/* Live Screen Viewer Modal */}
-            <LiveScreenViewerModal
-                open={viewerModalOpen}
-                onClose={() => setViewerModalOpen(false)}
-                roomName={activeLiveSession?.room_name ?? null}
-                hostName={activeLiveSession?.host_name ?? 'Guru'}
-                materiJudul={materi.judul}
-                pertemuanJudul={pertemuan}
-            />
         </>
     );
 }

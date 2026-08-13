@@ -1,10 +1,13 @@
-import { AlertTriangle, Eye, Loader2, MonitorPlay, Radio, Square } from 'lucide-react';
+import { useState } from 'react';
+import { AlertTriangle, Loader2, MonitorPlay, Radio, Square, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
 type LiveSessionData = {
     id: number;
     room_name: string;
+    meet_url?: string | null;
     host_id?: number;
     host_name: string;
     status: string;
@@ -18,9 +21,8 @@ type LiveScreenCardProps = {
     isBroadcasting: boolean;
     isLoading: boolean;
     error?: string | null;
-    onStartShare: () => void;
+    onStartShare: (meetUrl: string) => void;
     onStopShare: () => void;
-    onOpenViewer: () => void;
 };
 
 export default function LiveScreenCard({
@@ -31,10 +33,21 @@ export default function LiveScreenCard({
     error,
     onStartShare,
     onStopShare,
-    onOpenViewer,
 }: LiveScreenCardProps) {
+    const [meetUrl, setMeetUrl] = useState('');
     const isLive = isBroadcasting || liveSession?.status === 'live';
     const hostName = liveSession?.host_name || 'Pengajar';
+
+    const handleStart = () => {
+        const url = meetUrl.trim();
+        if (!url) return;
+        onStartShare(url);
+    };
+
+    const handleJoinMeet = () => {
+        if (!liveSession?.meet_url) return;
+        window.open(liveSession.meet_url, 'esmart-gmeet', 'popup=yes,width=960,height=720');
+    };
 
     return (
         <Card className="overflow-hidden border-2 border-indigo-100 bg-gradient-to-br from-indigo-50/50 via-white to-slate-50/50 shadow-sm transition-all hover:border-indigo-200">
@@ -71,17 +84,22 @@ export default function LiveScreenCard({
                                 {isTeacher ? (
                                     isLive ? (
                                         <span className="font-semibold text-red-600">
-                                            Anda sedang membagikan layar ke seluruh siswa.
+                                            Anda sedang membagikan sesi Google Meet ke seluruh siswa.
                                         </span>
                                     ) : (
-                                        'Bagikan layar perangkat Anda secara realtime agar siswa dapat menyimak penjelasan dengan jelas.'
+                                        <>
+                                            Bagikan penjelasan secara realtime melalui Google Meet. Buka{' '}
+                                            <strong>meet.google.com</strong> → <strong>Meeting baru</strong> → salin
+                                            link, tempel di bawah, lalu klik <strong>Mulai</strong>.
+                                        </>
                                     )
                                 ) : isLive ? (
                                     <span>
-                                        <strong className="font-semibold text-slate-900">{hostName}</strong> sedang membagikan layar. Klik tombol di kanan untuk menyimak.
+                                        <strong className="font-semibold text-slate-900">{hostName}</strong> sedang
+                                        membagikan sesi. Klik tombol di kanan untuk bergabung.
                                     </span>
                                 ) : (
-                                    'Belum dimulai. Guru belum membagikan layar pada pertemuan ini.'
+                                    'Belum dimulai. Guru belum membagikan sesi pada pertemuan ini.'
                                 )}
                             </p>
 
@@ -95,7 +113,7 @@ export default function LiveScreenCard({
                     </div>
 
                     {/* Right Actions */}
-                    <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+                    <div className="flex shrink-0 flex-col items-stretch gap-2 self-start sm:self-center">
                         {isTeacher ? (
                             isLive ? (
                                 <Button
@@ -105,37 +123,51 @@ export default function LiveScreenCard({
                                     variant="destructive"
                                     className="gap-2 bg-red-600 font-bold hover:bg-red-700 text-xs py-2 px-4 shadow-sm"
                                 >
-                                    {isLoading ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <Square className="h-4 w-4" />
-                                    )}
-                                    Stop Share Screen
+                                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
+                                    Stop Live Screen
+                                </Button>
+                            ) : (
+                                <>
+                                    <Input
+                                        type="url"
+                                        value={meetUrl}
+                                        onChange={(e) => setMeetUrl(e.target.value)}
+                                        placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                                        className="w-full sm:w-80 bg-white text-xs"
+                                        aria-label="Link Google Meet"
+                                    />
+                                    <Button
+                                        type="button"
+                                        onClick={handleStart}
+                                        disabled={isLoading || !meetUrl.trim()}
+                                        className="gap-2 bg-indigo-600 font-bold hover:bg-indigo-700 text-white text-xs py-2 px-4 shadow-sm"
+                                    >
+                                        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
+                                        Mulai Live Screen
+                                    </Button>
+                                </>
+                            )
+                        ) : isLive ? (
+                            liveSession?.meet_url ? (
+                                <Button
+                                    type="button"
+                                    onClick={handleJoinMeet}
+                                    className="gap-2 bg-gradient-to-r from-red-600 to-orange-600 font-extrabold hover:from-red-700 hover:to-orange-700 text-white text-xs py-2 px-5 shadow-md animate-pulse"
+                                >
+                                    <Video className="h-4 w-4" />
+                                    Gabung Google Meet
                                 </Button>
                             ) : (
                                 <Button
                                     type="button"
-                                    onClick={onStartShare}
-                                    disabled={isLoading}
-                                    className="gap-2 bg-indigo-600 font-bold hover:bg-indigo-700 text-white text-xs py-2 px-4 shadow-sm"
+                                    disabled
+                                    variant="outline"
+                                    className="gap-2 text-xs font-semibold opacity-60 cursor-not-allowed"
                                 >
-                                    {isLoading ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <MonitorPlay className="h-4 w-4" />
-                                    )}
-                                    Mulai Share Screen
+                                    <Loader2 className="h-4 w-4" />
+                                    Menunggu Link
                                 </Button>
                             )
-                        ) : isLive ? (
-                            <Button
-                                type="button"
-                                onClick={onOpenViewer}
-                                className="gap-2 bg-gradient-to-r from-red-600 to-orange-600 font-extrabold hover:from-red-700 hover:to-orange-700 text-white text-xs py-2 px-5 shadow-md animate-pulse"
-                            >
-                                <Eye className="h-4 w-4" />
-                                Lihat Layar Guru
-                            </Button>
                         ) : (
                             <Button
                                 type="button"

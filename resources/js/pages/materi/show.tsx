@@ -127,7 +127,6 @@ export default function MateriShow({
                             error={liveError}
                             onStartShare={startBroadcasting}
                             onStopShare={stopBroadcasting}
-                            onOpenViewer={() => {}}
                         />
                     )}
 

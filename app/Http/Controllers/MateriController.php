@@ -175,6 +175,7 @@ class MateriController extends Controller
         $liveSessionData = $activeSession ? [
             'id' => $activeSession->id,
             'room_name' => $activeSession->room_name,
+            'meet_url' => $activeSession->meet_url,
             'host_id' => $activeSession->host_id,
             'host_name' => $activeSession->host?->name ?? 'Guru',
             'status' => $activeSession->status,
@@ -775,6 +776,7 @@ class MateriController extends Controller
         $liveSessionData = $activeSession ? [
             'id' => $activeSession->id,
             'room_name' => $activeSession->room_name,
+            'meet_url' => $activeSession->meet_url,
             'host_id' => $activeSession->host_id,
             'host_name' => $activeSession->host?->name ?? 'Guru',
             'status' => $activeSession->status,

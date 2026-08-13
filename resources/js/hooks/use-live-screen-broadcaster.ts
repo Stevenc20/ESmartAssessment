@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { peerConnectionOptions } from '../lib/peer-connection';
 
 type LiveSessionInfo = {
     id: number;
     room_name: string;
+    meet_url: string | null;
     host_name: string;
     status: string;
     started_at: string | null;
@@ -40,25 +40,9 @@ export function useLiveScreenBroadcaster(pertemuanId: number | null) {
     const [liveSession, setLiveSession] = useState<LiveSessionInfo | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const peerRef = useRef<any>(null);
-    const streamRef = useRef<MediaStream | null>(null);
-
     const stopBroadcasting = useCallback(async () => {
         setIsLoading(true);
         try {
-            // Stop media stream tracks
-            if (streamRef.current) {
-                streamRef.current.getTracks().forEach((track) => track.stop());
-                streamRef.current = null;
-            }
-
-            // Destroy peer connection
-            if (peerRef.current) {
-                peerRef.current.destroy();
-                peerRef.current = null;
-            }
-
-            // Notify backend stop
             if (pertemuanId) {
                 await apiFetch(`/pertemuan/${pertemuanId}/live-screen/stop`);
             }
@@ -71,88 +55,47 @@ export function useLiveScreenBroadcaster(pertemuanId: number | null) {
         }
     }, [pertemuanId]);
 
-    const startBroadcasting = useCallback(async () => {
-        if (!pertemuanId) {
-            setError('Pertemuan ID tidak valid');
-            return;
-        }
+    const startBroadcasting = useCallback(
+        async (meetUrl: string) => {
+            if (!pertemuanId) {
+                setError('Pertemuan ID tidak valid');
+                return;
+            }
 
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-            setError('Browser Anda tidak mendukung Screen Capture API. Pastikan menggunakan Chrome/Edge/Firefox di HTTPS.');
-            return;
-        }
+            setIsLoading(true);
+            setError(null);
 
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            // 1. Get Screen Stream from Browser Native Picker
-            const stream = await navigator.mediaDevices.getDisplayMedia({
-                video: {
-                    displaySurface: 'monitor',
-                } as any,
-                audio: false,
-            });
-
-            streamRef.current = stream;
-
-            // Handle user clicking native browser "Stop sharing" bar
-            stream.getVideoTracks()[0].onended = () => {
-                stopBroadcasting();
-            };
-
-            // 2. Call backend start endpoint to get unique room_name
-            const response = await apiFetch(`/pertemuan/${pertemuanId}/live-screen/start`);
-
-            const text = await response.text();
-            let data: any;
             try {
-                data = JSON.parse(text);
-            } catch {
-                console.error('Non-JSON response from server:', text.substring(0, 300));
-                throw new Error(`Server error (${response.status}): Pastikan sudah login dan coba refresh halaman.`);
-            }
+                const response = await apiFetch(`/pertemuan/${pertemuanId}/live-screen/start`, 'POST', {
+                    meet_url: meetUrl,
+                });
 
-            if (!response.ok || data.status !== 'success') {
-                throw new Error(data.message || 'Gagal memulai Sesi Live Screen.');
-            }
+                const text = await response.text();
+                let data: any;
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    console.error('Non-JSON response from server:', text.substring(0, 300));
+                    throw new Error(
+                        `Server error (${response.status}): Pastikan sudah login dan coba refresh halaman.`,
+                    );
+                }
 
-            const roomName = data.live_session.room_name;
-            setLiveSession(data.live_session);
+                if (!response.ok || data.status !== 'success') {
+                    throw new Error(data.message || 'Gagal memulai Sesi Live Screen.');
+                }
 
-            // 3. Dynamically import PeerJS and create Host Peer with roomName as peer ID
-            const { default: Peer } = await import('peerjs');
-
-            const peer = new Peer(roomName, peerConnectionOptions());
-
-            peerRef.current = peer;
-
-            peer.on('open', () => {
+                setLiveSession(data.live_session);
                 setIsBroadcasting(true);
+            } catch (err: any) {
+                console.error('Start live screen error:', err);
+                setError(err.message || 'Gagal membagikan link Google Meet.');
+            } finally {
                 setIsLoading(false);
-            });
-
-            // Answer incoming call from student viewers with teacher's screen stream
-            peer.on('call', (call: any) => {
-                call.answer(stream);
-            });
-
-            peer.on('error', (err: any) => {
-                console.error('PeerJS Broadcaster error:', err);
-                setError(err.message || 'Gagal membuat koneksi share screen.');
-                setIsLoading(false);
-                setIsBroadcasting(false);
-            });
-        } catch (err: any) {
-            console.error('Start broadcasting error:', err);
-            setError(err.message || 'Gagal membagikan layar.');
-            if (streamRef.current) {
-                streamRef.current.getTracks().forEach((track) => track.stop());
-                streamRef.current = null;
             }
-            setIsLoading(false);
-        }
-    }, [pertemuanId, stopBroadcasting]);
+        },
+        [pertemuanId],
+    );
 
     useEffect(() => {
         return () => {
