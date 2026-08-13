@@ -148,7 +148,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
         setZoomMax(4);
     }, []);
 
-    const startScanner = useCallback(async () => {
+    const startScanner = useCallback(async (fromUserGesture = false) => {
         if (scannerStartedRef.current) {
             return;
         }
@@ -177,7 +177,18 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                     });
                     stream.getTracks().forEach((track) => track.stop());
                 } catch (permErr: any) {
-                    throw new Error(cameraErrorMessage(permErr));
+                    const name = permErr?.name ?? '';
+                    if (
+                        fromUserGesture &&
+                        (name === 'NotAllowedError' ||
+                            name === 'PermissionDeniedError' ||
+                            name === 'SecurityError')
+                    ) {
+                        throw new Error(cameraErrorMessage(permErr));
+                    }
+                    throw new Error(
+                        'Untuk membuka kamera, ketuk tombol "Izinkan Akses Kamera" di bawah ini.',
+                    );
                 }
             } else {
                 throw new Error(
@@ -285,7 +296,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
     const requestCameraPermission = useCallback(async () => {
         setCameraError(null);
         await stopScanner();
-        await startScanner();
+        await startScanner(true);
     }, [stopScanner, startScanner]);
 
     useEffect(() => {
@@ -298,7 +309,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
             setScannerActive(false);
         } else {
             autoStartDoneRef.current = true;
-            startScanner();
+            startScanner(true);
         }
     }, [scannerActive, startScanner, stopScanner]);
 
