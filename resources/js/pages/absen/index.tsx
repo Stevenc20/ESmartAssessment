@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import {
     Calendar,
     CheckCircle,
@@ -57,16 +57,34 @@ const formatEndTime = (iso: string): string => {
     }
 };
 
+const cameraErrorMessage = (err: any): string => {
+    const name = err?.name ?? '';
+    if (
+        name === 'NotAllowedError' ||
+        name === 'PermissionDeniedError' ||
+        name === 'SecurityError'
+    ) {
+        return 'Akses kamera diblokir. Silakan aktifkan izin kamera di pengaturan browser HP Anda (ikon gembok / tanda titik tiga di dekat alamat website).';
+    }
+    if (
+        name === 'NotFoundError' ||
+        name === 'DevicesNotFoundError' ||
+        name === 'OverconstrainedError'
+    ) {
+        return 'Kamera tidak ditemukan di perangkat ini.';
+    }
+    if (name === 'NotReadableError' || name === 'TrackStartError') {
+        return 'Kamera sedang digunakan oleh aplikasi lain. Tutup aplikasi kamera lain lalu coba lagi.';
+    }
+    return err?.message || 'Kamera tidak dapat diakses.';
+};
+
 export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
     const [scannerActive, setScannerActive] = useState(false);
     const [cameraError, setCameraError] = useState<string | null>(null);
     const [polledSessions, setPolledSessions] =
         useState<ActiveSession[]>(active_sessions);
     const [autoScanning, setAutoScanning] = useState(false);
-    const [cameraPermission, setCameraPermission] = useState<
-        'granted' | 'prompt' | 'denied' | 'unknown'
-    >('unknown');
-    const cameraPermissionRef = useRef(cameraPermission);
     const [zoomLevel, setZoomLevel] = useState(1);
     const [zoomMin, setZoomMin] = useState(1);
     const [zoomMax, setZoomMax] = useState(4);
@@ -140,19 +158,31 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
         setAutoScanning(false);
 
         try {
-            // First attempt explicit getUserMedia to trigger browser permission popup if promptable
+            if (window.self !== window.top) {
+                throw new Error(
+                    'Aplikasi dibuka di dalam bingkai/jendela. Buka langsung di browser (esmart.tantechstev.com) agar kamera dapat digunakan.',
+                );
+            }
+            if (!window.isSecureContext) {
+                throw new Error(
+                    'Akses kamera hanya tersedia melalui koneksi HTTPS yang aman.',
+                );
+            }
+
+            // First attempt explicit getUserMedia to trigger the browser permission prompt.
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: 'environment' },
                     });
                     stream.getTracks().forEach((track) => track.stop());
-                    setCameraPermission('granted');
                 } catch (permErr: any) {
-                    if (permErr?.name === 'NotAllowedError' || permErr?.name === 'PermissionDeniedError') {
-                        throw new Error('Akses kamera diblokir. Silakan berikan izin akses kamera di browser HP Anda.');
-                    }
+                    throw new Error(cameraErrorMessage(permErr));
                 }
+            } else {
+                throw new Error(
+                    'Perangkat ini tidak mendukung akses kamera (mediaDevices tidak tersedia).',
+                );
             }
 
             const { Html5Qrcode } = await import('html5-qrcode');
@@ -183,7 +213,7 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                     scannerStartedRef.current = false;
                     scanner.stop().catch(() => {});
                     setScannerActive(false);
-                    router.visit(`/absen/${token}`);
+                    window.location.href = `/absen/${token}`;
                 }
             };
 
@@ -247,76 +277,20 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
         } catch (err: any) {
             scannerStartedRef.current = false;
             html5QrCodeRef.current = null;
-            setCameraError(err?.message || 'Kamera tidak dapat diakses');
+            setCameraError(cameraErrorMessage(err));
             setScannerActive(false);
         }
     }, []);
 
     const requestCameraPermission = useCallback(async () => {
-        try {
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' },
-                });
-                stream.getTracks().forEach((track) => track.stop());
-            }
-            setCameraPermission('granted');
-            scannerStartedRef.current = false;
-            html5QrCodeRef.current = null;
-            setCameraError(null);
-            startScanner();
-        } catch (err: any) {
-            const isDenied = err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError';
-            setCameraError(
-                isDenied
-                    ? 'Akses kamera diblokir. Silakan aktifkan izin kamera di pengaturan browser HP Anda (ikon gembok 🔒 / tanda titik tiga di dekat alamat website).'
-                    : (err?.message || 'Kamera tidak dapat diakses'),
-            );
-            setScannerActive(false);
-        }
-    }, [startScanner]);
+        setCameraError(null);
+        await stopScanner();
+        await startScanner();
+    }, [stopScanner, startScanner]);
 
     useEffect(() => {
         startScannerRef.current = startScanner;
     }, [startScanner]);
-
-    // Proactive camera permission detection (works in any browser that supports it)
-    useEffect(() => {
-        let cancelled = false;
-
-        const updateFromState = (state: PermissionState) => {
-            if (cancelled) return;
-            if (state === 'granted' || state === 'prompt' || state === 'denied') {
-                setCameraPermission(state);
-            }
-        };
-
-        const query = async () => {
-            try {
-                if (!navigator.permissions || !navigator.permissions.query) {
-                    if (!cancelled) setCameraPermission('unknown');
-                    return;
-                }
-                const status = await navigator.permissions.query({
-                    name: 'camera' as PermissionName,
-                });
-                updateFromState(status.state);
-                status.addEventListener('change', () =>
-                    updateFromState(status.state),
-                );
-            } catch {
-                // Permissions API unsupported (e.g. iOS Safari) — leave as 'unknown',
-                // the auto-start attempt will surface the browser prompt instead.
-                if (!cancelled) setCameraPermission('unknown');
-            }
-        };
-
-        query();
-
-        return () => {
-            cancelled = true;
-        };
-    }, []);
 
     const toggleScanner = useCallback(() => {
         if (scannerActive) {
@@ -331,23 +305,14 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
     useEffect(() => {
         if (active_sessions.length > 0 && !autoStartDoneRef.current) {
             autoStartDoneRef.current = true;
-            if (cameraPermission === 'granted' || cameraPermission === 'unknown') {
-                setAutoScanning(true);
-                const timer = setTimeout(() => {
-                    startScannerRef.current();
-                }, 600);
+            setAutoScanning(true);
+            const timer = setTimeout(() => {
+                startScannerRef.current();
+            }, 600);
 
-                return () => clearTimeout(timer);
-            }
-            // Not granted (prompt/denied) — surface the permission card right away
-            setCameraError('Akses kamera diperlukan untuk scan QR. Klik tombol di bawah untuk mengizinkan.');
-            setScannerActive(false);
+            return () => clearTimeout(timer);
         }
-    }, [active_sessions.length, cameraPermission]);
-
-    useEffect(() => {
-        cameraPermissionRef.current = cameraPermission;
-    }, [cameraPermission]);
+    }, [active_sessions.length]);
 
     useEffect(() => {
         const poll = setInterval(async () => {
@@ -362,16 +327,8 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                     !autoStartDoneRef.current
                 ) {
                     autoStartDoneRef.current = true;
-                    if (
-                        cameraPermissionRef.current === 'granted' ||
-                        cameraPermissionRef.current === 'unknown'
-                    ) {
-                        setAutoScanning(true);
-                        startScannerRef.current();
-                    } else {
-                        setCameraError('Akses kamera diperlukan untuk scan QR. Klik tombol di bawah untuk mengizinkan.');
-                        setScannerActive(false);
-                    }
+                    setAutoScanning(true);
+                    startScannerRef.current();
                 }
             } catch { /* network error, will retry next interval */ }
         }, 10000);
