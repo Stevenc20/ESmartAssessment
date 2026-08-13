@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { MonitorSmartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 function GoogleLogo() {
@@ -50,6 +51,25 @@ export default function Login() {
                     >
                         Daftar dengan Google
                     </a>
+                </div>
+
+                <div className="flex items-center gap-3 text-muted-foreground">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-xs">atau</span>
+                    <div className="h-px flex-1 bg-border" />
+                </div>
+
+                <div className="text-center">
+                    <p className="text-sm text-muted-foreground">
+                        Sudah login di perangkat lain?
+                    </p>
+                    <Link
+                        href="/link-device"
+                        className="mt-1 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:text-blue-700 hover:decoration-current!"
+                    >
+                        <MonitorSmartphone className="h-4 w-4" />
+                        Link Device
+                    </Link>
                 </div>
             </div>
 

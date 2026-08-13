@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Models\DeviceLinkRequest;
 use App\Models\LoginSession;
 use App\Models\UserLog;
 use Illuminate\Auth\Events\Failed;
@@ -73,6 +74,13 @@ class LogLoginAttempt
                         'is_active' => false,
                         'logout_at' => now(),
                     ]);
+
+                DeviceLinkRequest::where('user_id', $user->id)
+                    ->whereIn('status', [
+                        DeviceLinkRequest::STATUS_PENDING,
+                        DeviceLinkRequest::STATUS_SCANNED,
+                    ])
+                    ->update(['status' => DeviceLinkRequest::STATUS_CANCELLED]);
 
                 UserLog::create([
                     'user_id' => $user->id,

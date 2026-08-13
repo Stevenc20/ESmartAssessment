@@ -3,6 +3,7 @@
 use App\Http\Controllers\AbsenController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\Auth\AdminLoginController;
+use App\Http\Controllers\Auth\DeviceLinkController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\CourseController;
@@ -31,6 +32,29 @@ Route::middleware(['guest'])->group(function () {
     })->name('admin.login');
     Route::post('admin/login', [AdminLoginController::class, 'login'])->middleware('throttle:admin-login')->name('admin.login.store');
     Route::get('s/c', [AdminLoginController::class, 'showForm'])->name('staff.login');
+});
+
+Route::get('link-device', [DeviceLinkController::class, 'show'])->middleware('guest')->name('device-link.show');
+
+Route::prefix('auth/device-link')->name('device-link.')->group(function () {
+    Route::post('create', [DeviceLinkController::class, 'create'])
+        ->middleware(['guest', 'throttle:device-link-create'])
+        ->name('create');
+    Route::get('status/{deviceLinkRequest}', [DeviceLinkController::class, 'status'])
+        ->middleware('guest')
+        ->name('status');
+    Route::post('consume/{deviceLinkRequest}', [DeviceLinkController::class, 'consume'])
+        ->middleware(['guest', 'throttle:device-link-consume'])
+        ->name('consume');
+    Route::post('scan', [DeviceLinkController::class, 'scan'])
+        ->middleware(['auth', 'throttle:device-link-scan'])
+        ->name('scan');
+    Route::post('approve/{deviceLinkRequest}', [DeviceLinkController::class, 'approve'])
+        ->middleware(['auth', 'throttle:device-link-approve'])
+        ->name('approve');
+    Route::post('cancel/{deviceLinkRequest}', [DeviceLinkController::class, 'cancel'])
+        ->middleware('throttle:device-link-approve')
+        ->name('cancel');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

@@ -3,8 +3,11 @@
 namespace App\Providers;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -24,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureRateLimiting();
     }
 
     /**
@@ -46,5 +50,27 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    /**
+     * Configure rate limiters for the device-link pairing flow.
+     */
+    protected function configureRateLimiting(): void
+    {
+        RateLimiter::for('device-link-create', function (Request $request) {
+            return Limit::perMinute(5)->by($request->session()->getId().'|'.$request->ip());
+        });
+
+        RateLimiter::for('device-link-scan', function (Request $request) {
+            return Limit::perMinute(10)->by($request->user()?->id.'|'.$request->ip());
+        });
+
+        RateLimiter::for('device-link-approve', function (Request $request) {
+            return Limit::perMinute(10)->by($request->user()?->id.'|'.$request->ip());
+        });
+
+        RateLimiter::for('device-link-consume', function (Request $request) {
+            return Limit::perMinute(10)->by($request->session()->getId().'|'.$request->ip());
+        });
     }
 }

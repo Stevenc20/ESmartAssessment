@@ -114,4 +114,14 @@ class User extends Authenticatable implements PasskeyUser
     {
         return $this->hasMany(MateriRequest::class, 'siswa_id');
     }
+
+    public function deviceLinkRequests(): HasMany
+    {
+        return $this->hasMany(DeviceLinkRequest::class);
+    }
+
+    public function devices(): HasMany
+    {
+        return $this->hasMany(UserDevice::class);
+    }
 }
