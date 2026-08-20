@@ -214,6 +214,24 @@ export default function MateriEdit({
         setRemoveQuizGambar(true);
     }
 
+    function handleQuizGambarPaste(e: React.ClipboardEvent<HTMLFormElement>) {
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const file = items[i].getAsFile();
+                if (file) {
+                    setQuizGambar(file);
+                    setQuizGambarPreview(URL.createObjectURL(file));
+                    setRemoveQuizGambar(false);
+                    e.preventDefault(); // Prevent pasting text (like filename) if focused in textarea
+                    break;
+                }
+            }
+        }
+    }
+
     function submitQuiz(e: React.FormEvent) {
         e.preventDefault();
         const form = new FormData();
@@ -635,6 +653,7 @@ export default function MateriEdit({
                             {showQuizForm && (
                                 <form
                                     onSubmit={submitQuiz}
+                                    onPaste={handleQuizGambarPaste}
                                     className="space-y-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4"
                                 >
                                     <div>
@@ -652,7 +671,7 @@ export default function MateriEdit({
                                     {/* Lampiran Gambar Soal (Opsional) */}
                                     <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
                                         <Label className="text-xs font-bold text-slate-700">
-                                            Gambar Lampiran Soal (Opsional)
+                                            Gambar Lampiran Soal <span className="font-normal italic text-slate-500">(Bisa langsung Copy-Paste / Ctrl+V gambar)</span>
                                         </Label>
                                         
                                         {quizGambarPreview ? (
