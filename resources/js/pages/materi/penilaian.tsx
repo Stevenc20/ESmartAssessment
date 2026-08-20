@@ -82,6 +82,22 @@ const JURUSAN_LIST = [
     { value: 'BisnisRitel', label: 'Bisnis Ritel' },
 ];
 
+const HEADER_COLORS = [
+    { bg: "bg-blue-50/80", text: "text-blue-700" },
+    { bg: "bg-amber-50/80", text: "text-amber-700" },
+    { bg: "bg-emerald-50/80", text: "text-emerald-700" },
+    { bg: "bg-purple-50/80", text: "text-purple-700" },
+    { bg: "bg-rose-50/80", text: "text-rose-700" },
+    { bg: "bg-cyan-50/80", text: "text-cyan-700" },
+];
+
+function getRoadmapColor(bulan?: number, tahun?: number) {
+    if (!bulan || !tahun) return { bg: "", text: "text-blue-600" };
+    // Create a deterministic index based on year and month
+    const idx = (tahun * 12 + bulan) % HEADER_COLORS.length;
+    return HEADER_COLORS[idx];
+}
+
 export default function MateriPenilaian({
     pertemuanList,
     students,
@@ -319,22 +335,25 @@ export default function MateriPenilaian({
                                             Jurusan
                                         </th>
 
-                                        {pertemuanList.map((p) => (
-                                            <th
-                                                key={p.id}
-                                                className="px-4 py-3.5 font-bold border-r border-slate-200 text-center min-w-[130px]"
-                                            >
-                                                {p.roadmap_judul && (
-                                                    <div className="text-[9px] uppercase tracking-wider text-blue-600 font-bold mb-0.5 truncate max-w-[130px]">
-                                                        {p.roadmap_judul}
+                                        {pertemuanList.map((p) => {
+                                            const colors = getRoadmapColor(p.roadmap_bulan, p.roadmap_tahun);
+                                            return (
+                                                <th
+                                                    key={p.id}
+                                                    className={`px-4 py-3.5 font-bold border-r border-slate-200 text-center min-w-[130px] ${colors.bg}`}
+                                                >
+                                                    {p.roadmap_judul && (
+                                                        <div className={`text-[9px] uppercase tracking-wider font-bold mb-0.5 truncate max-w-[130px] ${colors.text}`}>
+                                                            {p.roadmap_judul}
+                                                        </div>
+                                                    )}
+                                                    <div>Pertemuan {p.urutan}</div>
+                                                    <div className="text-[10px] font-normal text-slate-500 truncate max-w-[130px]">
+                                                        {p.judul}
                                                     </div>
-                                                )}
-                                                <div>Pertemuan {p.urutan}</div>
-                                                <div className="text-[10px] font-normal text-slate-500 truncate max-w-[130px]">
-                                                    {p.judul}
-                                                </div>
-                                            </th>
-                                        ))}
+                                                </th>
+                                            );
+                                        })}
 
                                         <th className="px-4 py-3.5 font-bold text-center bg-emerald-50/70 text-emerald-900 min-w-[120px]">
                                             Rata-Rata Akhir
