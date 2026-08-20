@@ -411,6 +411,10 @@ export default function MateriSiswaDetail({
             { answers: quizAnswers },
             {
                 preserveScroll: true,
+                onSuccess: () => {
+                    setStartQuiz(false); // Hide the form on success
+                    setQuizAnswers({}); // Reset answers
+                },
                 onFinish: () => setSubmittingQuiz(false),
             },
         );
