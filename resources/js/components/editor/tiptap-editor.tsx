@@ -33,6 +33,31 @@ type TiptapEditorProps = {
     editable?: boolean;
 };
 
+const ToolButton = ({
+    active,
+    onClick,
+    children,
+    title,
+}: {
+    active?: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+    title?: string;
+}) => (
+    <button
+        type="button"
+        onClick={onClick}
+        title={title}
+        className={`flex h-8 w-8 items-center justify-center rounded-md text-sm transition-colors ${
+            active
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-slate-500 hover:bg-slate-100'
+        }`}
+    >
+        {children}
+    </button>
+);
+
 export default function TiptapEditor({
     initialContent,
     onChange,
@@ -58,6 +83,46 @@ export default function TiptapEditor({
         onUpdate: ({ editor }) => {
             onChange(editor.getHTML());
         },
+        editorProps: {
+            handlePaste: (view, event, slice) => {
+                const items = event.clipboardData?.items;
+                if (!items) return false;
+
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i];
+                    if (item.type.indexOf('image') === 0) {
+                        const file = item.getAsFile();
+                        if (file && materiId) {
+                            setUploading(true);
+                            const formData = new FormData();
+                            formData.append('image', file);
+
+                            fetch(`${window.location.origin}/materi/${materiId}/upload-image`, {
+                                method: 'POST',
+                                body: formData,
+                            })
+                            .then(res => {
+                                if (!res.ok) throw new Error('Upload gagal');
+                                return res.json();
+                            })
+                            .then(data => {
+                                // Insert the uploaded image URL into the editor
+                                view.dispatch(
+                                    view.state.tr.replaceSelectionWith(
+                                        view.state.schema.nodes.image.create({ src: data.url })
+                                    )
+                                );
+                            })
+                            .catch(err => alert('Gagal memproses paste gambar'))
+                            .finally(() => setUploading(false));
+                            
+                            return true; // We handled the paste event
+                        }
+                    }
+                }
+                return false;
+            }
+        }
     });
 
     function handleImageClick() {
@@ -93,31 +158,6 @@ export default function TiptapEditor({
     }
 
     if (!editor) return null;
-
-    const ToolButton = ({
-        active,
-        onClick,
-        children,
-        title,
-    }: {
-        active?: boolean;
-        onClick: () => void;
-        children: React.ReactNode;
-        title?: string;
-    }) => (
-        <button
-            type="button"
-            onClick={onClick}
-            title={title}
-            className={`flex h-8 w-8 items-center justify-center rounded-md text-sm transition-colors ${
-                active
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-slate-500 hover:bg-slate-100'
-            }`}
-        >
-            {children}
-        </button>
-    );
 
     return (
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
