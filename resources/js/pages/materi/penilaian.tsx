@@ -40,6 +40,9 @@ type PertemuanItem = {
     id: number;
     judul: string;
     urutan: number;
+    roadmap_judul?: string;
+    roadmap_bulan?: number;
+    roadmap_tahun?: number;
 };
 
 type PertemuanScore = {
@@ -316,12 +319,17 @@ export default function MateriPenilaian({
                                             Jurusan
                                         </th>
 
-                                        {pertemuanList.map((p, idx) => (
+                                        {pertemuanList.map((p) => (
                                             <th
                                                 key={p.id}
                                                 className="px-4 py-3.5 font-bold border-r border-slate-200 text-center min-w-[130px]"
                                             >
-                                                <div>Pertemuan {idx + 1}</div>
+                                                {p.roadmap_judul && (
+                                                    <div className="text-[9px] uppercase tracking-wider text-blue-600 font-bold mb-0.5 truncate max-w-[130px]">
+                                                        {p.roadmap_judul}
+                                                    </div>
+                                                )}
+                                                <div>Pertemuan {p.urutan}</div>
                                                 <div className="text-[10px] font-normal text-slate-500 truncate max-w-[130px]">
                                                     {p.judul}
                                                 </div>

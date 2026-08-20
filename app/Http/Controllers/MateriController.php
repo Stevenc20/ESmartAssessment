@@ -1143,8 +1143,11 @@ class MateriController extends Controller
     public function penilaianIndex(Request $request)
     {
         $pertemuanList = Pertemuan::with(['roadmap', 'materi.quiz', 'materi.tugas', 'materi.linkedMateri.quiz', 'materi.linkedMateri.tugas'])
-            ->orderBy('urutan')
-            ->get();
+            ->get()
+            ->sortBy(function ($p) {
+                return sprintf('%04d-%02d-%04d', $p->roadmap->tahun ?? 0, $p->roadmap->bulan ?? 0, $p->urutan);
+            })
+            ->values();
 
         $query = User::whereHas('role', function ($q) {
             $q->where('role_name', 'siswa');
@@ -1257,6 +1260,9 @@ class MateriController extends Controller
                 'id' => $p->id,
                 'judul' => $p->judul,
                 'urutan' => $p->urutan,
+                'roadmap_judul' => $p->roadmap->judul ?? '',
+                'roadmap_bulan' => $p->roadmap->bulan ?? null,
+                'roadmap_tahun' => $p->roadmap->tahun ?? null,
             ]),
             'students' => $matrix,
             'kelasList' => $kelasList,
@@ -1298,7 +1304,12 @@ class MateriController extends Controller
 
     public function penilaianExport(Request $request)
     {
-        $pertemuanList = Pertemuan::with(['materi.tugas', 'materi.linkedMateri.tugas'])->orderBy('urutan')->get();
+        $pertemuanList = Pertemuan::with(['roadmap', 'materi.tugas', 'materi.linkedMateri.tugas'])
+            ->get()
+            ->sortBy(function ($p) {
+                return sprintf('%04d-%02d-%04d', $p->roadmap->tahun ?? 0, $p->roadmap->bulan ?? 0, $p->urutan);
+            })
+            ->values();
 
         $query = User::whereHas('role', function ($q) {
             $q->where('role_name', 'siswa');
@@ -1330,9 +1341,10 @@ class MateriController extends Controller
 
             $columns = ['No', 'Nama Siswa', 'Email', 'No. HP', 'Kelas', 'Jurusan'];
             foreach ($pertemuanList as $p) {
-                $columns[] = $p->judul.' (Quiz)';
-                $columns[] = $p->judul.' (Tugas)';
-                $columns[] = $p->judul.' (Nilai Akhir)';
+                $roadmapStr = $p->roadmap ? $p->roadmap->judul.' ' : '';
+                $columns[] = $roadmapStr . 'P' . $p->urutan . ' (Quiz)';
+                $columns[] = $roadmapStr . 'P' . $p->urutan . ' (Tugas)';
+                $columns[] = $roadmapStr . 'P' . $p->urutan . ' (Akhir)';
             }
             $columns[] = 'Rata-Rata Akhir';
 
