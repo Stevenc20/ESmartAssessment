@@ -105,8 +105,19 @@ export default function QuizPasteParserModal({
                 continue;
             }
 
-            // Check if line is an Option choice e.g. "A. Option", "a) Option", "*A. Option", "1. Option" (after question)
-            const optionMatch = line.match(/^[\*\-]?\s*([a-eA-E0-9])[\.\)\:\-]\s+(.+)/);
+            // Check if line is a Question start e.g. "1. Question", "Soal 1:", "Q1."
+            const questionStartMatch = line.match(/^(?:soal\s*)?(?:q)?(\d+)[\.\)\:\-]\s+(.+)/i);
+
+            if (questionStartMatch) {
+                // Finalize previous question block
+                finalizeCurrent();
+                currentSoal = questionStartMatch[2].trim();
+                continue;
+            }
+
+            // Check if line is an Option choice e.g. "A. Option", "a) Option", "*A. Option"
+            // We only match letters A-H to prevent matching numbered lists if they weren't caught above
+            const optionMatch = line.match(/^[\*\-]?\s*([a-hA-H])[\.\)\:\-]\s+(.+)/);
             const isStarredOption = line.startsWith('*');
 
             if (currentSoal && optionMatch) {
@@ -119,19 +130,15 @@ export default function QuizPasteParserModal({
                 continue;
             }
 
-            // Check if line is a Question start e.g. "1. Question", "Soal 1:", "Q1."
-            const questionStartMatch = line.match(/^(?:soal\s*)?(\d+)[\.\)\:\-]\s+(.+)/i);
-
-            if (questionStartMatch) {
-                // Finalize previous question block
-                finalizeCurrent();
-                currentSoal = questionStartMatch[2].trim();
-            } else if (!currentSoal) {
+            if (!currentSoal) {
                 // First line without number is treated as Question
                 currentSoal = line;
             } else if (currentOpsi.length === 0) {
                 // Multiline question continuation
                 currentSoal += '\n' + line;
+            } else {
+                // Multiline option continuation
+                currentOpsi[currentOpsi.length - 1] += '\n' + line;
             }
         }
 
