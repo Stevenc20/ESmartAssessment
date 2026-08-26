@@ -56,14 +56,19 @@ class AutoDeactivatePassiveStudents extends Command
 
             $isPassiveInQuiz = ($quizAttempts == 0) || ($quizAvg < 50);
 
-            // If they have no recent attendance (but have alpa) AND passive in quizzes
-            if ($hasAlpa && !$hasRecentHadir && $isPassiveInQuiz) {
+            // LOGIC 1: Siswa berturut-turut alpa di pertemuan terakhir (minimal 2-3 pertemuan terakhir kosong/alpa)
+            $isConsecutivelyAbsent = ($absensi->count() >= 2 && !$hasRecentHadir && $hasAlpa);
+
+            // LOGIC 2: Siswa pasif karena nilai kuis kurang dan tidak hadir di pertemuan terakhir
+            $isPassivePerformance = ($hasAlpa && !$hasRecentHadir && $isPassiveInQuiz);
+
+            if ($isConsecutivelyAbsent || $isPassivePerformance) {
                 $student->update(['status' => 'inactive']);
                 
                 InactiveStudent::updateOrCreate(
                     ['siswa_id' => $student->id],
                     [
-                        'alasan' => 'Otomatis oleh sistem: Aktivitas kuis dan kehadiran sangat rendah',
+                        'alasan' => 'Otomatis oleh sistem: ' . ($isConsecutivelyAbsent ? 'Tidak pernah hadir di beberapa pertemuan terakhir' : 'Aktivitas kuis dan kehadiran sangat rendah'),
                         'tanggal_nonaktif' => now()->toDateString(),
                         'status' => 'inactive'
                     ]
