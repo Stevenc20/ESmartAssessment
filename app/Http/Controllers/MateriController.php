@@ -164,6 +164,7 @@ class MateriController extends Controller
                     'file_count' => $src->files->count(),
                     'pertemuan' => $m->pertemuan?->judul ?? '-',
                     'roadmap' => $m->pertemuan?->roadmap?->judul ?? '-',
+                    'tingkat' => $m->tingkat ?? null,
                     'created_by' => $m->creator?->name ?? '-',
                     'created_at' => $m->created_at->format('d M Y'),
                     'has_quiz' => $src->quiz->isNotEmpty(),

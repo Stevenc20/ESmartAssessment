@@ -39,6 +39,7 @@ type MateriItem = {
     roadmap: string;
     created_by: string;
     created_at: string;
+    tingkat?: string | null;
     is_live?: boolean;
     linked_to?: {
         id: number;
@@ -59,6 +60,16 @@ export default function MateriIndex({
 }) {
     const { errors } = usePage().props;
     const [deleteId, setDeleteId] = useState<number | null>(null);
+
+    const groupedMateri = materiList.reduce((acc, materi) => {
+        const groupName = materi.pertemuan === '-' 
+            ? 'Lainnya (Tanpa Pertemuan)' 
+            : `${materi.roadmap} - ${materi.pertemuan}`;
+        
+        if (!acc[groupName]) acc[groupName] = [];
+        acc[groupName].push(materi);
+        return acc;
+    }, {} as Record<string, MateriItem[]>);
 
     function executeDelete() {
         if (!deleteId) {
@@ -136,9 +147,18 @@ export default function MateriIndex({
                                 </h2>
                             </div>
                         </div>
-                        {materiList.length > 0 ? (
+                        {Object.keys(groupedMateri).length > 0 ? (
                             <div className="divide-y divide-slate-100">
-                                {materiList.map((materi) => (
+                                {Object.entries(groupedMateri).map(([groupName, materis]) => (
+                                    <div key={groupName} className="pb-4">
+                                        <div className="bg-slate-50 px-5 py-2 border-y border-slate-100 flex items-center gap-2">
+                                            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">{groupName}</span>
+                                            <span className="bg-white px-2 py-0.5 rounded-full text-[10px] font-bold text-slate-500 border border-slate-200">
+                                                {materis.length} Materi
+                                            </span>
+                                        </div>
+                                        <div className="divide-y divide-slate-50">
+                                        {materis.map((materi) => (
                                     <div
                                         key={materi.id}
                                         className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-slate-50"
@@ -164,6 +184,11 @@ export default function MateriIndex({
                                                 <p className="truncate text-sm font-semibold text-slate-900">
                                                     {materi.judul}
                                                 </p>
+                                                {materi.tingkat && (
+                                                    <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 shrink-0">
+                                                        Kelas {materi.tingkat}
+                                                    </span>
+                                                )}
                                                 {materi.is_live && (
                                                     <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-extrabold text-red-700 animate-pulse shrink-0">
                                                         <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-ping" />
@@ -252,6 +277,9 @@ export default function MateriIndex({
                                                 <Trash2 className="h-3.5 w-3.5" />
                                             </button>
                                         </div>
+                                    </div>
+                                    ))}
+                                    </div>
                                     </div>
                                 ))}
                             </div>
