@@ -54,6 +54,11 @@ export default function MateriCreate({
     const [uploadProgress, setUploadProgress] = useState(0);
     const [folders, setFolders] = useState<PickedFolder[]>([]);
     const [files, setFiles] = useState<PickedFile[]>([]);
+    
+    // Cloning options
+    const [cloneMode, setCloneMode] = useState(true);
+    const [includeQuiz, setIncludeQuiz] = useState(true);
+    const [includeTugas, setIncludeTugas] = useState(true);
 
     const addOpsi = () => setPollOpsi([...pollOpsi, '']);
     const removeOpsi = (idx: number) => setPollOpsi(pollOpsi.filter((_, i) => i !== idx));
@@ -117,6 +122,12 @@ export default function MateriCreate({
 
             if (tingkat) {
                 form.append('tingkat', tingkat);
+            }
+            
+            form.append('clone_mode', cloneMode ? '1' : '0');
+            if (cloneMode) {
+                form.append('include_quiz', includeQuiz ? '1' : '0');
+                form.append('include_tugas', includeTugas ? '1' : '0');
             }
 
             router.post('/materi', form, {
@@ -234,12 +245,63 @@ export default function MateriCreate({
                                 onSubmit={submit}
                                 className="grid grid-cols-2 gap-4"
                             >
-                                <div className="col-span-2 rounded-xl border border-blue-100 bg-blue-50/40 p-4 text-xs text-blue-700">
-                                    Materi yang dibuat akan menampilkan konten,
-                                    file, quiz, dan tugas dari materi sumber.
-                                    Perubahan pada materi sumber akan otomatis
-                                    terlihat di sini. Progress siswa tetap
-                                    dicatat terpisah per pertemuan.
+                                <div className="col-span-2 space-y-4">
+                                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="space-y-0.5">
+                                                <Label className="text-base font-bold text-slate-800">
+                                                    Salin sebagai Materi Baru
+                                                </Label>
+                                                <p className="text-xs text-slate-500">
+                                                    Menduplikat teks dan file sehingga Bapak/Ibu dapat menambah/mengedit secara terpisah dari materi aslinya.
+                                                </p>
+                                            </div>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={cloneMode}
+                                                onChange={(e) => setCloneMode(e.target.checked)}
+                                                className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
+                                            />
+                                        </div>
+                                        
+                                        {!cloneMode && (
+                                            <div className="mt-3 rounded-lg bg-amber-50 p-3 text-xs text-amber-800 font-medium">
+                                                Mode Tautkan: Materi ini akan terkunci dengan materi aslinya. Perubahan pada aslinya akan ikut mengubah materi ini. (Quiz dan Tugas ikut tertaut)
+                                            </div>
+                                        )}
+
+                                        {cloneMode && (
+                                            <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
+                                                <Label className="text-sm font-semibold text-slate-700">Pilihan Duplikasi Tambahan:</Label>
+                                                
+                                                <div className="flex items-center space-x-3">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        id="includeQuiz"
+                                                        checked={includeQuiz}
+                                                        onChange={(e) => setIncludeQuiz(e.target.checked)}
+                                                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
+                                                    />
+                                                    <label htmlFor="includeQuiz" className="text-sm text-slate-600 cursor-pointer">
+                                                        Bawa/Salin soal Quiz dari materi ini
+                                                    </label>
+                                                </div>
+
+                                                <div className="flex items-center space-x-3">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        id="includeTugas"
+                                                        checked={includeTugas}
+                                                        onChange={(e) => setIncludeTugas(e.target.checked)}
+                                                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
+                                                    />
+                                                    <label htmlFor="includeTugas" className="text-sm text-slate-600 cursor-pointer">
+                                                        Bawa/Salin Penugasan (Assessment) dari materi ini
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div>

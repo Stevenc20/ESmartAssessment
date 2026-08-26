@@ -307,7 +307,7 @@ class MateriController extends Controller
         }
 
         if (! empty($data['linked_materi_id'])) {
-            $source = Materi::findOrFail($data['linked_materi_id']);
+            $source = Materi::with(['folders', 'files', 'quiz', 'tugas', 'poll.options'])->findOrFail($data['linked_materi_id']);
 
             if ($source->isLink()) {
                 return back()->withErrors([
@@ -321,6 +321,129 @@ class MateriController extends Controller
                 ])->withInput();
             }
 
+            $cloneMode = $request->input('clone_mode') == '1';
+
+            if ($cloneMode) {
+                // Copy Materi Data
+                $materi = Materi::create([
+                    'pertemuan_id' => $data['pertemuan_id'],
+                    'linked_materi_id' => null, // Standalone clone
+                    'judul' => $data['judul'],
+                    'deskripsi' => $source->deskripsi,
+                    'konten' => $source->konten,
+                    'video_url' => $source->video_url,
+                    'video_embed_url' => $source->video_embed_url,
+                    'drive_link' => $source->drive_link,
+                    'tingkat' => $data['tingkat'] ?? $source->tingkat,
+                    'created_by' => $request->user()->id,
+                ]);
+
+                // Copy files in storage
+                if ($source->thumbnail && \Illuminate\Support\Facades\Storage::disk('public')->exists($source->thumbnail)) {
+                    $ext = pathinfo($source->thumbnail, PATHINFO_EXTENSION);
+                    $newThumb = 'thumbnails/' . \Illuminate\Support\Str::random(40) . '.' . $ext;
+                    \Illuminate\Support\Facades\Storage::disk('public')->copy($source->thumbnail, $newThumb);
+                    $materi->update(['thumbnail' => $newThumb]);
+                }
+
+                if ($source->pdf_file && \Illuminate\Support\Facades\Storage::disk('public')->exists($source->pdf_file)) {
+                    $ext = pathinfo($source->pdf_file, PATHINFO_EXTENSION);
+                    $newPdf = 'materi-files/' . \Illuminate\Support\Str::random(40) . '.' . $ext;
+                    \Illuminate\Support\Facades\Storage::disk('public')->copy($source->pdf_file, $newPdf);
+                    $materi->update(['pdf_file' => $newPdf]);
+                }
+
+                // Copy single files (MateriFile)
+                foreach ($source->files as $file) {
+                    $newPath = "materi-files/{$materi->id}/" . \Illuminate\Support\Str::uuid() . '/' . basename($file->path);
+                    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($file->path)) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->copy($file->path, $newPath);
+                    }
+                    \App\Models\MateriFile::create([
+                        'materi_id' => $materi->id,
+                        'nama' => $file->nama,
+                        'path' => $newPath,
+                        'size' => $file->size,
+                    ]);
+                }
+
+                // Copy folders
+                foreach ($source->folders as $folder) {
+                    $newFolder = \App\Models\MateriFolder::create([
+                        'materi_id' => $materi->id,
+                        'nama' => $folder->nama,
+                        'file_count' => $folder->file_count,
+                        'total_size' => $folder->total_size,
+                    ]);
+                    
+                    $oldPath = "materi-folders/{$folder->id}";
+                    $newPath = "materi-folders/{$newFolder->id}";
+                    
+                    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($oldPath)) {
+                        \Illuminate\Support\Facades\File::copyDirectory(
+                            \Illuminate\Support\Facades\Storage::disk('public')->path($oldPath),
+                            \Illuminate\Support\Facades\Storage::disk('public')->path($newPath)
+                        );
+                    }
+                }
+
+                // Copy Poll
+                if ($source->poll) {
+                    $poll = \App\Models\MateriPoll::create([
+                        'materi_id' => $materi->id,
+                        'pertanyaan' => $source->poll->pertanyaan,
+                        'is_active' => $source->poll->is_active,
+                    ]);
+                    foreach ($source->poll->options as $option) {
+                        \App\Models\MateriPollOption::create([
+                            'poll_id' => $poll->id,
+                            'opsi_text' => $option->opsi_text,
+                            'urutan' => $option->urutan,
+                        ]);
+                    }
+                }
+
+                // Copy Quiz
+                if ($request->input('include_quiz') == '1') {
+                    foreach ($source->quiz as $quiz) {
+                        $newQuizGambar = null;
+                        if ($quiz->gambar && \Illuminate\Support\Facades\Storage::disk('public')->exists($quiz->gambar)) {
+                            $ext = pathinfo($quiz->gambar, PATHINFO_EXTENSION);
+                            $newQuizGambar = 'quiz-images/' . \Illuminate\Support\Str::random(40) . '.' . $ext;
+                            \Illuminate\Support\Facades\Storage::disk('public')->copy($quiz->gambar, $newQuizGambar);
+                        }
+
+                        \App\Models\MateriQuiz::create([
+                            'materi_id' => $materi->id,
+                            'soal' => $quiz->soal,
+                            'gambar' => $newQuizGambar,
+                            'opsi' => $quiz->opsi,
+                            'jawaban_benar' => $quiz->jawaban_benar,
+                            'urutan' => $quiz->urutan,
+                        ]);
+                    }
+                }
+
+                // Copy Tugas
+                if ($request->input('include_tugas') == '1') {
+                    foreach ($source->tugas as $tugas) {
+                        \App\Models\Tugas::create([
+                            'materi_id' => $materi->id,
+                            'judul' => $tugas->judul,
+                            'deskripsi' => $tugas->deskripsi,
+                            'deadline' => null, // Reset deadline for new task
+                            'bobot' => $tugas->bobot,
+                            'max_revisi' => $tugas->max_revisi,
+                            'is_active' => $tugas->is_active,
+                        ]);
+                    }
+                }
+
+                return redirect()->route('materi.index')
+                    ->with('success', 'Materi berhasil disalin/diduplikasi.');
+            }
+
+            // Fallback: Default Link Mode
             Materi::create([
                 'pertemuan_id' => $data['pertemuan_id'],
                 'linked_materi_id' => $source->id,
