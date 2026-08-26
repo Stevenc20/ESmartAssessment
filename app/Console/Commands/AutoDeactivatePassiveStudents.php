@@ -5,77 +5,62 @@ namespace App\Console\Commands;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-
 use App\Models\User;
-use App\Models\Role;
 use App\Models\InactiveStudent;
+use App\Services\AttendanceAlertService;
 
-#[Signature('student:auto-deactivate')]
-#[Description('Otomatis menonaktifkan siswa yang sangat pasif (tidak hadir & kuis rendah)')]
+#[Signature("student:auto-deactivate")]
+#[Description("Otomatis menonaktifkan siswa yang pasif berdasarkan threshold absensi")]
 class AutoDeactivatePassiveStudents extends Command
 {
     public function handle()
     {
-        $siswaRole = Role::where('role_name', 'Siswa')->orWhere('role_name', 'siswa')->first();
-        if (!$siswaRole) {
-            $this->error("Role siswa tidak ditemukan.");
+        $alertService = app(AttendanceAlertService::class);
+        $atRiskStudents = $alertService->studentsBelowThreshold(1000);
+
+        if (empty($atRiskStudents)) {
+            $this->info("Tidak ada siswa berisiko.");
             return;
         }
 
-        // Get all active students (we remove the 3-days limit to ensure it works on testing accounts too)
-        // Except specific accounts specified by user
-        $students = User::where('role_id', $siswaRole->id)
-            ->where('status', 'active')
-            ->whereRaw('LOWER(name) NOT IN (?, ?)', ['belajar sukses', 'putra jaya eksis'])
-            ->with(['absensi', 'progressMateri'])
-            ->get();
+        // Jangan nonaktifkan akun testing
+        $excludedNames = ["belajar sukses", "putra jaya eksis"];
+
+        // Jangan nonaktifkan siswa yang baru saja dipulihkan (grace period 14 hari)
+        $recentlyRestoredIds = InactiveStudent::where("status", "restored")
+            ->where("updated_at", ">=", now()->subDays(14))
+            ->pluck("siswa_id")
+            ->toArray();
 
         $deactivatedCount = 0;
 
-        foreach ($students as $student) {
-            // Take the latest 3 absensi in memory
-            $absensi = $student->absensi->sortByDesc('created_at')->take(3);
-            $progress = $student->progressMateri;
-
-            $hasRecentHadir = false;
-            foreach ($absensi as $a) {
-                if ($a->status !== 'alpa' && $a->status !== 'tidak_hadir') {
-                    $hasRecentHadir = true;
-                    break;
-                }
+        foreach ($atRiskStudents as $risk) {
+            if (in_array($risk["siswa_id"], $recentlyRestoredIds)) {
+                continue;
             }
 
-            // If they have NO absensi records yet at all, we might skip them or count them as passive. 
-            // If the user wants 17 students that "banyak yang alfa" deactivated, they must have alpa records.
-            // Let's only deactivate if they actually have at least 1 alpa in those latest records.
-            $hasAlpa = $absensi->whereIn('status', ['alpa', 'tidak_hadir'])->isNotEmpty();
-
-            // Evaluate Quiz Progress
-            $quizAvg = $progress->avg('quiz_score') ?? 0;
-            $quizAttempts = $progress->sum('quiz_attempts') ?? 0;
-
-            $isPassiveInQuiz = ($quizAttempts == 0) || ($quizAvg < 50);
-
-            // LOGIC 1: Siswa berturut-turut alpa di pertemuan terakhir (minimal 2-3 pertemuan terakhir kosong/alpa)
-            $isConsecutivelyAbsent = ($absensi->count() >= 2 && !$hasRecentHadir && $hasAlpa);
-
-            // LOGIC 2: Siswa pasif karena nilai kuis kurang dan tidak hadir di pertemuan terakhir
-            $isPassivePerformance = ($hasAlpa && !$hasRecentHadir && $isPassiveInQuiz);
-
-            if ($isConsecutivelyAbsent || $isPassivePerformance) {
-                $student->update(['status' => 'inactive']);
-                
-                InactiveStudent::updateOrCreate(
-                    ['siswa_id' => $student->id],
-                    [
-                        'alasan' => 'Otomatis oleh sistem: ' . ($isConsecutivelyAbsent ? 'Tidak pernah hadir di beberapa pertemuan terakhir' : 'Aktivitas kuis dan kehadiran sangat rendah'),
-                        'tanggal_nonaktif' => now()->toDateString(),
-                        'status' => 'inactive'
-                    ]
-                );
-                
-                $deactivatedCount++;
+            $student = User::find($risk["siswa_id"]);
+            if (!$student || $student->status !== "active") {
+                continue;
             }
+
+            if (in_array(strtolower($student->name), $excludedNames)) {
+                continue;
+            }
+
+            // Deactivate
+            $student->update(["status" => "inactive"]);
+            
+            InactiveStudent::updateOrCreate(
+                ["siswa_id" => $student->id],
+                [
+                    "alasan" => "Otomatis oleh sistem: Kehadiran di bawah batas aman (" . $risk["persentase"] . "%) pada " . $risk["roadmap_judul"],
+                    "tanggal_nonaktif" => now()->toDateString(),
+                    "status" => "inactive"
+                ]
+            );
+            
+            $deactivatedCount++;
         }
 
         $this->info("Berhasil menonaktifkan $deactivatedCount siswa secara otomatis.");

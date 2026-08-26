@@ -11,6 +11,7 @@ class InactiveStudentController extends Controller
     public function index()
     {
         $students = InactiveStudent::with("siswa")
+            ->where("status", "inactive")
             ->where("alasan", "like", "Otomatis oleh sistem%")
             ->orderBy("created_at", "desc")
             ->get()
@@ -29,5 +30,21 @@ class InactiveStudentController extends Controller
         return Inertia::render("teacher/inactive-students/index", [
             "inactiveStudents" => $students
         ]);
+    }
+
+    public function restore(Request $request, $id)
+    {
+        $inactive = InactiveStudent::findOrFail($id);
+        
+        if ($inactive->siswa_id) {
+            $user = \App\Models\User::find($inactive->siswa_id);
+            if ($user) {
+                $user->update(['status' => 'active']);
+            }
+        }
+        
+        $inactive->update(['status' => 'restored']);
+        
+        return redirect()->back()->with('success', 'Siswa berhasil diaktifkan kembali. Sistem tidak akan menonaktifkannya otomatis selama 14 hari ke depan.');
     }
 }

@@ -56,6 +56,7 @@ export default function InactiveStudentsIndex({ inactiveStudents }: { inactiveSt
                                             <th className="px-4 py-3 font-semibold border-b">Kelas</th>
                                             <th className="px-4 py-3 font-semibold border-b">Tanggal Nonaktif</th>
                                             <th className="px-4 py-3 font-semibold border-b">Alasan</th>
+                                            <th className="px-4 py-3 font-semibold border-b text-right">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-200 bg-white">
@@ -66,6 +67,11 @@ export default function InactiveStudentsIndex({ inactiveStudents }: { inactiveSt
                                                 <td className="px-4 py-3">{student.tanggal_nonaktif}</td>
                                                 <td className="px-4 py-3 max-w-[250px] truncate" title={student.alasan}>
                                                     {student.alasan}
+                                                </td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <Link href={`/guru/siswa-pasif/${student.id}/restore`} method="post" as="button">
+                                                        <Button variant="outline" size="sm" className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200">Aktifkan Kembali</Button>
+                                                    </Link>
                                                 </td>
                                             </tr>
                                         ))}
