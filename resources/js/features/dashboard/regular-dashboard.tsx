@@ -23,6 +23,21 @@ type GuruActivity = {
     time: string;
 };
 
+type AttendanceAlertItem = {
+    siswa_id: number;
+    nama: string;
+    persentase: number;
+    roadmap_id: number;
+    roadmap_judul: string;
+};
+
+type NewlyDeactivatedItem = {
+    id: number;
+    name: string;
+    kelas: string;
+    tanggal: string;
+};
+
 type GuruDashboard = {
     totalSiswa: number;
     tugasAktif: number;
@@ -32,20 +47,25 @@ type GuruDashboard = {
     attendanceRiskCount: number;
     attendanceAlerts: AttendanceAlertItem[];
     attendanceThreshold: number;
+    newlyDeactivatedCount?: number;
+    newlyDeactivated?: NewlyDeactivatedItem[];
 } | null;
-
-type AttendanceAlertItem = {
-    siswa_id: number;
-    nama: string;
-    persentase: number;
-    roadmap_id: number;
-    roadmap_judul: string;
-};
 
 type PageProps = {
     auth: Auth;
     guruDashboard: GuruDashboard;
 };
+
+import { useEffect, useState } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 const quickActions = [
     {
@@ -71,6 +91,40 @@ export default function RegularDashboard() {
         .join('')
         .slice(0, 2)
         .toUpperCase();
+
+    const [showInactiveModal, setShowInactiveModal] = useState(false);
+
+    useEffect(() => {
+        if (guruDashboard?.newlyDeactivatedCount && guruDashboard.newlyDeactivatedCount > 0) {
+            const hasSeenModal = sessionStorage.getItem('hasSeenInactiveModal');
+            if (!hasSeenModal) {
+                setShowInactiveModal(true);
+                sessionStorage.setItem('hasSeenInactiveModal', 'true');
+                
+                // Play simple notification sound
+                try {
+                    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                    const oscillator = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+                    oscillator.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.1); // A4
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.2);
+                } catch (e) {
+                    console.error("Failed to play audio", e);
+                }
+            }
+        }
+    }, [guruDashboard]);
 
     const stats = [
         {
@@ -103,6 +157,42 @@ export default function RegularDashboard() {
 
     return (
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+            <Dialog open={showInactiveModal} onOpenChange={setShowInactiveModal}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                            <AlertTriangle className="h-5 w-5" />
+                            Peringatan Sistem: Siswa Dinonaktifkan
+                        </DialogTitle>
+                        <DialogDescription className="pt-2">
+                            Terdapat <strong>{guruDashboard?.newlyDeactivatedCount} siswa</strong> yang baru saja dinonaktifkan secara otomatis oleh sistem karena aktivitas kuis dan kehadiran yang sangat rendah.
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 my-2 max-h-48 overflow-y-auto">
+                        <ul className="space-y-2">
+                            {guruDashboard?.newlyDeactivated?.map((siswa) => (
+                                <li key={siswa.id} className="text-sm flex justify-between items-center border-b border-slate-200 last:border-0 pb-1 last:pb-0">
+                                    <span className="font-semibold text-slate-700">{siswa.name}</span>
+                                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">{siswa.kelas ?? '-'}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowInactiveModal(false)}>
+                            Tutup
+                        </Button>
+                        <Link href="/guru/siswa-pasif">
+                            <Button className="bg-red-600 hover:bg-red-700 text-white">
+                                Lihat Daftar Lengkap
+                            </Button>
+                        </Link>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             {/* ── Hero ── */}
             <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
                 <div

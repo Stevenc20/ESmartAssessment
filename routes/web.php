@@ -59,6 +59,7 @@ Route::prefix('auth/device-link')->name('device-link.')->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('guru/siswa-pasif', [\App\Http\Controllers\InactiveStudentController::class, 'index'])->name('guru.siswa-pasif');
 
     Route::get('penilaian-materi', [MateriController::class, 'penilaianIndex'])->name('materi.penilaian.index');
     Route::get('penilaian-materi/export', [MateriController::class, 'penilaianExport'])->name('materi.penilaian.export');

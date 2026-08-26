@@ -143,6 +143,12 @@ class DashboardController extends Controller
             $attendanceAlerts = app(AttendanceAlertService::class)->studentsBelowThreshold(10);
             $attendanceRiskCount = count($attendanceAlerts);
 
+            $newlyDeactivated = \App\Models\InactiveStudent::with('siswa:id,name,kelas')
+                ->where('status', 'inactive')
+                ->where('alasan', 'like', 'Otomatis oleh sistem%')
+                ->where('created_at', '>=', now()->subDays(1))
+                ->get();
+
             $guruDashboard = [
                 'totalSiswa' => $totalSiswa,
                 'tugasAktif' => $tugasAktif,
@@ -152,6 +158,13 @@ class DashboardController extends Controller
                 'attendanceRiskCount' => $attendanceRiskCount,
                 'attendanceAlerts' => $attendanceAlerts,
                 'attendanceThreshold' => AttendanceAlertService::THRESHOLD,
+                'newlyDeactivatedCount' => $newlyDeactivated->count(),
+                'newlyDeactivated' => $newlyDeactivated->map(fn($m) => [
+                    'id' => $m->siswa_id,
+                    'name' => $m->siswa?->name,
+                    'kelas' => $m->siswa?->kelas,
+                    'tanggal' => $m->tanggal_nonaktif,
+                ])->toArray(),
             ];
         }
 

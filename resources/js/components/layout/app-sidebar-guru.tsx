@@ -7,6 +7,7 @@ import {
     GraduationCap,
     LayoutGrid,
     Megaphone,
+    UserX,
 } from 'lucide-react';
 import AppLogo from '@/components/layout/app-logo';
 import { NavMain } from '@/components/layout/nav-main';
@@ -35,6 +36,7 @@ export function AppSidebarGuru() {
         { title: 'Materi Pembelajaran', href: '/materi', icon: BookOpen },
         { title: 'Rekap Penilaian Siswa', href: '/penilaian-materi', icon: FileSpreadsheet },
         { title: 'Assessment', href: '/assessment', icon: GraduationCap },
+        { title: 'Siswa Pasif', href: '/guru/siswa-pasif', icon: UserX },
     ];
     return (
         <Sidebar collapsible="icon" variant="inset">
