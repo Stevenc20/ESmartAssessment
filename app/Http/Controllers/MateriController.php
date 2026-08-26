@@ -136,10 +136,12 @@ class MateriController extends Controller
             'creator',
             'folders',
             'files',
+            'quiz',
             'linkedMateri.pertemuan.roadmap',
             'linkedMateri.creator',
             'linkedMateri.folders',
             'linkedMateri.files',
+            'linkedMateri.quiz',
         ])
             ->orderBy('created_at')
             ->get()
@@ -164,7 +166,7 @@ class MateriController extends Controller
                     'roadmap' => $m->pertemuan?->roadmap?->judul ?? '-',
                     'created_by' => $m->creator?->name ?? '-',
                     'created_at' => $m->created_at->format('d M Y'),
-                    'has_quiz' => $src->quiz()->exists(),
+                    'has_quiz' => $src->quiz->isNotEmpty(),
                     'linked_to' => $m->isLink() ? [
                         'id' => $src->id,
                         'judul' => $src->judul,
@@ -785,9 +787,9 @@ class MateriController extends Controller
             if ($tingkat) {
                 $query->where('tingkat', $tingkat)->orWhereNull('tingkat');
             }
-        }, 'pertemuan.materi.folders', 'pertemuan.materi.files', 'pertemuan.materi.tugas.pengumpulan' => function ($q) use ($user) {
+        }, 'pertemuan.materi.folders', 'pertemuan.materi.files', 'pertemuan.materi.quiz', 'pertemuan.materi.tugas.pengumpulan' => function ($q) use ($user) {
             $q->where('siswa_id', $user->id);
-        }, 'pertemuan.materi.tugas.pengumpulan.penilaian', 'pertemuan.materi.linkedMateri.folders', 'pertemuan.materi.linkedMateri.files', 'pertemuan.materi.linkedMateri.tugas.pengumpulan' => function ($q) use ($user) {
+        }, 'pertemuan.materi.tugas.pengumpulan.penilaian', 'pertemuan.materi.linkedMateri.folders', 'pertemuan.materi.linkedMateri.files', 'pertemuan.materi.linkedMateri.quiz', 'pertemuan.materi.linkedMateri.tugas.pengumpulan' => function ($q) use ($user) {
             $q->where('siswa_id', $user->id);
         }, 'pertemuan.materi.linkedMateri.tugas.pengumpulan.penilaian'])
             ->where(function ($q) use ($tingkat) {
@@ -853,7 +855,7 @@ class MateriController extends Controller
                             'created_by' => $src->creator?->name ?? '-',
                             'progress_status' => $progress?->status ?? 'not_started',
                             'completed_at' => $progress?->completed_at,
-                            'has_quiz' => $src->quiz()->exists(),
+                            'has_quiz' => $src->quiz->isNotEmpty(),
                             'quiz_score' => $progress?->quiz_score,
                             'quiz_attempts' => $progress?->quiz_attempts ?? 0,
                             'tugas' => $tugasList,

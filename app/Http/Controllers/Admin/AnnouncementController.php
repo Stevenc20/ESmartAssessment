@@ -38,7 +38,7 @@ class AnnouncementController extends Controller
 
         Cache::increment('announcement_version');
 
-        app(\App\Services\AnnouncementService::class)->sendEmailNotifications(
+        \App\Jobs\SendAnnouncementEmails::dispatch(
             $validated['judul'],
             $validated['isi'],
             $validated['target_role'] ?? 'all',
