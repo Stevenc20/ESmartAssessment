@@ -5,6 +5,7 @@ import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import Placeholder from '@tiptap/extension-placeholder';
+import Youtube from '@tiptap/extension-youtube';
 import {
     Bold,
     Italic,
@@ -19,6 +20,7 @@ import {
     Undo,
     Redo,
     Image as ImageIcon,
+    Youtube as YoutubeIcon,
     AlignLeft,
     AlignCenter,
     AlignRight,
@@ -79,6 +81,10 @@ export default function TiptapEditor({
             TextAlign.configure({ types: ['heading', 'paragraph'] }),
             Underline,
             Placeholder.configure({ placeholder }),
+            Youtube.configure({
+                controls: true,
+                nocookie: true,
+            }),
         ],
         content: initialContent,
         editable,
@@ -162,6 +168,16 @@ export default function TiptapEditor({
         } finally {
             setUploading(false);
             if (fileRef.current) fileRef.current.value = '';
+        }
+    }
+
+    function addYoutubeVideo() {
+        const url = prompt('Masukkan URL YouTube:');
+        
+        if (url) {
+            editor.commands.setYoutubeVideo({
+                src: url,
+            });
         }
     }
 
@@ -290,6 +306,12 @@ export default function TiptapEditor({
                     ) : (
                         <ImageIcon className="h-4 w-4" />
                     )}
+                </ToolButton>
+                <ToolButton
+                    onClick={addYoutubeVideo}
+                    title="Insert YouTube Video"
+                >
+                    <YoutubeIcon className="h-4 w-4" />
                 </ToolButton>
 
                 <span className="mx-1 w-px bg-slate-200" />
