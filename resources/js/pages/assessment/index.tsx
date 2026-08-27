@@ -1,4 +1,11 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { useState } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import {
     BookOpen,
     Calendar,
@@ -8,6 +15,7 @@ import {
     GraduationCap,
     Trophy,
     XCircle,
+    UploadCloud,
 } from 'lucide-react';
 
 type Assessment = {
@@ -63,6 +71,34 @@ export default function AssessmentIndex({
 }: {
     assessments: Assessment[];
 }) {
+    const [uploadTarget, setUploadTarget] = useState<Assessment | null>(null);
+    const { data, setData, post, processing, reset } = useForm<{
+        file_tugas: File | null;
+    }>({
+        file_tugas: null,
+    });
+    const [fileName, setFileName] = useState<string | null>(null);
+
+    function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        setData('file_tugas', file || null);
+        setFileName(file?.name ?? null);
+    }
+
+    function submitUpload(e: React.FormEvent) {
+        e.preventDefault();
+        if (!uploadTarget || !data.file_tugas) return;
+        post(`/materi-saya/tugas/${uploadTarget.id}/submit`, {
+            preserveScroll: true,
+            forceFormData: true,
+            onSuccess: () => {
+                setUploadTarget(null);
+                setFileName(null);
+                reset();
+            },
+        });
+    }
+
     const total = assessments.length;
     const tersedia = assessments.filter((a) => a.status === 'tersedia').length;
     const dikirim = assessments.filter((a) => a.status === 'dikirim').length;
@@ -209,12 +245,24 @@ export default function AssessmentIndex({
                                                                 </div>
                                                             )}
                                                             {assessment.status === 'tersedia' && (
-                                                                <Link
-                                                                    href={`/materi-saya/${assessment.materi_id}`}
-                                                                    className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-violet-700"
-                                                                >
-                                                                    Kerjakan
-                                                                </Link>
+                                                                <div className="flex items-center gap-2">
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setUploadTarget(assessment);
+                                                                            setFileName(null);
+                                                                            reset();
+                                                                        }}
+                                                                        className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-violet-700"
+                                                                    >
+                                                                        Upload
+                                                                    </button>
+                                                                    <Link
+                                                                        href={`/materi-saya/${assessment.materi_id}`}
+                                                                        className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-200"
+                                                                    >
+                                                                        Buka Materi
+                                                                    </Link>
+                                                                </div>
                                                             )}
                                                         </div>
                                                     </div>
@@ -239,6 +287,86 @@ export default function AssessmentIndex({
                     </div>
                 </div>
             </div>
+
+            <Dialog
+                open={uploadTarget !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setUploadTarget(null);
+                        setFileName(null);
+                        reset();
+                    }
+                }}
+            >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Upload Tugas</DialogTitle>
+                    </DialogHeader>
+                    {uploadTarget && (
+                        <div className="flex flex-col gap-4">
+                            <div className="rounded-lg bg-slate-50 p-3 text-sm">
+                                <p className="font-semibold text-slate-800">
+                                    {uploadTarget.judul}
+                                </p>
+                                <p className="text-xs text-slate-500 mt-1">
+                                    Materi: {uploadTarget.materi}
+                                </p>
+                            </div>
+                            
+                            <form onSubmit={submitUpload} className="flex flex-col gap-4">
+                                <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
+                                    <div className="flex flex-col items-center justify-center gap-3">
+                                        <div className="rounded-full bg-blue-100 p-2 text-blue-600">
+                                            <UploadCloud className="h-5 w-5" />
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-sm font-semibold text-slate-700">
+                                                Pilih file tugas Anda
+                                            </p>
+                                            <p className="text-xs text-slate-500">
+                                                PDF, DOC, DOCX, ZIP, JPG, PNG (Max. 10MB)
+                                            </p>
+                                        </div>
+                                        <input
+                                            type="file"
+                                            onChange={handleFile}
+                                            className="hidden"
+                                            id="file-upload"
+                                        />
+                                        <label
+                                            htmlFor="file-upload"
+                                            className="cursor-pointer rounded-lg bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50"
+                                        >
+                                            Browse File
+                                        </label>
+                                        {fileName && (
+                                            <p className="mt-2 truncate max-w-full text-xs font-medium text-blue-600">
+                                                Terpilih: {fileName}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="flex justify-end gap-2 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setUploadTarget(null)}
+                                        className="rounded-lg px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={!data.file_tugas || processing}
+                                        className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {processing ? 'Mengupload...' : 'Submit Tugas'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
