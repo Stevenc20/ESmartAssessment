@@ -10,6 +10,7 @@ import {
     Smartphone,
     HeartHandshake,
     Stethoscope,
+    Layers,
     ZoomIn,
     ZoomOut,
 } from 'lucide-react';
@@ -764,72 +765,79 @@ export default function AbsenIndex({ stats, riwayat, active_sessions }: Props) {
                             </h2>
                         </div>
                         {riwayat.length > 0 ? (
-                            <table className="w-full text-left text-xs">
-                                <thead>
-                                    <tr className="bg-slate-50 text-slate-500">
-                                        <th className="px-4 py-2.5 font-semibold">
-                                            Pertemuan
-                                        </th>
-                                        <th className="px-4 py-2.5 font-semibold">
-                                            Tanggal
-                                        </th>
-                                        <th className="px-4 py-2.5 font-semibold">
-                                            Waktu Scan
-                                        </th>
-                                        <th className="px-4 py-2.5 font-semibold">
-                                            Status
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {riwayat.map((r) => (
-                                        <tr
-                                            key={r.id}
-                                            className="transition-colors hover:bg-slate-50"
-                                        >
-                                            <td className="px-4 py-3">
-                                                <p className="font-medium text-slate-800">
-                                                    {r.pertemuan}
-                                                </p>
-                                                <p className="text-[10px] text-slate-400">
-                                                    {r.roadmap}
-                                                </p>
-                                            </td>
-                                            <td className="px-4 py-3 text-slate-600">
-                                                {r.tanggal}
-                                            </td>
-                                            <td className="px-4 py-3 text-slate-400">
-                                                {r.scan_time ?? '-'}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span
-                                                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                                                        r.status === 'hadir'
-                                                            ? 'bg-emerald-50 text-emerald-700'
-                                                            : r.status === 'terlambat'
-                                                            ? 'bg-amber-50 text-amber-700'
-                                                            : r.status === 'izin'
-                                                            ? 'bg-sky-50 text-sky-700'
-                                                            : r.status === 'sakit'
-                                                            ? 'bg-violet-50 text-violet-700'
-                                                            : 'bg-red-50 text-red-700'
-                                                    }`}
-                                                >
-                                                    {r.status === 'hadir'
-                                                        ? 'Hadir'
-                                                        : r.status === 'terlambat'
-                                                        ? 'Terlambat'
-                                                        : r.status === 'izin'
-                                                        ? 'Izin'
-                                                        : r.status === 'sakit'
-                                                        ? 'Sakit'
-                                                        : 'Tidak Hadir (Bolong)'}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            <div className="divide-y divide-slate-200">
+                                {Object.entries(
+                                    riwayat.reduce((acc, r) => {
+                                        const key = r.roadmap || 'Lainnya';
+                                        if (!acc[key]) acc[key] = [];
+                                        acc[key].push(r);
+                                        return acc;
+                                    }, {} as Record<string, typeof riwayat>)
+                                ).map(([roadmapName, meetings]) => (
+                                    <div key={roadmapName} className="pb-2 last:pb-0">
+                                        <div className="bg-slate-50 px-5 py-2.5 border-y border-slate-100 first:border-t-0">
+                                            <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
+                                                <Layers className="h-3.5 w-3.5 opacity-60" />
+                                                {roadmapName}
+                                            </span>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left text-xs">
+                                                <thead>
+                                                    <tr className="text-slate-400 border-b border-slate-100 bg-white">
+                                                        <th className="px-5 py-2 font-medium w-1/3">Pertemuan</th>
+                                                        <th className="px-5 py-2 font-medium whitespace-nowrap">Tanggal</th>
+                                                        <th className="px-5 py-2 font-medium whitespace-nowrap">Waktu Scan</th>
+                                                        <th className="px-5 py-2 font-medium text-right">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-50 bg-white">
+                                                    {meetings.map((r) => (
+                                                        <tr key={r.id} className="transition-colors hover:bg-slate-50/50">
+                                                            <td className="px-5 py-3">
+                                                                <p className="font-semibold text-slate-800 leading-snug">
+                                                                    {r.pertemuan}
+                                                                </p>
+                                                            </td>
+                                                            <td className="px-5 py-3 text-slate-500 whitespace-nowrap">
+                                                                {r.tanggal}
+                                                            </td>
+                                                            <td className="px-5 py-3 text-slate-400 whitespace-nowrap">
+                                                                {r.scan_time ?? '-'}
+                                                            </td>
+                                                            <td className="px-5 py-3 text-right">
+                                                                <span
+                                                                    className={`inline-flex items-center justify-center min-w-[75px] gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                                                                        r.status === 'hadir'
+                                                                            ? 'bg-emerald-50 text-emerald-700'
+                                                                            : r.status === 'terlambat'
+                                                                            ? 'bg-amber-50 text-amber-700'
+                                                                            : r.status === 'izin'
+                                                                            ? 'bg-sky-50 text-sky-700'
+                                                                            : r.status === 'sakit'
+                                                                            ? 'bg-violet-50 text-violet-700'
+                                                                            : 'bg-red-50 text-red-700'
+                                                                    }`}
+                                                                >
+                                                                    {r.status === 'hadir'
+                                                                        ? 'Hadir'
+                                                                        : r.status === 'terlambat'
+                                                                        ? 'Terlambat'
+                                                                        : r.status === 'izin'
+                                                                        ? 'Izin'
+                                                                        : r.status === 'sakit'
+                                                                        ? 'Sakit'
+                                                                        : 'Tidak Hadir'}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         ) : (
                             <div className="flex flex-col items-center gap-2 px-5 py-12 text-center">
                                 <Calendar className="h-10 w-10 text-slate-300" />
