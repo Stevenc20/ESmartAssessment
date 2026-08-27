@@ -175,6 +175,16 @@ export default function LaporanAbsensi({
             }
         });
     }
+
+    function updateAttendance(pertemuan_id: number, siswa_id: number, new_status: string) {
+        router.post(`/pertemuan/${pertemuan_id}/absen/manual`, {
+            status: {
+                [siswa_id]: new_status
+            }
+        }, {
+            preserveScroll: true
+        });
+    }
     const [filterBulan, setFilterBulan] = useState(String(bulan));
     const [filterTahun, setFilterTahun] = useState(String(tahun));
     const [filterRoadmap, setFilterRoadmap] = useState(
@@ -582,16 +592,27 @@ export default function LaporanAbsensi({
                                                                     key={p.id}
                                                                     className="px-2 py-3 text-center"
                                                                 >
-                                                                    <span
-                                                                        className={`inline-flex min-w-[70px] items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${cfg.bg} ${cfg.text}`}
+                                                                    <div
+                                                                        className={`relative inline-flex min-w-[80px] items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold transition-all hover:ring-2 hover:ring-offset-1 hover:ring-slate-300 ${cfg.bg} ${cfg.text}`}
                                                                     >
                                                                         <span
                                                                             className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`}
                                                                         />
-                                                                        {
-                                                                            cfg.label
-                                                                        }
-                                                                    </span>
+                                                                        {cfg.label}
+                                                                        
+                                                                        <select
+                                                                            value={st}
+                                                                            onChange={(e) => updateAttendance(p.id, s.siswa_id, e.target.value)}
+                                                                            className="absolute inset-0 h-full w-full opacity-0 cursor-pointer"
+                                                                            title="Ubah Status Kehadiran"
+                                                                        >
+                                                                            <option value="hadir">Hadir</option>
+                                                                            <option value="terlambat">Terlambat</option>
+                                                                            <option value="izin">Izin</option>
+                                                                            <option value="sakit">Sakit</option>
+                                                                            <option value="alpa">Alpa</option>
+                                                                        </select>
+                                                                    </div>
                                                                 </td>
                                                             );
                                                         })}
