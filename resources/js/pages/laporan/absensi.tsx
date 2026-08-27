@@ -14,6 +14,14 @@ import {
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -150,6 +158,23 @@ export default function LaporanAbsensi({
     roadmap_judul,
     pertemuan_total,
 }: Props) {
+    const [deactivateTarget, setDeactivateTarget] = useState<{ id: number, nama: string } | null>(null);
+    const [isDeactivating, setIsDeactivating] = useState(false);
+
+    function processDeactivate() {
+        if (!deactivateTarget) return;
+        setIsDeactivating(true);
+        router.post(`/guru/siswa-pasif/${deactivateTarget.id}/deactivate`, {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setDeactivateTarget(null);
+                setIsDeactivating(false);
+            },
+            onError: () => {
+                setIsDeactivating(false);
+            }
+        });
+    }
     const [filterBulan, setFilterBulan] = useState(String(bulan));
     const [filterTahun, setFilterTahun] = useState(String(tahun));
     const [filterRoadmap, setFilterRoadmap] = useState(
@@ -193,6 +218,28 @@ export default function LaporanAbsensi({
     return (
         <>
             <Head title="Laporan Absensi" />
+
+            <Dialog open={!!deactivateTarget} onOpenChange={(open) => !open && !isDeactivating && setDeactivateTarget(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                            <AlertTriangle className="h-5 w-5" />
+                            Konfirmasi Penonaktifan Siswa
+                        </DialogTitle>
+                        <DialogDescription className="pt-2">
+                            Apakah Anda yakin ingin memasukkan <strong>{deactivateTarget?.nama}</strong> ke daftar Siswa Pasif?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDeactivateTarget(null)} disabled={isDeactivating}>
+                            Batal
+                        </Button>
+                        <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={processDeactivate} disabled={isDeactivating}>
+                            {isDeactivating ? 'Memproses...' : 'Ya, Nonaktifkan'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6 lg:p-8">
                 <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -498,13 +545,22 @@ export default function LaporanAbsensi({
                                                                 {s.nama}
                                                             </span>
                                                             {s.below_threshold && (
-                                                                <span
-                                                                    className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700"
-                                                                    title={`Kehadiran di bawah ${threshold}%`}
-                                                                >
-                                                                    <AlertTriangle className="h-3 w-3" />
-                                                                    &lt;{threshold}%
-                                                                </span>
+                                                                <div className="flex shrink-0 items-center gap-1.5">
+                                                                    <span
+                                                                        className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700"
+                                                                        title={`Kehadiran di bawah ${threshold}%`}
+                                                                    >
+                                                                        <AlertTriangle className="h-3 w-3" />
+                                                                        &lt;{threshold}%
+                                                                    </span>
+                                                                    <button
+                                                                        onClick={() => setDeactivateTarget({ id: s.siswa_id, nama: s.nama })}
+                                                                        className="rounded border border-red-600 px-1.5 py-0.5 text-[9px] font-bold text-red-600 transition-colors hover:bg-red-600 hover:text-white"
+                                                                        title="Nonaktifkan Siswa"
+                                                                    >
+                                                                        Nonaktifkan
+                                                                    </button>
+                                                                </div>
                                                             )}
                                                         </div>
                                                     </td>
