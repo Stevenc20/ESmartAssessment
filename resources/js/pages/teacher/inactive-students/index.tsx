@@ -69,9 +69,20 @@ export default function InactiveStudentsIndex({ inactiveStudents }: { inactiveSt
                                                     {student.alasan}
                                                 </td>
                                                 <td className="px-4 py-3 text-right">
-                                                    <Link href={`/guru/siswa-pasif/${student.id}/restore`} method="post" as="button">
-                                                        <Button variant="outline" size="sm" className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200">Aktifkan Kembali</Button>
-                                                    </Link>
+                                                    <Button 
+                                                        onClick={() => {
+                                                            if (window.confirm('Apakah Anda yakin ingin mengaktifkan kembali siswa ini?')) {
+                                                                import('@inertiajs/react').then(({ router }) => {
+                                                                    router.post(`/guru/siswa-pasif/${student.id}/restore`);
+                                                                });
+                                                            }
+                                                        }}
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className="text-green-600 hover:text-white hover:bg-green-600 border-green-600 transition-colors cursor-pointer"
+                                                    >
+                                                        Aktifkan Kembali
+                                                    </Button>
                                                 </td>
                                             </tr>
                                         ))}
