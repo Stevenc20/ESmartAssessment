@@ -6,27 +6,26 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\InactiveStudent;
-use App\Services\AttendanceAlertService;
 
 #[Signature("student:auto-deactivate")]
-#[Description("Otomatis menonaktifkan siswa yang pasif berdasarkan threshold absensi")]
+#[Description("Otomatis menonaktifkan siswa yang pasif berdasarkan absen berturut-turut")]
 class AutoDeactivatePassiveStudents extends Command
 {
     public function handle()
     {
-        $alertService = app(AttendanceAlertService::class);
-        $atRiskStudents = $alertService->studentsBelowThreshold(1000);
-
-        if (empty($atRiskStudents)) {
-            $this->info("Tidak ada siswa berisiko.");
+        $roleSiswa = Role::where("role_name", "Siswa")->orWhere("role_name", "siswa")->first();
+        if (!$roleSiswa) {
+            $this->error("Role siswa tidak ditemukan.");
             return;
         }
 
-        // Jangan nonaktifkan akun testing
-        $excludedNames = ["belajar sukses", "putra jaya eksis"];
+        $students = User::with(["absensi" => function ($query) {
+            $query->orderBy("created_at", "desc");
+        }])->where("role_id", $roleSiswa->id)->where("status", "active")->get();
 
-        // Jangan nonaktifkan siswa yang baru saja dipulihkan (grace period 14 hari)
+        $excludedNames = ["belajar sukses", "putra jaya eksis"];
         $recentlyRestoredIds = InactiveStudent::where("status", "restored")
             ->where("updated_at", ">=", now()->subDays(14))
             ->pluck("siswa_id")
@@ -34,33 +33,44 @@ class AutoDeactivatePassiveStudents extends Command
 
         $deactivatedCount = 0;
 
-        foreach ($atRiskStudents as $risk) {
-            if (in_array($risk["siswa_id"], $recentlyRestoredIds)) {
-                continue;
-            }
-
-            $student = User::find($risk["siswa_id"]);
-            if (!$student || $student->status !== "active") {
-                continue;
-            }
-
+        foreach ($students as $student) {
             if (in_array(strtolower($student->name), $excludedNames)) {
                 continue;
             }
+            if (in_array($student->id, $recentlyRestoredIds)) {
+                continue;
+            }
 
-            // Deactivate
-            $student->update(["status" => "inactive"]);
+            // Ambil 3 absensi terakhir
+            $recentAbsensi = $student->absensi->take(3);
             
-            InactiveStudent::updateOrCreate(
-                ["siswa_id" => $student->id],
-                [
-                    "alasan" => "Otomatis oleh sistem: Kehadiran di bawah batas aman (" . $risk["persentase"] . "%) pada " . $risk["roadmap_judul"],
-                    "tanggal_nonaktif" => now()->toDateString(),
-                    "status" => "inactive"
-                ]
-            );
-            
-            $deactivatedCount++;
+            // Jika belum ada absensi, skip
+            if ($recentAbsensi->isEmpty()) continue;
+
+            $hasRecentHadir = false;
+            $alpaCount = 0;
+
+            foreach ($recentAbsensi as $a) {
+                if (in_array($a->status, ["alpa", "tidak_hadir"])) {
+                    $alpaCount++;
+                } else {
+                    $hasRecentHadir = true;
+                }
+            }
+
+            // Jika dalam 3 pertemuan terakhir ada >= 2 alpa dan TIDAK ADA hadir sama sekali di rentang itu
+            if ($alpaCount >= 2 && !$hasRecentHadir) {
+                $student->update(["status" => "inactive"]);
+                InactiveStudent::updateOrCreate(
+                    ["siswa_id" => $student->id],
+                    [
+                        "alasan" => "Otomatis oleh sistem: Alpa/Tidak Hadir berturut-turut pada pertemuan terakhir",
+                        "tanggal_nonaktif" => now()->toDateString(),
+                        "status" => "inactive"
+                    ]
+                );
+                $deactivatedCount++;
+            }
         }
 
         $this->info("Berhasil menonaktifkan $deactivatedCount siswa secara otomatis.");

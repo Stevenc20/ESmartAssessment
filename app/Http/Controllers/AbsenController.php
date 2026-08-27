@@ -213,7 +213,7 @@ class AbsenController extends Controller
     {
         $this->authorizeGuru($request);
 
-        $roleSiswa = Role::where('role_name', 'siswa')->first();
+        $roleSiswa = Role::where('role_name', 'Siswa')->orWhere('role_name', 'siswa')->first();
         $siswa = User::where('role_id', $roleSiswa?->id)
             ->where('status', 'active')
             ->orderBy('name')
@@ -253,7 +253,7 @@ class AbsenController extends Controller
             ])],
         ]);
 
-        $roleSiswa = Role::where('role_name', 'siswa')->first();
+        $roleSiswa = Role::where('role_name', 'Siswa')->orWhere('role_name', 'siswa')->first();
         $validSiswaIds = User::where('role_id', $roleSiswa?->id)
             ->where('status', 'active')
             ->pluck('id')
