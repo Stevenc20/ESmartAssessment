@@ -10,6 +10,7 @@ import {
     UserX,
     Layers,
     Stethoscope,
+    ChevronDown,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -593,12 +594,15 @@ export default function LaporanAbsensi({
                                                                     className="px-2 py-3 text-center"
                                                                 >
                                                                     <div
-                                                                        className={`relative inline-flex min-w-[80px] items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold transition-all hover:ring-2 hover:ring-offset-1 hover:ring-slate-300 ${cfg.bg} ${cfg.text}`}
+                                                                        className={`group relative inline-flex min-w-[80px] max-w-[90px] items-center justify-between gap-1 rounded-md px-2 py-1 text-[11px] font-bold transition-all hover:ring-2 hover:ring-offset-1 hover:ring-slate-300 ${cfg.bg} ${cfg.text}`}
                                                                     >
-                                                                        <span
-                                                                            className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`}
-                                                                        />
-                                                                        {cfg.label}
+                                                                        <div className="flex items-center gap-1.5 overflow-hidden">
+                                                                            <span
+                                                                                className={`h-1.5 w-1.5 shrink-0 rounded-full ${cfg.dot}`}
+                                                                            />
+                                                                            <span className="truncate">{cfg.label}</span>
+                                                                        </div>
+                                                                        <ChevronDown className="h-3 w-3 shrink-0 opacity-50 transition-opacity group-hover:opacity-100" />
                                                                         
                                                                         <select
                                                                             value={st}
