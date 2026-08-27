@@ -783,11 +783,26 @@ setManualSession(null);
                         <div className="flex max-h-[60vh] flex-col gap-3">
                             <div className="flex items-center justify-between rounded-lg bg-violet-50 px-3 py-2">
                                 <span className="text-xs font-semibold text-violet-700">
-                                    Total siswa
+                                    Total siswa: <span className="font-bold">{manualSession.roster.length}</span>
                                 </span>
-                                <span className="text-sm font-bold text-violet-700">
-                                    {manualSession.roster.length}
-                                </span>
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={() => setManualStatuses(
+                                            Object.fromEntries(manualSession.roster.map(r => [r.siswa_id, 'hadir']))
+                                        )}
+                                        className="text-[10px] font-medium bg-emerald-100 text-emerald-700 px-2 py-1 rounded hover:bg-emerald-200 transition-colors"
+                                    >
+                                        Hadirkan Semua
+                                    </button>
+                                    <button 
+                                        onClick={() => setManualStatuses(
+                                            Object.fromEntries(manualSession.roster.map(r => [r.siswa_id, 'alpa']))
+                                        )}
+                                        className="text-[10px] font-medium bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 transition-colors"
+                                    >
+                                        Alpakan Semua
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="divide-y divide-slate-100 overflow-y-auto rounded-lg border border-slate-200">
