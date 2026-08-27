@@ -103,9 +103,6 @@ class AbsenController extends Controller
 
         $session->update(['status' => 'closed']);
 
-        // Run auto-deactivate check when a session is closed
-        \Illuminate\Support\Facades\Artisan::call('student:auto-deactivate');
-
         GlobalAnnouncement::where('judul', 'Absen Dibuka - '.$pertemuan->judul)
             ->where('is_active', true)
             ->update(['is_active' => false, 'ends_at' => now()]);

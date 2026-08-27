@@ -47,4 +47,22 @@ class InactiveStudentController extends Controller
         
         return redirect()->back()->with('success', 'Siswa berhasil diaktifkan kembali. Sistem tidak akan menonaktifkannya otomatis selama 14 hari ke depan.');
     }
+
+    public function deactivate(Request $request, $id)
+    {
+        $user = \App\Models\User::findOrFail($id);
+        
+        $user->update(['status' => 'inactive']);
+        
+        InactiveStudent::updateOrCreate(
+            ['siswa_id' => $user->id],
+            [
+                'alasan' => 'Otomatis oleh sistem: Dinonaktifkan manual oleh guru dari dashboard (kehadiran rendah)',
+                'tanggal_nonaktif' => now()->toDateString(),
+                'status' => 'inactive'
+            ]
+        );
+        
+        return redirect()->back()->with('success', 'Siswa berhasil dinonaktifkan.');
+    }
 }

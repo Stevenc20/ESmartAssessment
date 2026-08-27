@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import {
     ArrowRight,
     BookOpen,
@@ -93,6 +93,28 @@ export default function RegularDashboard() {
         .toUpperCase();
 
     const [showInactiveModal, setShowInactiveModal] = useState(false);
+
+    const [deactivateTarget, setDeactivateTarget] = useState<{ id: number, nama: string } | null>(null);
+    const [isDeactivating, setIsDeactivating] = useState(false);
+
+    function confirmDeactivate(target: { id: number, nama: string }) {
+        setDeactivateTarget(target);
+    }
+
+    function processDeactivate() {
+        if (!deactivateTarget) return;
+        setIsDeactivating(true);
+        router.post(`/guru/siswa-pasif/${deactivateTarget.id}/deactivate`, {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setDeactivateTarget(null);
+                setIsDeactivating(false);
+            },
+            onError: () => {
+                setIsDeactivating(false);
+            }
+        });
+    }
 
     useEffect(() => {
         if (guruDashboard?.newlyDeactivatedCount && guruDashboard.newlyDeactivatedCount > 0) {
@@ -189,6 +211,28 @@ export default function RegularDashboard() {
                                 Lihat Daftar Lengkap
                             </Button>
                         </Link>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!deactivateTarget} onOpenChange={(open) => !open && !isDeactivating && setDeactivateTarget(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                            <AlertTriangle className="h-5 w-5" />
+                            Konfirmasi Penonaktifan Siswa
+                        </DialogTitle>
+                        <DialogDescription className="pt-2">
+                            Apakah Anda yakin ingin memasukkan <strong>{deactivateTarget?.nama}</strong> ke daftar Siswa Pasif?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDeactivateTarget(null)} disabled={isDeactivating}>
+                            Batal
+                        </Button>
+                        <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={processDeactivate} disabled={isDeactivating}>
+                            {isDeactivating ? 'Memproses...' : 'Ya, Nonaktifkan'}
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -310,12 +354,11 @@ export default function RegularDashboard() {
                         </div>
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                             {guruDashboard.attendanceAlerts.map((a) => (
-                                <Link
+                                <div
                                     key={a.siswa_id}
-                                    href={`/laporan/absensi?mode=roadmap&roadmap_id=${a.roadmap_id}`}
-                                    className="flex items-center justify-between gap-2 rounded-lg border border-red-200 bg-white px-3 py-2.5 transition-colors hover:border-red-300 hover:bg-red-50"
+                                    className="flex items-center justify-between gap-2 rounded-lg border border-red-200 bg-white px-3 py-2.5 transition-colors hover:border-red-300"
                                 >
-                                    <div className="min-w-0">
+                                    <div className="min-w-0 flex-1">
                                         <p className="truncate text-sm font-bold text-slate-900">
                                             {a.nama}
                                         </p>
@@ -323,13 +366,24 @@ export default function RegularDashboard() {
                                             {a.roadmap_judul}
                                         </p>
                                     </div>
-                                    <span className="flex shrink-0 items-center gap-1.5">
+                                    <div className="flex shrink-0 items-center gap-2">
                                         <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">
                                             {a.persentase}%
                                         </span>
-                                        <ArrowRight className="h-3.5 w-3.5 text-red-400" />
-                                    </span>
-                                </Link>
+                                        <button
+                                            onClick={() => confirmDeactivate({ id: a.siswa_id, nama: a.nama })}
+                                            className="rounded border border-red-600 px-2 py-1 text-[10px] font-bold text-red-600 transition-colors hover:bg-red-600 hover:text-white"
+                                        >
+                                            Nonaktifkan
+                                        </button>
+                                        <Link 
+                                            href={`/laporan/absensi?mode=roadmap&roadmap_id=${a.roadmap_id}`}
+                                            className="text-slate-400 hover:text-slate-600"
+                                        >
+                                            <ArrowRight className="h-3.5 w-3.5" />
+                                        </Link>
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     </div>
