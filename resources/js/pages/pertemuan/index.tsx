@@ -787,17 +787,27 @@ setManualSession(null);
                                 </span>
                                 <div className="flex gap-2">
                                     <button 
-                                        onClick={() => setManualStatuses(
-                                            Object.fromEntries(manualSession.roster.map(r => [r.siswa_id, 'hadir']))
-                                        )}
+                                        onClick={() => setManualStatuses(prev => {
+                                            const next = { ...prev };
+                                            manualSession.roster.forEach(r => {
+                                                const current = prev[r.siswa_id] ?? 'alpa';
+                                                if (current === 'alpa') next[r.siswa_id] = 'hadir';
+                                            });
+                                            return next;
+                                        })}
                                         className="text-[10px] font-medium bg-emerald-100 text-emerald-700 px-2 py-1 rounded hover:bg-emerald-200 transition-colors"
                                     >
                                         Hadirkan Semua
                                     </button>
                                     <button 
-                                        onClick={() => setManualStatuses(
-                                            Object.fromEntries(manualSession.roster.map(r => [r.siswa_id, 'alpa']))
-                                        )}
+                                        onClick={() => setManualStatuses(prev => {
+                                            const next = { ...prev };
+                                            manualSession.roster.forEach(r => {
+                                                const current = prev[r.siswa_id] ?? 'alpa';
+                                                if (current === 'hadir') next[r.siswa_id] = 'alpa';
+                                            });
+                                            return next;
+                                        })}
                                         className="text-[10px] font-medium bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 transition-colors"
                                     >
                                         Alpakan Semua
