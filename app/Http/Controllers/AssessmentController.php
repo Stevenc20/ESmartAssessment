@@ -36,7 +36,7 @@ class AssessmentController extends Controller
             ->first()?->tingkat
             ?? $user->kelas()->first()?->tingkat;
 
-        $tugasList = Tugas::with('materi')
+        $tugasList = Tugas::with(['materi.pertemuan.roadmap'])
             ->whereHas('materi', function ($mq) use ($tingkat) {
                 if ($tingkat) {
                     $mq->where('tingkat', $tingkat)->orWhereNull('tingkat');
@@ -61,6 +61,10 @@ class AssessmentController extends Controller
                     'judul' => $tugas->judul,
                     'deskripsi' => $tugas->deskripsi,
                     'materi' => $tugas->materi?->judul ?? '-',
+                    'materi_id' => $tugas->materi_id,
+                    'pertemuan' => $tugas->materi?->pertemuan?->judul ?? '-',
+                    'pertemuan_id' => $tugas->materi?->pertemuan_id,
+                    'roadmap' => $tugas->materi?->pertemuan?->roadmap?->judul ?? '-',
                     'deadline' => $tugas->deadline ? Carbon::parse($tugas->deadline)->format('d M Y H:i') : '-',
                     'deadline_passed' => $deadlinePassed,
                     'bobot' => $tugas->bobot,

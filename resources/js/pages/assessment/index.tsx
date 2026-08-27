@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import {
     BookOpen,
     Calendar,
@@ -15,6 +15,10 @@ type Assessment = {
     judul: string;
     deskripsi: string;
     materi: string;
+    materi_id: number;
+    pertemuan: string;
+    pertemuan_id: number;
+    roadmap: string;
     deadline: string;
     deadline_passed: boolean;
     bobot: number;
@@ -139,73 +143,86 @@ export default function AssessmentIndex({
                         </div>
                         {assessments.length > 0 ? (
                             <div className="divide-y divide-slate-100">
-                                {assessments.map((assessment) => {
-                                    const cfg = statusConfig[assessment.status];
-                                    const StatusIcon = cfg.icon;
-
-                                    return (
-                                        <div
-                                            key={assessment.id}
-                                            className="flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-slate-50 md:flex-row md:items-center md:justify-between"
-                                        >
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex items-center gap-2">
-                                                    <p className="truncate text-sm font-semibold text-slate-900">
-                                                        {assessment.judul}
-                                                    </p>
-                                                    <span
-                                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${cfg.bg}`}
-                                                        style={{
-                                                            color: cfg.color,
-                                                        }}
-                                                    >
-                                                        <StatusIcon className="h-3 w-3" />
-                                                        {cfg.label}
-                                                    </span>
-                                                </div>
-                                                <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">
-                                                    {assessment.materi} · Bobot{' '}
-                                                    {assessment.bobot} · Max
-                                                    revisi{' '}
-                                                    {assessment.max_revisi}
-                                                </p>
-                                                {assessment.deskripsi && (
-                                                    <p className="mt-0.5 line-clamp-1 text-xs text-slate-400">
-                                                        {assessment.deskripsi}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <div className="flex shrink-0 items-center gap-3 text-xs text-slate-400">
-                                                <div className="flex items-center gap-1">
-                                                    <Calendar className="h-3.5 w-3.5" />
-                                                    {assessment.deadline}
-                                                </div>
-                                                {assessment.nilai != null && (
-                                                    <span className="font-bold text-emerald-600">
-                                                        {assessment.nilai}
-                                                    </span>
-                                                )}
-                                                {assessment.submitted_at && (
-                                                    <div className="flex items-center gap-1">
-                                                        <Clock className="h-3.5 w-3.5" />
-                                                        {
-                                                            assessment.submitted_at
-                                                        }
-                                                    </div>
-                                                )}
-                                                {assessment.status ===
-                                                    'tersedia' && (
-                                                    <a
-                                                        href="#"
-                                                        className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-violet-700"
-                                                    >
-                                                        Kerjakan
-                                                    </a>
-                                                )}
-                                            </div>
+                                {Object.entries(
+                                    assessments.reduce((acc, a) => {
+                                        const key = a.pertemuan !== '-' && a.pertemuan 
+                                            ? `${a.pertemuan} - ${a.roadmap}`
+                                            : 'Lainnya';
+                                        if (!acc[key]) acc[key] = [];
+                                        acc[key].push(a);
+                                        return acc;
+                                    }, {} as Record<string, Assessment[]>)
+                                ).map(([groupKey, groupAssessments]) => (
+                                    <div key={groupKey} className="pb-2 last:pb-0">
+                                        <div className="bg-slate-50 px-5 py-2.5 border-y border-slate-100 first:border-t-0">
+                                            <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
+                                                <BookOpen className="h-3.5 w-3.5 opacity-60" />
+                                                {groupKey}
+                                            </span>
                                         </div>
-                                    );
-                                })}
+                                        <div className="divide-y divide-slate-50">
+                                            {groupAssessments.map((assessment) => {
+                                                const cfg = statusConfig[assessment.status];
+                                                const StatusIcon = cfg.icon;
+
+                                                return (
+                                                    <div
+                                                        key={assessment.id}
+                                                        className="flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-slate-50 md:flex-row md:items-center md:justify-between"
+                                                    >
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="truncate text-sm font-semibold text-slate-900">
+                                                                    {assessment.judul}
+                                                                </p>
+                                                                <span
+                                                                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${cfg.bg}`}
+                                                                    style={{ color: cfg.color }}
+                                                                >
+                                                                    <StatusIcon className="h-3 w-3" />
+                                                                    {cfg.label}
+                                                                </span>
+                                                            </div>
+                                                            <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">
+                                                                Materi: {assessment.materi} &middot; Bobot {assessment.bobot} &middot; Max revisi {assessment.max_revisi}
+                                                            </p>
+                                                            {assessment.deskripsi && (
+                                                                <p className="mt-0.5 line-clamp-1 text-xs text-slate-400">
+                                                                    {assessment.deskripsi}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex shrink-0 items-center gap-3 text-xs text-slate-400">
+                                                            <div className="flex items-center gap-1">
+                                                                <Calendar className="h-3.5 w-3.5" />
+                                                                {assessment.deadline}
+                                                            </div>
+                                                            {assessment.nilai != null && (
+                                                                <span className="font-bold text-emerald-600">
+                                                                    {assessment.nilai}
+                                                                </span>
+                                                            )}
+                                                            {assessment.submitted_at && (
+                                                                <div className="flex items-center gap-1">
+                                                                    <Clock className="h-3.5 w-3.5" />
+                                                                    {assessment.submitted_at}
+                                                                </div>
+                                                            )}
+                                                            {assessment.status === 'tersedia' && (
+                                                                <Link
+                                                                    href={`/materi-saya/${assessment.materi_id}`}
+                                                                    className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-violet-700"
+                                                                >
+                                                                    Kerjakan
+                                                                </Link>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : (
                             <div className="flex flex-col items-center gap-2 px-5 py-16 text-center">
