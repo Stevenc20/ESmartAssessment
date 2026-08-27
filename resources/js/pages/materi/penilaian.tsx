@@ -188,6 +188,46 @@ export default function MateriPenilaian({
         return Math.round(v * 100) / 100;
     }
 
+    // Helper to count missing assessments
+    function getMissingCount(student: StudentMatrixItem) {
+        let missing = 0;
+        let totalAssessed = 0;
+        pertemuanList.forEach((p) => {
+            const pScore = student.pertemuan_scores[p.id];
+            if (pScore?.has_quiz || pScore?.has_tugas) {
+                totalAssessed++;
+                if (pScore.combined_score === null || pScore.combined_score === undefined) {
+                    missing++;
+                }
+            }
+        });
+        return { missing, totalAssessed };
+    }
+
+    const sortedStudents = [...students].sort((a, b) => {
+        const isPasifA = a.status === 'pasif' || a.status === 'nonaktif';
+        const isPasifB = b.status === 'pasif' || b.status === 'nonaktif';
+
+        if (isPasifA && !isPasifB) return 1;
+        if (!isPasifA && isPasifB) return -1;
+
+        const aStats = getMissingCount(a);
+        const bStats = getMissingCount(b);
+        
+        const aAllEmpty = aStats.missing === aStats.totalAssessed && aStats.totalAssessed > 0;
+        const bAllEmpty = bStats.missing === bStats.totalAssessed && bStats.totalAssessed > 0;
+
+        if (aAllEmpty && !bAllEmpty) return 1;
+        if (!aAllEmpty && bAllEmpty) return -1;
+
+        // Both are partially missing or complete. Sort those with MORE missing below.
+        if (aStats.missing !== bStats.missing) {
+            return aStats.missing - bStats.missing; // ascending (0 missing at top)
+        }
+
+        return 0;
+    });
+
     return (
         <>
             <Head title="Master Rekap Penilaian Siswa" />
@@ -376,8 +416,10 @@ export default function MateriPenilaian({
                                             </td>
                                         </tr>
                                     ) : (
-                                        students.map((s, idx) => (
-                                            <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
+                                        sortedStudents.map((s, idx) => {
+                                            const isPasif = s.status === 'pasif' || s.status === 'nonaktif';
+                                            return (
+                                            <tr key={s.id} className={`transition-colors ${isPasif ? 'bg-slate-50/50 opacity-60' : 'hover:bg-slate-50/80'}`}>
                                                 <td className="px-4 py-3 text-center text-slate-400 border-r border-slate-200 font-medium">
                                                     {idx + 1}
                                                 </td>
@@ -387,21 +429,28 @@ export default function MateriPenilaian({
                                                             <img
                                                                 src={s.foto}
                                                                 alt={s.nama}
-                                                                className="h-8 w-8 rounded-full object-cover shrink-0 border"
+                                                                className={`h-8 w-8 rounded-full object-cover shrink-0 border ${isPasif ? 'grayscale' : ''}`}
                                                             />
                                                         ) : (
-                                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-xs shrink-0">
+                                                            <div className={`flex h-8 w-8 items-center justify-center rounded-full font-bold text-xs shrink-0 ${isPasif ? 'bg-slate-200 text-slate-500' : 'bg-blue-100 text-blue-700'}`}>
                                                                 {s.nama.charAt(0).toUpperCase()}
                                                             </div>
                                                         )}
                                                         <div className="min-w-0">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setSelectedStudent(s)}
-                                                                className="font-bold text-slate-900 hover:text-blue-600 text-left transition-colors truncate block max-w-[170px]"
-                                                            >
-                                                                {s.nama}
-                                                            </button>
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setSelectedStudent(s)}
+                                                                    className="font-bold text-slate-900 hover:text-blue-600 text-left transition-colors truncate block max-w-[170px]"
+                                                                >
+                                                                    {s.nama}
+                                                                </button>
+                                                                {isPasif && (
+                                                                    <span className="inline-block rounded bg-red-100 px-1.5 py-0.5 text-[9px] font-bold text-red-700 uppercase tracking-wider shrink-0">
+                                                                        Non Aktif
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                             <p className="text-[10px] text-slate-400 truncate max-w-[170px]">
                                                                 {s.email}
                                                             </p>
@@ -513,10 +562,10 @@ export default function MateriPenilaian({
                                                         </Button>
                                                     </div>
                                                 </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
+                                                </tr>
+                                            );
+                                        })
+                                    )}</tbody>
                             </table>
                         </div>
                     </Card>
