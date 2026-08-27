@@ -1,8 +1,17 @@
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, UserX } from "lucide-react";
+import { useState } from "react";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 type InactiveStudent = {
     id: number;
@@ -15,6 +24,18 @@ type InactiveStudent = {
 };
 
 export default function InactiveStudentsIndex({ inactiveStudents }: { inactiveStudents: InactiveStudent[] }) {
+    const [selectedStudent, setSelectedStudent] = useState<InactiveStudent | null>(null);
+
+    const handleConfirmRestore = () => {
+        if (!selectedStudent) return;
+        
+        router.post(`/guru/siswa-pasif/${selectedStudent.id}/restore`, {}, {
+            onSuccess: () => {
+                setSelectedStudent(null);
+            }
+        });
+    };
+
     return (
         <>
             <Head title="Siswa Pasif (Otomatis Dinonaktifkan)" />
@@ -69,20 +90,13 @@ export default function InactiveStudentsIndex({ inactiveStudents }: { inactiveSt
                                                     {student.alasan}
                                                 </td>
                                                 <td className="px-4 py-3 text-right">
-                                                    <Button 
-                                                        onClick={() => {
-                                                            if (window.confirm('Apakah Anda yakin ingin mengaktifkan kembali siswa ini?')) {
-                                                                import('@inertiajs/react').then(({ router }) => {
-                                                                    router.post(`/guru/siswa-pasif/${student.id}/restore`);
-                                                                });
-                                                            }
-                                                        }}
-                                                        variant="outline" 
-                                                        size="sm" 
-                                                        className="text-green-600 hover:text-white hover:bg-green-600 border-green-600 transition-colors cursor-pointer"
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setSelectedStudent(student)}
+                                                        className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-green-600 text-green-600 bg-transparent hover:bg-green-600 hover:text-white h-9 px-3 cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-green-600"
                                                     >
                                                         Aktifkan Kembali
-                                                    </Button>
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -93,6 +107,30 @@ export default function InactiveStudentsIndex({ inactiveStudents }: { inactiveSt
                     </CardContent>
                 </Card>
             </div>
+
+            <Dialog open={!!selectedStudent} onOpenChange={(open) => !open && setSelectedStudent(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Konfirmasi Pengaktifan Akun</DialogTitle>
+                        <DialogDescription>
+                            Apakah Anda yakin ingin mengaktifkan kembali akun atas nama <strong className="text-slate-900">{selectedStudent?.name}</strong>? 
+                            <br/><br/>
+                            Siswa ini tidak akan dinonaktifkan secara otomatis selama masa percobaan (grace period) 14 hari ke depan.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="mt-4">
+                        <Button variant="outline" onClick={() => setSelectedStudent(null)}>
+                            Batal
+                        </Button>
+                        <Button 
+                            className="bg-green-600 hover:bg-green-700 text-white" 
+                            onClick={handleConfirmRestore}
+                        >
+                            Ya, Aktifkan Siswa
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
