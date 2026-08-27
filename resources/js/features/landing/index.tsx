@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Menu, X, ArrowUp } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
+import { Toaster } from 'sonner';
 import { Button } from '@/components/ui/button';
 import CoreExperienceSection from '@/features/landing/components/core-experience-section';
 import CtaSection from '@/features/landing/components/cta-section';
@@ -11,10 +12,29 @@ import TargetUsersSection from '@/features/landing/components/target-users-secti
 import { dashboard, login } from '@/routes';
 
 export default function Welcome() {
-    const { auth } = usePage().props;
+    const { auth, flash } = usePage().props as any;
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [showBackToTop, setShowBackToTop] = useState(false);
+
+    useEffect(() => {
+        if (flash?.error) {
+            import('sonner').then(({ toast }) => {
+                toast.error(flash.error, {
+                    duration: 8000,
+                    position: 'top-center',
+                });
+            });
+        }
+        if (flash?.success) {
+            import('sonner').then(({ toast }) => {
+                toast.success(flash.success, {
+                    duration: 5000,
+                    position: 'top-center',
+                });
+            });
+        }
+    }, [flash]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -221,15 +241,18 @@ export default function Welcome() {
 
                 <Footer />
 
-                {/* Back to top */}
-                <button
-                    type="button"
-                    className={`lp-back-to-top${showBackToTop ? ' lp-back-to-top--visible' : ''}`}
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    aria-label="Kembali ke atas"
-                >
-                    <ArrowUp className="h-5 w-5" />
-                </button>
+                {showBackToTop && (
+                    <button
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-1 hover:bg-blue-700 hover:shadow-xl focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:outline-hidden"
+                        aria-label="Kembali ke atas"
+                    >
+                        <ArrowUp className="h-5 w-5" />
+                    </button>
+                )}
+
+                {/* Render Toaster */}
+                <Toaster richColors position="top-center" />
             </div>
         </>
     );

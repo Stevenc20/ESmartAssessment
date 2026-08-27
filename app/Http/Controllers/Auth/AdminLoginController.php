@@ -40,6 +40,16 @@ class AdminLoginController extends Controller
 
             $user = $request->user();
 
+            if ($user->status === 'inactive') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                throw ValidationException::withMessages([
+                    'email' => ['Akun Anda telah dinonaktifkan oleh sistem.'],
+                ]);
+            }
+
             if (! $user->role || ! in_array($user->role->role_name, ['super_admin', 'admin', 'guru'])) {
                 Auth::logout();
                 $request->session()->invalidate();

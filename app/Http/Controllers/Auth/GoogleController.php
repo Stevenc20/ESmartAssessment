@@ -31,6 +31,10 @@ class GoogleController extends Controller
             ->first();
 
         if ($existing) {
+            if ($existing->status === 'inactive') {
+                return redirect('/')->with('error', 'Akun di nonaktifkan, kirim persetujuan untuk di aktifkan atau langsung temui guru yang bersangkutan.');
+            }
+
             if (! $existing->google_id) {
                 $existing->update(['google_id' => $googleUser->getId()]);
             }
@@ -41,7 +45,7 @@ class GoogleController extends Controller
 
             Auth::login($existing);
 
-        return Inertia::location('/dashboard');
+            return Inertia::location('/dashboard');
         }
 
         $settings = Cache::get('app_settings', ['registration_open' => true]);
