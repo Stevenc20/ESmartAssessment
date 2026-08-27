@@ -182,7 +182,25 @@ class AbsenController extends Controller
             ? ($session->pertemuan->urutan ? 'Pertemuan '.$session->pertemuan->urutan.': '.$session->pertemuan->judul : $session->pertemuan->judul)
             : 'Pertemuan';
 
+        $isTerlambat = now()->diffInMinutes($session->expired_at) <= 2;
+        $newStatus = $isTerlambat ? 'terlambat' : 'hadir';
+
         if ($existing) {
+            if (in_array($existing->status, ['alpa', 'tidak_hadir'])) {
+                $existing->update([
+                    'status' => $newStatus,
+                    'qr_session_id' => $session->id,
+                    'scan_time' => now(),
+                ]);
+
+                return Inertia::render('absen/scan', [
+                    'status' => 'success',
+                    'message' => 'Absensi berhasil diperbarui!',
+                    'scan_time' => now()->format('d M Y H:i:s'),
+                    'pertemuan' => $pertemuanTitle,
+                ]);
+            }
+
             return Inertia::render('absen/scan', [
                 'status' => 'already',
                 'message' => 'Anda sudah melakukan absensi untuk pertemuan ini.',
@@ -191,13 +209,11 @@ class AbsenController extends Controller
             ]);
         }
 
-        $isTerlambat = now()->diffInMinutes($session->expired_at) <= 2;
-
         Absensi::create([
             'siswa_id' => auth()->id(),
             'pertemuan_id' => $session->pertemuan_id,
             'qr_session_id' => $session->id,
-            'status' => $isTerlambat ? 'terlambat' : 'hadir',
+            'status' => $newStatus,
             'scan_time' => now(),
         ]);
 
