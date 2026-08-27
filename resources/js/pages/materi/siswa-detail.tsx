@@ -355,6 +355,15 @@ export default function MateriSiswaDetail({
     const [liveSession, setLiveSession] = useState(materi.live_session ?? null);
 
     useEffect(() => {
+        if (window.location.hash) {
+            const el = document.querySelector(window.location.hash);
+            if (el) {
+                setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 300);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
         if (!materi.pertemuan_id) return;
         let cancelled = false;
 
@@ -932,7 +941,7 @@ export default function MateriSiswaDetail({
 
                     {/* Tugas Section */}
                     {materi.tugas.length > 0 && (
-                        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                        <div id="penugasan-section" className="overflow-hidden rounded-xl border border-slate-200 bg-white scroll-mt-24">
                             <div className="border-b border-slate-100 px-5 py-3">
                                 <div className="flex items-center gap-2">
                                     <Clock className="h-4 w-4 text-slate-500" />

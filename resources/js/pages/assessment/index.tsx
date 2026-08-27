@@ -257,7 +257,7 @@ export default function AssessmentIndex({
                                                                         Upload
                                                                     </button>
                                                                     <Link
-                                                                        href={`/materi-saya/${assessment.materi_id}`}
+                                                                        href={`/materi-saya/${assessment.materi_id}#penugasan-section`}
                                                                         className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-200"
                                                                     >
                                                                         Buka Materi
