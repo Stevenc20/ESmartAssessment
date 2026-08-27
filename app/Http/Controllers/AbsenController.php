@@ -290,6 +290,10 @@ class AbsenController extends Controller
             $sent = app(AttendanceAlertService::class)->checkRoadmap($pertemuan->roadmap_id);
         }
 
+        if ($request->hasHeader('X-Inertia')) {
+            return back();
+        }
+
         return response()->json([
             'success' => true,
             'updated' => $updated,
