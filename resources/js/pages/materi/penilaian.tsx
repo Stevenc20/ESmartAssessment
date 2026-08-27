@@ -205,8 +205,8 @@ export default function MateriPenilaian({
     }
 
     const sortedStudents = [...students].sort((a, b) => {
-        const isPasifA = a.status === 'pasif' || a.status === 'nonaktif';
-        const isPasifB = b.status === 'pasif' || b.status === 'nonaktif';
+        const isPasifA = ['pasif', 'nonaktif', 'inactive'].includes(a.status?.toLowerCase());
+        const isPasifB = ['pasif', 'nonaktif', 'inactive'].includes(b.status?.toLowerCase());
 
         if (isPasifA && !isPasifB) return 1;
         if (!isPasifA && isPasifB) return -1;
@@ -417,7 +417,7 @@ export default function MateriPenilaian({
                                         </tr>
                                     ) : (
                                         sortedStudents.map((s, idx) => {
-                                            const isPasif = s.status === 'pasif' || s.status === 'nonaktif';
+                                            const isPasif = ['pasif', 'nonaktif', 'inactive'].includes(s.status?.toLowerCase());
                                             return (
                                             <tr key={s.id} className={`transition-colors ${isPasif ? 'bg-slate-50/50 opacity-60' : 'hover:bg-slate-50/80'}`}>
                                                 <td className="px-4 py-3 text-center text-slate-400 border-r border-slate-200 font-medium">
