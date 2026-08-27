@@ -1352,12 +1352,17 @@ class MateriController extends Controller
                     $countEvaluated++;
                 }
 
+                $hasQuiz = $srcMateri->flatMap(fn ($m) => $m->quiz)->isNotEmpty();
+                $hasTugas = $tugasIds->isNotEmpty();
+
                 $pertemuanScores[$p->id] = [
                     'pertemuan_id' => $p->id,
                     'pertemuan_judul' => $p->judul,
                     'quiz_score' => $maxQuizScore,
                     'tugas_score' => $avgTugasScore,
                     'combined_score' => $combinedScore,
+                    'has_quiz' => $hasQuiz,
+                    'has_tugas' => $hasTugas,
                 ];
             }
 
@@ -1615,6 +1620,9 @@ class MateriController extends Controller
             $abs = $absensiRecords->get($p->id);
             $absStatus = $abs ? $abs->status : 'alpa';
 
+            $hasQuiz = $srcMateri->flatMap(fn ($m) => $m->quiz)->isNotEmpty();
+            $hasTugas = $tugasIds->isNotEmpty();
+
             $pertemuanProgress[] = [
                 'pertemuan_id' => $p->id,
                 'pertemuan_judul' => $p->judul,
@@ -1625,6 +1633,8 @@ class MateriController extends Controller
                 'tugas_score' => $avgTugasScore,
                 'tugas_submitted' => $pengumpulanList->isNotEmpty(),
                 'combined_score' => $combinedScore,
+                'has_quiz' => $hasQuiz,
+                'has_tugas' => $hasTugas,
             ];
         }
 

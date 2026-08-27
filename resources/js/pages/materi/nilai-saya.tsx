@@ -24,6 +24,8 @@ type PertemuanProgressItem = {
     tugas_score: number | null;
     tugas_submitted: boolean;
     combined_score: number | null;
+    has_quiz: boolean;
+    has_tugas: boolean;
 };
 
 type Props = {
@@ -183,7 +185,9 @@ export default function NilaiSaya({ stats, pertemuanProgress }: Props) {
                                                 <div className="flex items-center gap-1.5">
                                                     <HelpCircle className="h-3.5 w-3.5 text-purple-600" />
                                                     <span>Quiz:</span>
-                                                    {p.quiz_score !== null ? (
+                                                    {!p.has_quiz ? (
+                                                        <span className="text-slate-400 italic">Tidak ada</span>
+                                                    ) : p.quiz_score !== null ? (
                                                         <span className="font-bold text-purple-700">
                                                             {p.quiz_score} ({p.quiz_attempts}x coba)
                                                         </span>
@@ -197,12 +201,14 @@ export default function NilaiSaya({ stats, pertemuanProgress }: Props) {
                                                 <div className="flex items-center gap-1.5">
                                                     <FileText className="h-3.5 w-3.5 text-amber-600" />
                                                     <span>Tugas:</span>
-                                                    {p.tugas_score !== null ? (
+                                                    {!p.has_tugas ? (
+                                                        <span className="text-slate-400 italic">Tidak ada</span>
+                                                    ) : p.tugas_score !== null ? (
                                                         <span className="font-bold text-amber-700">
-                                                            {p.tugas_score} (Sudah Dinilai)
+                                                            {p.tugas_score} (Dinilai)
                                                         </span>
                                                     ) : p.tugas_submitted ? (
-                                                        <span className="font-semibold text-blue-600">Disubmit (Menunggu Nilai)</span>
+                                                        <span className="font-semibold text-blue-600">Disubmit</span>
                                                     ) : (
                                                         <span className="text-slate-400 italic">Belum disubmit</span>
                                                     )}

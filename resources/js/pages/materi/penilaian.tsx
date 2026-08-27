@@ -51,6 +51,8 @@ type PertemuanScore = {
     quiz_score: number | null;
     tugas_score: number | null;
     combined_score: number | null;
+    has_quiz: boolean;
+    has_tugas: boolean;
 };
 
 type StudentMatrixItem = {
@@ -463,6 +465,10 @@ export default function MateriPenilaian({
                                                                         )}
                                                                     </div>
                                                                 </div>
+                                                            ) : !pScore?.has_quiz && !pScore?.has_tugas ? (
+                                                                <span className="text-slate-300 text-[10px] italic">
+                                                                    Tidak ada assessment
+                                                                </span>
                                                             ) : (
                                                                 <span className="text-slate-300 font-semibold">
                                                                     -
