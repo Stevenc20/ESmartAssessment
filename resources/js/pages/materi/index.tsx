@@ -255,8 +255,9 @@ export default function MateriIndex({
                                                 </a>
                                             )}
                                             <Link
-                                                href={`/materi/${materi.id}`}
+                                                href={`/materi-saya/${materi.id}`}
                                                 className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
+                                                title="View Materi (Tampilan Siswa)"
                                             >
                                                 <Eye className="h-3.5 w-3.5" />
                                             </Link>
