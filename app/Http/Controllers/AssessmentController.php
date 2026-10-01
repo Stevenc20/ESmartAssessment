@@ -55,6 +55,8 @@ class AssessmentController extends Controller
                     : null;
 
                 $deadlinePassed = $tugas->deadline && Carbon::parse($tugas->deadline)->isPast();
+                $revisiKe = $submission?->revisi_ke ?? 0;
+                $canSubmit = ! $submission || ($tugas->max_revisi === 0 || $revisiKe <= $tugas->max_revisi);
 
                 return [
                     'id' => $tugas->id,
@@ -69,10 +71,15 @@ class AssessmentController extends Controller
                     'deadline_passed' => $deadlinePassed,
                     'bobot' => $tugas->bobot,
                     'max_revisi' => $tugas->max_revisi,
+                    'revisi_ke' => $revisiKe,
+                    'can_submit' => $canSubmit,
                     'status' => $submission
                         ? ($penilaian ? 'dinilai' : 'dikirim')
                         : ($deadlinePassed ? 'terlewat' : 'tersedia'),
                     'nilai' => $penilaian?->nilai,
+                    'feedback' => $penilaian?->feedback,
+                    'file_tugas' => $submission?->file_url,
+                    'files' => $submission?->files_list ?? [],
                     'submitted_at' => $submission
                         ? $submission->created_at->diffForHumans()
                         : null,
@@ -225,7 +232,8 @@ class AssessmentController extends Controller
                     'id' => $s->id,
                     'siswa_id' => $s->siswa_id,
                     'siswa_nama' => $s->siswa?->name ?? '-',
-                    'file_tugas' => $s->file_tugas,
+                    'file_tugas' => $s->file_url,
+                    'files' => $s->files_list,
                     'revisi_ke' => $s->revisi_ke,
                     'submitted_at' => $s->created_at->diffForHumans(),
                     'nilai' => $s->penilaian?->nilai,

@@ -836,7 +836,8 @@ class MateriController extends Controller
                                 'nilai' => $penilaian?->nilai,
                                 'feedback' => $penilaian?->feedback,
                                 'submitted_at' => $submission?->created_at?->diffForHumans(),
-                                'file_tugas' => $submission?->file_tugas ? Storage::url($submission->file_tugas) : null,
+                                'file_tugas' => $submission?->file_url,
+                                'files' => $submission?->files_list ?? [],
                                 'revisi_ke' => $submission?->revisi_ke ?? 0,
                             ];
                         });
@@ -945,7 +946,8 @@ class MateriController extends Controller
                 'nilai' => $penilaian?->nilai,
                 'feedback' => $penilaian?->feedback,
                 'submitted_at' => $submission?->created_at?->diffForHumans(),
-                'file_tugas' => $submission?->file_tugas ? Storage::url($submission->file_tugas) : null,
+                'file_tugas' => $submission?->file_url,
+                'files' => $submission?->files_list ?? [],
                 'revisi_ke' => $submission?->revisi_ke ?? 0,
             ];
         });
@@ -1200,9 +1202,48 @@ class MateriController extends Controller
     {
         $user = $request->user();
 
-        $request->validate([
-            'file_tugas' => 'required|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,zip,rar,jpg,jpeg,png|max:102400',
-        ]);
+        // Support both 'files' (array) and 'file_tugas' (single/array)
+        $files = [];
+        if ($request->hasFile('files')) {
+            $rawFiles = $request->file('files');
+            $files = is_array($rawFiles) ? $rawFiles : [$rawFiles];
+        } elseif ($request->hasFile('file_tugas')) {
+            $rawFiles = $request->file('file_tugas');
+            $files = is_array($rawFiles) ? $rawFiles : [$rawFiles];
+        }
+
+        if (empty($files)) {
+            return back()->withErrors(['files' => 'Silakan pilih setidaknya satu file untuk diupload.']);
+        }
+
+        $allowedExtensions = [
+            'pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'txt', 'rtf',
+            'zip', 'rar', '7z', 'tar', 'gz', 'bz2',
+            'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'ico', 'heic', 'tif', 'tiff',
+            'psd', 'psb', 'ai', 'eps', 'indd', 'cdr', 'raw', 'cr2', 'nef', 'sketch', 'fig', 'xd', 'dng',
+            'blend', 'fbx', 'obj', 'mp4', 'mov', 'avi',
+        ];
+
+        $maxSizeKb = 256000; // 250MB per file
+
+        foreach ($files as $file) {
+            if (! $file->isValid()) {
+                return back()->withErrors(['files' => 'Salah satu file gagal diupload. Silakan coba lagi.']);
+            }
+
+            $ext = strtolower($file->getClientOriginalExtension());
+            if (! in_array($ext, $allowedExtensions)) {
+                return back()->withErrors([
+                    'files' => "Format file .{$ext} pada file '{$file->getClientOriginalName()}' tidak didukung. Format yang diizinkan meliputi Desain (PSD, AI, EPS, SVG, dsb), Gambar (JPG, PNG, dsb), Dokumen (PDF, Word, dsb), dan Arsip (ZIP, RAR, dsb).",
+                ]);
+            }
+
+            if ($file->getSize() > $maxSizeKb * 1024) {
+                return back()->withErrors([
+                    'files' => "Ukuran file '{$file->getClientOriginalName()}' melebihi batas maksimal (250MB).",
+                ]);
+            }
+        }
 
         $lastSubmission = PengumpulanTugas::where('tugas_id', $tugas->id)
             ->where('siswa_id', $user->id)
@@ -1215,12 +1256,22 @@ class MateriController extends Controller
             return back()->with('error', 'Batas maksimum pengiriman/revisi tugas sudah tercapai.');
         }
 
-        $path = $request->file('file_tugas')->store('tugas-submissions', 'public');
+        $storedFiles = [];
+        foreach ($files as $file) {
+            $name = $file->getClientOriginalName();
+            $path = $file->store('tugas-submissions', 'public');
+            $storedFiles[] = [
+                'path' => $path,
+                'name' => $name,
+                'size' => $file->getSize(),
+                'ext' => strtolower($file->getClientOriginalExtension()),
+            ];
+        }
 
         PengumpulanTugas::create([
             'tugas_id' => $tugas->id,
             'siswa_id' => $user->id,
-            'file_tugas' => $path,
+            'file_tugas' => json_encode($storedFiles),
             'revisi_ke' => $revisiKe,
             'submitted_at' => now(),
         ]);
@@ -1230,7 +1281,7 @@ class MateriController extends Controller
             session()->flash('new_badges', $newBadges);
         }
 
-        return back()->with('success', 'Tugas berhasil dikumpulkan.');
+        return back()->with('success', $revisiKe > 1 ? 'Revisi tugas berhasil dikirim.' : 'Tugas berhasil dikumpulkan.');
     }
 
     public function updateProgress(Request $request, Materi $materi)

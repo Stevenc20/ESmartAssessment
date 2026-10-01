@@ -13,6 +13,9 @@ import {
     PlayCircle,
     Upload,
     X,
+    Paperclip,
+    Plus,
+    AlertCircle,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -46,6 +49,14 @@ type QuizResults = {
     details: QuizResultDetail[];
 };
 
+type SubmissionFile = {
+    path: string;
+    name: string;
+    size: number | null;
+    ext: string;
+    url: string;
+};
+
 type TugasItem = {
     id: number;
     judul: string;
@@ -59,6 +70,7 @@ type TugasItem = {
     feedback: string | null;
     submitted_at: string | null;
     file_tugas: string | null;
+    files?: SubmissionFile[];
     revisi_ke: number;
 };
 
@@ -167,31 +179,57 @@ function formatBytes(bytes: number): string {
 
 /* ── Tugas Card ── */
 function TugasCard({ tugas }: { tugas: TugasItem }) {
-    const { data, setData, post, processing, errors } = useForm({
-        file_tugas: null as File | null,
-    });
-    const fileRef = useRef<HTMLInputElement>(null);
-    const [fileName, setFileName] = useState<string | null>(null);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const fileRef = useRef<HTMLInputElement>(null);
     const cfg = tugasStatusConfig[tugas.status];
 
+    const { setData, post, processing, errors, clearErrors } = useForm<{
+        files: File[];
+    }>({
+        files: [],
+    });
+
+    function addFiles(newFiles: FileList | File[]) {
+        const fileArr = Array.from(newFiles);
+        clearErrors();
+        setSelectedFiles((prev) => {
+            const existingKeys = new Set(prev.map((f) => `${f.name}-${f.size}`));
+            const filtered = fileArr.filter(
+                (f) => !existingKeys.has(`${f.name}-${f.size}`)
+            );
+            const updated = [...prev, ...filtered];
+            setData('files', updated);
+            return updated;
+        });
+    }
+
+    function removeFile(index: number) {
+        setSelectedFiles((prev) => {
+            const updated = prev.filter((_, i) => i !== index);
+            setData('files', updated);
+            return updated;
+        });
+    }
+
     function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0] ?? null;
-        setData('file_tugas', file);
-        setFileName(file?.name ?? null);
+        if (e.target.files && e.target.files.length > 0) {
+            addFiles(e.target.files);
+            if (fileRef.current) fileRef.current.value = '';
+        }
     }
 
     function submitTugas() {
-        if (!data.file_tugas) return;
+        if (selectedFiles.length === 0) return;
 
         post(`/materi-saya/tugas/${tugas.id}/submit`, {
             preserveScroll: true,
             forceFormData: true,
-            only: ['flash'],
+            only: ['flash', 'materi'],
             onProgress: (progress) => setUploadProgress(progress?.percentage ?? 0),
             onSuccess: () => {
-                setFileName(null);
-                setData('file_tugas', null);
+                setSelectedFiles([]);
+                setData('files', []);
                 setUploadProgress(0);
                 if (fileRef.current) fileRef.current.value = '';
             },
@@ -201,7 +239,9 @@ function TugasCard({ tugas }: { tugas: TugasItem }) {
 
     const canSubmit =
         tugas.status === 'tersedia' ||
-        (tugas.status === 'dikirim' && tugas.revisi_ke < tugas.max_revisi);
+        (tugas.status === 'dikirim' && (tugas.max_revisi === 0 || tugas.revisi_ke <= tugas.max_revisi));
+
+    const totalSelectedSize = selectedFiles.reduce((acc, f) => acc + f.size, 0);
 
     return (
         <div className="rounded-xl border border-slate-200 bg-white p-4">
@@ -258,74 +298,133 @@ function TugasCard({ tugas }: { tugas: TugasItem }) {
             )}
 
             {tugas.submitted_at && (
-                <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                    <CheckCircle2 className="h-3 w-3 text-amber-500" />
-                    Dikirim {tugas.submitted_at}
-                    {tugas.file_tugas && (
-                        <a
-                            href={tugas.file_tugas}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="ml-1 font-semibold text-blue-600 hover:text-blue-700"
-                        >
-                            (Lihat File)
-                        </a>
-                    )}
+                <div className="mt-2.5 flex flex-col gap-1.5 text-xs text-slate-500">
+                    <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-amber-500" />
+                        <span>Dikirim {tugas.submitted_at} {tugas.revisi_ke > 0 && `(Revisi ke-${tugas.revisi_ke})`}</span>
+                    </div>
+
+                    {/* Previously submitted files */}
+                    {tugas.files && tugas.files.length > 0 ? (
+                        <div className="flex flex-wrap items-center gap-1.5 pl-5">
+                            {tugas.files.map((file, idx) => (
+                                <a
+                                    key={idx}
+                                    href={file.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download={file.name}
+                                    className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors"
+                                >
+                                    <Paperclip className="h-3 w-3 text-slate-400" />
+                                    <span className="max-w-[140px] truncate">{file.name}</span>
+                                </a>
+                            ))}
+                        </div>
+                    ) : tugas.file_tugas ? (
+                        <div className="pl-5">
+                            <a
+                                href={tugas.file_tugas}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-semibold text-blue-600 hover:text-blue-700"
+                            >
+                                (Lihat File)
+                            </a>
+                        </div>
+                    ) : null}
                 </div>
             )}
 
             {canSubmit && (
-                <div className="mt-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3">
-                    <div className="flex items-center gap-3">
-                        <input
-                            ref={fileRef}
-                            type="file"
-                            accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png"
-                            onChange={handleFile}
-                            className="hidden"
-                        />
-                        <button
-                            onClick={() => fileRef.current?.click()}
-                            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50"
-                        >
-                            <Upload className="h-3.5 w-3.5" />
-                            {fileName ? 'Ganti File' : 'Pilih File'}
-                        </button>
-                        {fileName && (
-                            <span className="truncate text-xs text-slate-500">
-                                {fileName}
-                            </span>
-                        )}
-                        {fileName && (
+                <div className="mt-3 rounded-lg border border-dashed border-slate-300 bg-slate-50/80 p-3 space-y-2.5">
+                    <input
+                        ref={fileRef}
+                        type="file"
+                        multiple
+                        accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.zip,.rar,.7z,.tar,.gz,.bz2,.jpg,.jpeg,.png,.gif,.webp,.bmp,.svg,.ico,.heic,.tif,.tiff,.psd,.psb,.ai,.eps,.indd,.cdr,.raw,.cr2,.nef,.sketch,.fig,.xd,.dng,.blend,.fbx,.obj,.mp4,.mov,.avi"
+                        onChange={handleFile}
+                        className="hidden"
+                    />
+
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
                             <button
-                                onClick={() => {
-                                    setFileName(null);
-                                    setData('file_tugas', null);
-                                    if (fileRef.current) fileRef.current.value = '';
-                                }}
-                                className="shrink-0 text-slate-400 hover:text-slate-600"
+                                type="button"
+                                onClick={() => fileRef.current?.click()}
+                                className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs transition-colors hover:bg-slate-50 hover:border-blue-400"
                             >
-                                <X className="h-3.5 w-3.5" />
+                                <Upload className="h-3.5 w-3.5 text-blue-600" />
+                                {selectedFiles.length > 0 ? 'Tambah File Lain' : 'Pilih File (Bisa Banyak)'}
                             </button>
-                        )}
-                        {fileName && (
+                            <span className="text-[11px] text-slate-400">
+                                PSD, AI, EPS, SVG, PNG, JPG, PDF, ZIP, dll (Maks. 250MB)
+                            </span>
+                        </div>
+
+                        {selectedFiles.length > 0 && (
                             <button
+                                type="button"
                                 onClick={submitTugas}
                                 disabled={processing}
-                                className="ml-auto min-w-[120px] rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 shadow-xs"
                             >
                                 {processing
                                     ? uploadProgress > 0
-                                        ? `${uploadProgress}%`
-                                        : '...'
-                                    : 'Kumpulkan'}
+                                        ? `Mengupload ${uploadProgress}%`
+                                        : 'Mengupload...'
+                                    : tugas.status === 'tersedia'
+                                    ? `Kumpulkan (${selectedFiles.length} File)`
+                                    : `Kirim Revisi (${selectedFiles.length} File)`}
                             </button>
                         )}
                     </div>
-                    {errors.file_tugas && (
-                        <p className="mt-1.5 text-xs text-red-500">
-                            {errors.file_tugas}
-                        </p>
+
+                    {/* Selected files preview */}
+                    {selectedFiles.length > 0 && (
+                        <div className="space-y-1.5 pt-1">
+                            <div className="text-[11px] font-semibold text-slate-600">
+                                File terpilih ({selectedFiles.length} file &middot; {formatBytes(totalSelectedSize)}):
+                            </div>
+                            <div className="max-h-36 overflow-y-auto divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
+                                {selectedFiles.map((file, idx) => {
+                                    const ext = file.name.split('.').pop()?.toUpperCase() || 'FILE';
+                                    return (
+                                        <div
+                                            key={`${file.name}-${idx}`}
+                                            className="flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs"
+                                        >
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-600 uppercase">
+                                                    {ext}
+                                                </span>
+                                                <span className="truncate max-w-[220px] font-medium text-slate-700">
+                                                    {file.name}
+                                                </span>
+                                                <span className="text-[10px] text-slate-400">
+                                                    ({formatBytes(file.size)})
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeFile(idx)}
+                                                className="rounded p-1 text-slate-400 hover:text-red-500"
+                                                title="Hapus"
+                                            >
+                                                <X className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {errors.files && (
+                        <div className="flex items-center gap-1.5 text-xs text-red-500">
+                            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                            <span>{errors.files}</span>
+                        </div>
                     )}
                 </div>
             )}

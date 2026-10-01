@@ -7,6 +7,8 @@ import {
     GraduationCap,
     Users,
     XCircle,
+    Download,
+    Paperclip,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -21,11 +23,20 @@ type AssessmentInfo = {
     deadline: string;
 };
 
+type SubmissionFile = {
+    path: string;
+    name: string;
+    size: number | null;
+    ext: string;
+    url: string;
+};
+
 type Submission = {
     id: number;
     siswa_id: number;
     siswa_nama: string;
     file_tugas: string | null;
+    files?: SubmissionFile[];
     revisi_ke: number;
     submitted_at: string;
     nilai: number | null;
@@ -174,6 +185,13 @@ AssessmentSubmissions.layout = {
     ],
 };
 
+function formatBytes(bytes: number | null | undefined): string {
+    if (!bytes || bytes <= 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
+
 function SubmissionCard({
     submission,
     assessmentId,
@@ -226,18 +244,43 @@ function SubmissionCard({
                             Feedback: {submission.feedback}
                         </p>
                     )}
+
+                    {/* Multi-file preview / download links */}
+                    {submission.files && submission.files.length > 0 ? (
+                        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                            {submission.files.map((file, idx) => (
+                                <a
+                                    key={idx}
+                                    href={file.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download={file.name}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-blue-400 transition-colors shadow-xs"
+                                    title={`${file.name} (${formatBytes(file.size)})`}
+                                >
+                                    <span className="uppercase text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                                        {file.ext || 'FILE'}
+                                    </span>
+                                    <span className="max-w-[170px] truncate">{file.name}</span>
+                                    <Download className="h-3 w-3 text-slate-400" />
+                                </a>
+                            ))}
+                        </div>
+                    ) : submission.file_tugas ? (
+                        <div className="mt-2.5">
+                            <a
+                                href={submission.file_tugas.startsWith('/') || submission.file_tugas.startsWith('http') ? submission.file_tugas : `/storage/${submission.file_tugas}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-xs"
+                            >
+                                <Download className="h-3 w-3 text-slate-400" />
+                                Lihat File
+                            </a>
+                        </div>
+                    ) : null}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                    {submission.file_tugas && (
-                        <a
-                            href={`/storage/${submission.file_tugas}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
-                        >
-                            Lihat File
-                        </a>
-                    )}
                     {!isEditing ? (
                         <button
                             onClick={() => setIsEditing(true)}
