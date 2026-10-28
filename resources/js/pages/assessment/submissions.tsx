@@ -9,12 +9,14 @@ import {
     XCircle,
     Download,
     Paperclip,
+    Eye,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { FilePreviewModal, type PreviewFile } from '@/components/assessment/file-preview-modal';
 
 type AssessmentInfo = {
     id: number;
@@ -54,10 +56,17 @@ export default function AssessmentSubmissions({
     stats: { total: number; dinilai: number; belum_dinilai: number };
 }) {
     const { errors } = usePage().props;
+    const [previewFile, setPreviewFile] = useState<PreviewFile | null>(null);
 
     return (
         <>
             <Head title={`Pengumpulan - ${assessment.judul}`} />
+
+            <FilePreviewModal
+                file={previewFile}
+                isOpen={!!previewFile}
+                onClose={() => setPreviewFile(null)}
+            />
 
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6 lg:p-8">
                 <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
@@ -156,6 +165,7 @@ export default function AssessmentSubmissions({
                                         key={sub.id}
                                         submission={sub}
                                         assessmentId={assessment.id}
+                                        onPreviewFile={(f) => setPreviewFile(f)}
                                     />
                                 ))}
                             </div>
@@ -195,9 +205,11 @@ function formatBytes(bytes: number | null | undefined): string {
 function SubmissionCard({
     submission,
     assessmentId,
+    onPreviewFile,
 }: {
     submission: Submission;
     assessmentId: number;
+    onPreviewFile: (file: PreviewFile) => void;
 }) {
     const { errors } = usePage().props;
     const [isEditing, setIsEditing] = useState(
@@ -247,36 +259,83 @@ function SubmissionCard({
 
                     {/* Multi-file preview / download links */}
                     {submission.files && submission.files.length > 0 ? (
-                        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                        <div className="mt-2.5 flex flex-wrap items-center gap-2">
                             {submission.files.map((file, idx) => (
-                                <a
+                                <div
                                     key={idx}
-                                    href={file.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    download={file.name}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-blue-400 transition-colors shadow-xs"
-                                    title={`${file.name} (${formatBytes(file.size)})`}
+                                    className="group inline-flex items-center rounded-lg border border-slate-200 bg-white p-1 text-xs font-medium text-slate-700 hover:border-blue-400 hover:bg-slate-50 transition-all shadow-2xs"
                                 >
-                                    <span className="uppercase text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
-                                        {file.ext || 'FILE'}
-                                    </span>
-                                    <span className="max-w-[170px] truncate">{file.name}</span>
-                                    <Download className="h-3 w-3 text-slate-400" />
-                                </a>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            onPreviewFile({
+                                                url: file.url,
+                                                name: file.name,
+                                                ext: file.ext,
+                                                size: file.size,
+                                            })
+                                        }
+                                        className="flex items-center gap-1.5 px-2 py-0.5 text-left hover:text-blue-600 transition-colors"
+                                        title={`Preview ${file.name}`}
+                                    >
+                                        <span className="uppercase text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
+                                            {file.ext || 'FILE'}
+                                        </span>
+                                        <span className="max-w-[170px] truncate font-medium text-slate-800 group-hover:text-blue-600">
+                                            {file.name}
+                                        </span>
+                                        <Eye className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-600" />
+                                    </button>
+                                    <div className="h-4 w-px bg-slate-200 mx-0.5" />
+                                    <a
+                                        href={file.url}
+                                        download={file.name}
+                                        className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors"
+                                        title={`Download ${file.name} (${formatBytes(file.size)})`}
+                                    >
+                                        <Download className="h-3.5 w-3.5" />
+                                    </a>
+                                </div>
                             ))}
                         </div>
                     ) : submission.file_tugas ? (
                         <div className="mt-2.5">
-                            <a
-                                href={submission.file_tugas.startsWith('/') || submission.file_tugas.startsWith('http') ? submission.file_tugas : `/storage/${submission.file_tugas}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-xs"
-                            >
-                                <Download className="h-3 w-3 text-slate-400" />
-                                Lihat File
-                            </a>
+                            {(() => {
+                                const fileUrl = submission.file_tugas.startsWith('/') || submission.file_tugas.startsWith('http')
+                                    ? submission.file_tugas
+                                    : `/storage/${submission.file_tugas}`;
+                                const fileName = submission.file_tugas.split('/').pop() || 'Lampiran Tugas';
+                                const fileExt = fileName.split('.').pop() || 'file';
+
+                                return (
+                                    <div className="group inline-flex items-center rounded-lg border border-slate-200 bg-white p-1 text-xs font-medium text-slate-700 hover:border-blue-400 hover:bg-slate-50 transition-all shadow-2xs">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                onPreviewFile({
+                                                    url: fileUrl,
+                                                    name: fileName,
+                                                    ext: fileExt,
+                                                    size: null,
+                                                })
+                                            }
+                                            className="flex items-center gap-1.5 px-2 py-0.5 hover:text-blue-600"
+                                        >
+                                            <Eye className="h-3.5 w-3.5 text-blue-600" />
+                                            <span>Lihat Preview ({fileName})</span>
+                                        </button>
+                                        <div className="h-4 w-px bg-slate-200 mx-0.5" />
+                                        <a
+                                            href={fileUrl}
+                                            download={fileName}
+                                            className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded"
+                                            title="Download File"
+                                        >
+                                            <Download className="h-3.5 w-3.5" />
+                                        </a>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     ) : null}
                 </div>
