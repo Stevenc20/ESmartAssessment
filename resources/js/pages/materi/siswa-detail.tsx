@@ -69,6 +69,8 @@ type TugasItem = {
     nilai: number | null;
     feedback: string | null;
     submitted_at: string | null;
+    submitted_at_full?: string | null;
+    is_late?: boolean;
     file_tugas: string | null;
     files?: SubmissionFile[];
     revisi_ke: number;
@@ -299,9 +301,20 @@ function TugasCard({ tugas }: { tugas: TugasItem }) {
 
             {tugas.submitted_at && (
                 <div className="mt-2.5 flex flex-col gap-1.5 text-xs text-slate-500">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <CheckCircle2 className="h-3.5 w-3.5 text-amber-500" />
-                        <span>Dikirim {tugas.submitted_at} {tugas.revisi_ke > 0 && `(Revisi ke-${tugas.revisi_ke})`}</span>
+                        <span>Dikirim {tugas.submitted_at_full || tugas.submitted_at} {tugas.revisi_ke > 0 && `(Revisi ke-${tugas.revisi_ke})`}</span>
+                        {tugas.is_late !== undefined && (
+                            <span
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                    tugas.is_late
+                                        ? 'bg-amber-100 text-amber-800'
+                                        : 'bg-emerald-100 text-emerald-800'
+                                }`}
+                            >
+                                {tugas.is_late ? 'Terlambat' : 'Tepat Waktu'}
+                            </span>
+                        )}
                     </div>
 
                     {/* Previously submitted files */}

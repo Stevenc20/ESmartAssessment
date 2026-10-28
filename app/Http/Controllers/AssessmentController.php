@@ -58,6 +58,16 @@ class AssessmentController extends Controller
                 $revisiKe = $submission?->revisi_ke ?? 0;
                 $canSubmit = ! $submission || ($tugas->max_revisi === 0 || $revisiKe <= $tugas->max_revisi);
 
+                $submittedAtFull = $submission?->submitted_at
+                    ? Carbon::parse($submission->submitted_at)->translatedFormat('d M Y, H:i') . ' WIB'
+                    : ($submission?->created_at ? $submission->created_at->translatedFormat('d M Y, H:i') . ' WIB' : null);
+
+                $isSubmissionLate = false;
+                if ($submission && $tugas->deadline) {
+                    $subTime = $submission->submitted_at ? Carbon::parse($submission->submitted_at) : $submission->created_at;
+                    $isSubmissionLate = $subTime->greaterThan(Carbon::parse($tugas->deadline));
+                }
+
                 return [
                     'id' => $tugas->id,
                     'judul' => $tugas->judul,
@@ -83,6 +93,8 @@ class AssessmentController extends Controller
                     'submitted_at' => $submission
                         ? $submission->created_at->diffForHumans()
                         : null,
+                    'submitted_at_full' => $submittedAtFull,
+                    'is_late' => $isSubmissionLate,
                 ];
             });
 

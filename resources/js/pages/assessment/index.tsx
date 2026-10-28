@@ -52,6 +52,8 @@ type Assessment = {
     file_tugas: string | null;
     files: SubmissionFile[];
     submitted_at: string | null;
+    submitted_at_full?: string | null;
+    is_late?: boolean;
 };
 
 const statusConfig: Record<
@@ -361,9 +363,22 @@ export default function AssessmentIndex({
                                                                 </span>
                                                             )}
                                                             {assessment.submitted_at && (
-                                                                <div className="flex items-center gap-1">
-                                                                    <Clock className="h-3.5 w-3.5" />
-                                                                    {assessment.submitted_at}
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <div className="flex items-center gap-1 text-slate-600">
+                                                                        <Clock className="h-3.5 w-3.5" />
+                                                                        <span>{assessment.submitted_at_full || assessment.submitted_at}</span>
+                                                                    </div>
+                                                                    {assessment.is_late !== undefined && (
+                                                                        <span
+                                                                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                                                                assessment.is_late
+                                                                                    ? 'bg-amber-100 text-amber-800'
+                                                                                    : 'bg-emerald-100 text-emerald-800'
+                                                                            }`}
+                                                                        >
+                                                                            {assessment.is_late ? 'Terlambat' : 'Tepat Waktu'}
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                             )}
                                                             <div className="flex items-center gap-2">
@@ -580,9 +595,11 @@ export default function AssessmentIndex({
                                                                 <p className="truncate font-medium text-slate-800 max-w-[280px]">
                                                                     {file.name}
                                                                 </p>
-                                                                <p className="text-[10px] text-slate-400">
-                                                                    {formatBytes(file.size)}
-                                                                </p>
+                                                                <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                                                                    <span>{formatBytes(file.size)}</span>
+                                                                    <span>&bull;</span>
+                                                                    <span className="text-emerald-600 font-medium">Siap diunggah</span>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         <button

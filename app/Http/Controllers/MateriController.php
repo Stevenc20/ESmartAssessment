@@ -822,6 +822,15 @@ class MateriController extends Controller
                             $penilaian = $submission?->penilaian;
                             $deadlinePassed = $t->deadline && Carbon::parse($t->deadline)->isPast();
 
+                            $submittedAtFull = $submission?->submitted_at
+                                ? Carbon::parse($submission->submitted_at)->translatedFormat('d M Y, H:i') . ' WIB'
+                                : ($submission?->created_at ? $submission->created_at->translatedFormat('d M Y, H:i') . ' WIB' : null);
+                            $isSubmissionLate = false;
+                            if ($submission && $t->deadline) {
+                                $subTime = $submission->submitted_at ? Carbon::parse($submission->submitted_at) : $submission->created_at;
+                                $isSubmissionLate = $subTime->greaterThan(Carbon::parse($t->deadline));
+                            }
+
                             return [
                                 'id' => $t->id,
                                 'judul' => $t->judul,
@@ -836,6 +845,8 @@ class MateriController extends Controller
                                 'nilai' => $penilaian?->nilai,
                                 'feedback' => $penilaian?->feedback,
                                 'submitted_at' => $submission?->created_at?->diffForHumans(),
+                                'submitted_at_full' => $submittedAtFull,
+                                'is_late' => $isSubmissionLate,
                                 'file_tugas' => $submission?->file_url,
                                 'files' => $submission?->files_list ?? [],
                                 'revisi_ke' => $submission?->revisi_ke ?? 0,
@@ -932,6 +943,15 @@ class MateriController extends Controller
             $penilaian = $submission?->penilaian;
             $deadlinePassed = $t->deadline && Carbon::parse($t->deadline)->isPast();
 
+            $submittedAtFull = $submission?->submitted_at
+                ? Carbon::parse($submission->submitted_at)->translatedFormat('d M Y, H:i') . ' WIB'
+                : ($submission?->created_at ? $submission->created_at->translatedFormat('d M Y, H:i') . ' WIB' : null);
+            $isSubmissionLate = false;
+            if ($submission && $t->deadline) {
+                $subTime = $submission->submitted_at ? Carbon::parse($submission->submitted_at) : $submission->created_at;
+                $isSubmissionLate = $subTime->greaterThan(Carbon::parse($t->deadline));
+            }
+
             return [
                 'id' => $t->id,
                 'judul' => $t->judul,
@@ -946,6 +966,8 @@ class MateriController extends Controller
                 'nilai' => $penilaian?->nilai,
                 'feedback' => $penilaian?->feedback,
                 'submitted_at' => $submission?->created_at?->diffForHumans(),
+                'submitted_at_full' => $submittedAtFull,
+                'is_late' => $isSubmissionLate,
                 'file_tugas' => $submission?->file_url,
                 'files' => $submission?->files_list ?? [],
                 'revisi_ke' => $submission?->revisi_ke ?? 0,
@@ -1268,12 +1290,16 @@ class MateriController extends Controller
             ];
         }
 
+        $submissionTime = now();
+        $isLate = $tugas->deadline && Carbon::parse($tugas->deadline)->isPast();
+        $statusWaktu = $isLate ? 'Terlambat' : 'Tepat Waktu';
+
         PengumpulanTugas::create([
             'tugas_id' => $tugas->id,
             'siswa_id' => $user->id,
             'file_tugas' => json_encode($storedFiles),
             'revisi_ke' => $revisiKe,
-            'submitted_at' => now(),
+            'submitted_at' => $submissionTime,
         ]);
 
         $newBadges = app(\App\Services\BadgeService::class)->evaluateForStudent($user);
@@ -1281,7 +1307,10 @@ class MateriController extends Controller
             session()->flash('new_badges', $newBadges);
         }
 
-        return back()->with('success', $revisiKe > 1 ? 'Revisi tugas berhasil dikirim.' : 'Tugas berhasil dikumpulkan.');
+        $formattedTime = $submissionTime->translatedFormat('d F Y, H:i').' WIB';
+        $successMsg = ($revisiKe > 1 ? 'Revisi tugas' : 'Tugas')." berhasil dikumpulkan pada {$formattedTime} (Status: {$statusWaktu}).";
+
+        return back()->with('success', $successMsg);
     }
 
     public function updateProgress(Request $request, Materi $materi)

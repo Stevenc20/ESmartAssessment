@@ -1,5 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, MonitorSmartphone, Settings } from 'lucide-react';
 import { UserInfo } from '@/components/settings/user-info';
 import {
     DropdownMenuGroup,
@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
+import { edit as editDevices } from '@/routes/devices';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';
 
@@ -42,6 +43,17 @@ export function UserMenuContent({ user }: Props) {
                     >
                         <Settings className="mr-2" />
                         Settings
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link
+                        className="block w-full cursor-pointer"
+                        href={editDevices()}
+                        prefetch
+                        onClick={cleanup}
+                    >
+                        <MonitorSmartphone className="mr-2" />
+                        Link Device (Perangkat)
                     </Link>
                 </DropdownMenuItem>
             </DropdownMenuGroup>

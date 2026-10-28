@@ -58,20 +58,24 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
 
     return (
         <>
-            <div className="border-b border-sidebar-border/80">
+            <div className="sticky top-0 z-40 border-b border-sidebar-border/80 bg-white/95 backdrop-blur-md">
                 <div className="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
                     {/* Mobile Menu */}
-                    <div className="lg:hidden">
+                    <div className="flex items-center gap-2 lg:hidden">
                         <Sheet>
                             <SheetTrigger asChild>
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="mr-2 h-[34px] w-[34px]"
+                                    className="mr-1 h-[34px] w-[34px]"
+                                    aria-label="Buka menu navigasi"
                                 >
                                     <Menu className="h-5 w-5" />
                                 </Button>
                             </SheetTrigger>
+                            <span className="text-[11px] text-slate-500 sm:inline">
+                                Ketuk ikon untuk membuka menu
+                            </span>
                             <SheetContent
                                 side="left"
                                 className="flex h-full w-64 flex-col items-stretch justify-between bg-sidebar"

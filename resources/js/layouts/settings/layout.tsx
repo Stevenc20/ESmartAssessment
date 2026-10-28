@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { Lock, MonitorSmartphone, Palette, User } from 'lucide-react';
 import type { PropsWithChildren } from 'react';
 import Heading from '@/components/settings/heading';
 import { Button } from '@/components/ui/button';
@@ -15,22 +16,22 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Profile',
         href: edit(),
-        icon: null,
+        icon: User,
     },
     {
         title: 'Security',
         href: editSecurity(),
-        icon: null,
+        icon: Lock,
     },
     {
-        title: 'Devices',
+        title: 'Link Device (Perangkat)',
         href: editDevices(),
-        icon: null,
+        icon: MonitorSmartphone,
     },
     {
         title: 'Appearance',
         href: editAppearance(),
-        icon: null,
+        icon: Palette,
     },
 ];
 

@@ -127,30 +127,43 @@ return;
 
             <div className="space-y-8">
                 <Heading
-                    title="Perangkat Terhubung"
-                    description="Kelola perangkat yang terhubung ke akun Anda"
+                    title="Link Device (Perangkat Terhubung)"
+                    description="Hubungkan perangkat baru melalui QR Scanner dan kelola perangkat yang memiliki akses ke akun Anda"
                 />
 
-                <Card className="border-blue-100 bg-blue-50/40">
+                <Card className="border-blue-100 bg-blue-50/50 shadow-xs">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-sm">
-                            <MonitorSmartphone className="h-4 w-4 text-blue-600" />
-                            Link Device
-                        </CardTitle>
-                        <CardDescription className="text-xs">
-                            Hubungkan perangkat lain (misalnya komputer sekolah) dengan memindai QR
-                            Code menggunakan kamera perangkat ini.
+                        <div className="flex items-center justify-between gap-3">
+                            <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900">
+                                <MonitorSmartphone className="h-5 w-5 text-blue-600" />
+                                Hubungkan Perangkat Lain (Link Device)
+                            </CardTitle>
+                            <Badge variant="outline" className="border-blue-200 bg-white text-blue-700">
+                                QR Scanner
+                            </Badge>
+                        </div>
+                        <CardDescription className="text-xs text-slate-600 leading-relaxed pt-1">
+                            Fitur ini memungkinkan Anda login secara instan di komputer lain (misalnya PC laboratorium/sekolah) tanpa harus mengetik email dan kata sandi. Cukup buka halaman <strong>Link Device</strong> di komputer tujuan, lalu pindai QR Code-nya dengan kamera perangkat ini.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
+                        <div className="rounded-lg bg-white/80 p-3 text-xs text-slate-600 border border-blue-100/80">
+                            <p className="font-semibold text-slate-800 mb-1">Cara Menggunakan:</p>
+                            <ol className="list-decimal list-inside space-y-1">
+                                <li>Buka halaman login di komputer tujuan dan pilih <strong>Link Device</strong>.</li>
+                                <li>Klik tombol <strong>Scan QR Code</strong> di bawah untuk menyalakan kamera.</li>
+                                <li>Arahkan kamera ke QR Code di layar komputer, lalu konfirmasi persetujuan.</li>
+                            </ol>
+                        </div>
+
                         <Button
                             type="button"
                             onClick={() => setScanning(true)}
-                            className="bg-blue-600 hover:bg-blue-700"
+                            className="bg-blue-600 hover:bg-blue-700 shadow-xs"
                             data-test="start-link-device-scanner"
                         >
                             <Link2 className="mr-2 h-4 w-4" />
-                            Link Device
+                            Scan QR Code untuk Hubungkan
                         </Button>
                     </CardContent>
                 </Card>
