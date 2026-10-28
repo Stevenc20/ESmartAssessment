@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { GraduationCap, LayoutGrid, Menu, Search } from 'lucide-react';
+import { GraduationCap, LayoutGrid, Menu, MousePointerClick, Search } from 'lucide-react';
 import AppLogo from '@/components/layout/app-logo';
 import AppLogoIcon from '@/components/layout/app-logo-icon';
 import { Breadcrumbs } from '@/components/layout/breadcrumbs';
@@ -76,13 +76,10 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                             <SheetTrigger asChild>
                                 <button
                                     type="button"
-                                    className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50/90 px-2.5 py-1 text-xs font-semibold text-blue-700 shadow-2xs hover:bg-blue-100 active:scale-95"
-                                    aria-label="Menu lainnya ada di sini — ketuk untuk membuka navigasi"
+                                    className="group inline-flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-2xs transition-all hover:border-blue-300 hover:bg-blue-50/60 hover:text-blue-700 active:scale-95"
+                                    aria-label="Ketuk untuk membuka menu navigasi"
                                 >
-                                    <span className="relative flex h-2 w-2">
-                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
-                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-600"></span>
-                                    </span>
+                                    <MousePointerClick className="h-3.5 w-3.5 text-slate-500 transition-colors group-hover:text-blue-600" />
                                     <span>Menu navigasi</span>
                                 </button>
                             </SheetTrigger>

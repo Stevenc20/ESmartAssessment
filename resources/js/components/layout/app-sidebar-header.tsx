@@ -1,3 +1,4 @@
+import { MousePointerClick } from 'lucide-react';
 import { Breadcrumbs } from '@/components/layout/breadcrumbs';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
@@ -29,29 +30,27 @@ export function AppSidebarHeader({
                         </button>
                     )}
                 </div>
+                {/* On mobile, hide the breadcrumbs to avoid truncation clutter like 'Profile Set' */}
                 {breadcrumbs.length > 0 && (
-                    <div className="hidden h-4 w-px bg-slate-200 sm:block" />
+                    <div className="hidden min-w-0 items-center gap-2 sm:flex">
+                        <div className="h-4 w-px bg-slate-200" />
+                        <div className="truncate text-sm font-medium text-slate-600">
+                            <Breadcrumbs breadcrumbs={breadcrumbs} />
+                        </div>
+                    </div>
                 )}
-                <div className="min-w-0 truncate text-sm font-medium text-slate-600">
-                    <Breadcrumbs breadcrumbs={breadcrumbs} />
-                </div>
             </div>
 
             {isMobile && (
                 <button
                     type="button"
                     onClick={toggleSidebar}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50/90 px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-2xs transition-all hover:bg-blue-100 active:scale-95"
-                    title="Menu lainnya ada di sini — ketuk untuk membuka navigasi"
-                    aria-label="Menu lainnya ada di sini — ketuk untuk membuka navigasi"
+                    className="group inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200/90 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-2xs transition-all hover:border-blue-300 hover:bg-blue-50/60 hover:text-blue-700 active:scale-95"
+                    title="Ketuk untuk membuka menu navigasi"
+                    aria-label="Ketuk untuk membuka menu navigasi"
                 >
-                    <span className="relative flex h-2 w-2">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
-                        <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-600"></span>
-                    </span>
-                    <span className="truncate max-w-[200px] xs:max-w-none">
-                        Menu navigasi &bull; Ketuk di sini
-                    </span>
+                    <MousePointerClick className="h-3.5 w-3.5 text-slate-500 transition-colors group-hover:text-blue-600" />
+                    <span>Menu navigasi</span>
                 </button>
             )}
         </header>
