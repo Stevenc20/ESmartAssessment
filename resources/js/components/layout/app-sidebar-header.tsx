@@ -10,18 +10,22 @@ export function AppSidebarHeader({
     const { isMobile, toggleSidebar } = useSidebar();
 
     return (
-        <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-[#e9edf3] bg-white/95 px-3 backdrop-blur-md transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-6">
-            <div className="flex min-w-0 items-center gap-2.5">
+        <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-[#e9edf3] bg-white/95 px-3 backdrop-blur-md shadow-xs md:px-6">
+            <div className="flex min-w-0 items-center gap-2">
                 <div className="flex items-center gap-1.5">
-                    <SidebarTrigger className="-ml-1 h-8 w-8 rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700" />
+                    <SidebarTrigger
+                        className="h-9 w-9 rounded-lg border border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-100 hover:text-slate-900 active:scale-95 transition-all"
+                        aria-label="Buka/Tutup Menu Navigasi"
+                        title="Buka menu navigasi"
+                    />
                     {isMobile && (
                         <button
                             type="button"
                             onClick={toggleSidebar}
-                            className="hidden text-[11px] font-medium text-slate-500 hover:text-slate-800 sm:inline"
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 hover:text-blue-600 transition-colors"
                             title="Buka menu navigasi"
                         >
-                            Menu
+                            <span>Menu</span>
                         </button>
                     )}
                 </div>
@@ -37,11 +41,17 @@ export function AppSidebarHeader({
                 <button
                     type="button"
                     onClick={toggleSidebar}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-200"
-                    title="Ketuk untuk membuka menu navigasi"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50/90 px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-2xs transition-all hover:bg-blue-100 active:scale-95"
+                    title="Menu lainnya ada di sini — ketuk untuk membuka navigasi"
+                    aria-label="Menu lainnya ada di sini — ketuk untuk membuka navigasi"
                 >
-                    <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
-                    <span>Ketuk ikon untuk menu</span>
+                    <span className="relative flex h-2 w-2">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-600"></span>
+                    </span>
+                    <span className="truncate max-w-[200px] xs:max-w-none">
+                        Menu navigasi &bull; Ketuk di sini
+                    </span>
                 </button>
             )}
         </header>

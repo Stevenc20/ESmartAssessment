@@ -67,15 +67,25 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="mr-1 h-[34px] w-[34px]"
-                                    aria-label="Buka menu navigasi"
+                                    className="mr-1 h-9 w-9 rounded-lg border border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-100 active:scale-95"
+                                    aria-label="Menu lainnya ada di sini — ketuk untuk membuka navigasi"
                                 >
                                     <Menu className="h-5 w-5" />
                                 </Button>
                             </SheetTrigger>
-                            <span className="text-[11px] text-slate-500 sm:inline">
-                                Ketuk ikon untuk membuka menu
-                            </span>
+                            <SheetTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50/90 px-2.5 py-1 text-xs font-semibold text-blue-700 shadow-2xs hover:bg-blue-100 active:scale-95"
+                                    aria-label="Menu lainnya ada di sini — ketuk untuk membuka navigasi"
+                                >
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
+                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-600"></span>
+                                    </span>
+                                    <span>Menu navigasi</span>
+                                </button>
+                            </SheetTrigger>
                             <SheetContent
                                 side="left"
                                 className="flex h-full w-64 flex-col items-stretch justify-between bg-sidebar"

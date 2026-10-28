@@ -15,7 +15,7 @@ export default function AppSidebarLayout({
         <AppShell variant="sidebar">
             <AnnouncementsProvider>
                 <AppSidebar />
-                <AppContent variant="sidebar" className="overflow-x-hidden">
+                <AppContent variant="sidebar">
                     <AppSidebarHeader breadcrumbs={breadcrumbs} />
                     <AnnouncementBanner />
                     {children}

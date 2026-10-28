@@ -11,10 +11,10 @@ export function AppContent({ variant = 'sidebar', children, ...props }: Props) {
         return (
             <SidebarInset
                 {...props}
-                className="bg-slate-50"
+                className="bg-slate-50 min-h-screen"
                 style={{
                     position: 'relative',
-                    overflow: 'auto',
+                    overflow: 'visible',
                     ...(props.style as React.CSSProperties),
                 }}
             >
