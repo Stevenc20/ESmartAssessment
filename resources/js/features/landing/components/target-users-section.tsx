@@ -1,4 +1,4 @@
-import { Shield, Users, GraduationCap, User, CheckCircle } from 'lucide-react';
+import { Shield, Users, GraduationCap, UserCheck, CheckCircle } from 'lucide-react';
 
 const roles = [
     {
@@ -30,7 +30,7 @@ const roles = [
         perks: ['Buat materi & soal', 'Nilai & feedback', 'Pantau progress'],
     },
     {
-        icon: User,
+        icon: UserCheck,
         title: 'Siswa',
         description:
             'Belajar, mengerjakan tantangan, membangun portfolio, dan lacak progress sendiri.',

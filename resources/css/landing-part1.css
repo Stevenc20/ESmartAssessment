@@ -1,6 +1,7 @@
-﻿/* LANDING PAGE CSS */
+/* LANDING PAGE CSS */
 .lp-root {
-    font-family: 'Instrument Sans', sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #1a2236;
 }
 
 /* Navbar */
@@ -44,14 +45,14 @@
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #436391, #2d4f7a);
+    background: #436391;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.8rem;
     font-weight: 700;
     color: white;
-    box-shadow: 0 4px 12px rgba(67, 99, 145, 0.3);
+    box-shadow: 0 2px 8px rgba(67, 99, 145, 0.2);
 }
 .lp-nav-logo-text {
     font-size: 1rem;
@@ -177,18 +178,19 @@
 .lp-btn-primary {
     padding: 0.5rem 1.25rem;
     border-radius: 10px;
-    background: linear-gradient(135deg, #436391, #2d4f7a);
+    background: #436391;
     color: white;
     font-size: 0.875rem;
     font-weight: 600;
     border: none;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 4px 14px rgba(67, 99, 145, 0.3);
+    box-shadow: 0 2px 8px rgba(67, 99, 145, 0.2);
 }
 .lp-btn-primary:hover {
+    background: #365076;
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(67, 99, 145, 0.4);
+    box-shadow: 0 4px 12px rgba(67, 99, 145, 0.25);
 }
 .lp-btn-ghost {
     padding: 0.5rem 1rem;
@@ -294,68 +296,23 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: linear-gradient(
-        160deg,
-        #fdf0f2 0%,
-        #f2dcdb 30%,
-        #dce7f5 65%,
-        #c5d4ea 100%
+    background: radial-gradient(
+        ellipse 80% 60% at 50% 10%,
+        #fbf1f3 0%,
+        #f3f6fa 60%,
+        #ffffff 100%
     );
     padding-top: 64px;
 }
 .lp-hero-blob {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(40px);
-    pointer-events: none;
-    animation-play-state: paused;
-}
-.lp-hero-blob.lp-anim-running {
-    animation-play-state: running;
-}
-.lp-hero-blob-1 {
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(
-        circle,
-        rgba(242, 174, 188, 0.55) 0%,
-        transparent 70%
-    );
-    top: -150px;
-    left: -150px;
-    animation: lp-blob 16s ease-in-out infinite;
-}
-.lp-hero-blob-2 {
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(
-        circle,
-        rgba(67, 99, 145, 0.3) 0%,
-        transparent 70%
-    );
-    bottom: -100px;
-    right: -100px;
-    animation: lp-blob2 20s ease-in-out infinite;
-}
-.lp-hero-blob-3 {
-    width: 350px;
-    height: 350px;
-    background: radial-gradient(
-        circle,
-        rgba(242, 220, 219, 0.5) 0%,
-        transparent 70%
-    );
-    top: 40%;
-    left: 55%;
-    animation: lp-blob3 24s ease-in-out infinite;
-    opacity: 0.6;
+    display: none;
 }
 .lp-hero-grid {
     position: absolute;
     inset: 0;
     background-image: radial-gradient(
         circle,
-        rgba(67, 99, 145, 0.1) 1px,
+        rgba(67, 99, 145, 0.06) 1px,
         transparent 1px
     );
     background-size: 32px 32px;
@@ -377,39 +334,31 @@
 }
 .lp-hero-h1 {
     font-size: clamp(2.5rem, 6vw, 4.5rem);
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -0.03em;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
     margin: 0;
-    font-family:
-        system-ui,
-        -apple-system,
-        sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 .lp-hero-h1-plain {
-    color: #1b1b18;
+    color: #1a2236;
 }
 .lp-hero-h1-gradient {
-    background: linear-gradient(135deg, #f2aebc 0%, #e8899d 50%, #d4607a 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #d4607a;
 }
 .lp-hero-h1-accent {
-    background: linear-gradient(135deg, #436391 0%, #2d4f7a 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #436391;
 }
 .lp-hero-desc {
     max-width: 560px;
     font-size: 1.0625rem;
     line-height: 1.7;
-    color: #706f6c;
+    color: #556987;
     margin: 0;
 }
 .lp-hero-desc strong {
     color: #436391;
+    font-weight: 600;
 }
 .lp-hero-actions {
     display: flex;
@@ -422,38 +371,38 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.875rem 2rem;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #436391, #2d4f7a);
+    border-radius: 12px;
+    background: #436391;
     color: white;
     font-size: 1rem;
-    font-weight: 700;
+    font-weight: 600;
     border: none;
     cursor: pointer;
-    box-shadow: 0 8px 28px rgba(67, 99, 145, 0.35);
+    box-shadow: 0 4px 16px rgba(67, 99, 145, 0.22);
     transition: all 0.2s;
 }
 .lp-btn-hero-primary:hover {
+    background: #365076;
     transform: translateY(-2px);
-    box-shadow: 0 12px 36px rgba(67, 99, 145, 0.45);
+    box-shadow: 0 6px 20px rgba(67, 99, 145, 0.3);
 }
 .lp-btn-hero-outline {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.875rem 2rem;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(12px);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
     color: #436391;
     font-size: 1rem;
     font-weight: 600;
-    border: 1.5px solid rgba(67, 99, 145, 0.3);
+    border: 1.5px solid rgba(67, 99, 145, 0.25);
     cursor: pointer;
     transition: all 0.2s;
 }
 .lp-btn-hero-outline:hover {
     border-color: #436391;
-    background: rgba(255, 255, 255, 0.95);
+    background: #ffffff;
     transform: translateY(-2px);
 }
 .lp-hero-stats {
@@ -462,12 +411,11 @@
     gap: 2rem;
     flex-wrap: wrap;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(242, 174, 188, 0.4);
-    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(242, 174, 188, 0.35);
+    border-radius: 16px;
     padding: 1.25rem 2.5rem;
-    box-shadow: 0 4px 24px rgba(67, 99, 145, 0.08);
+    box-shadow: 0 2px 12px rgba(67, 99, 145, 0.05);
 }
 .lp-hero-stat {
     text-align: center;
@@ -535,17 +483,14 @@
 }
 .lp-section-h2 {
     font-size: clamp(1.75rem, 3.5vw, 2.75rem);
-    font-weight: 800;
-    color: #1b1b18;
+    font-weight: 700;
+    color: #1a2236;
     letter-spacing: -0.02em;
-    line-height: 1.2;
+    line-height: 1.25;
     margin: 0;
 }
 .lp-section-h2-accent {
-    background: linear-gradient(135deg, #f2aebc, #436391);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #436391;
 }
 .lp-section-desc {
     font-size: 1.0625rem;
@@ -614,23 +559,7 @@
     margin: 0;
 }
 .lp-feature-corner {
-    position: absolute;
-    bottom: -20px;
-    right: -20px;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    opacity: 0.08;
-    transition: opacity 0.3s;
-}
-.lp-feature-card:hover .lp-feature-corner {
-    opacity: 0.15;
-}
-.lp-feature-corner--blue {
-    background: #436391;
-}
-.lp-feature-corner--pink {
-    background: #f2aebc;
+    display: none;
 }
 
 /* Target Users */
@@ -683,25 +612,17 @@
 }
 .lp-user-icon {
     display: inline-flex;
-    padding: 1rem;
-    border-radius: 18px;
+    padding: 0.875rem;
+    border-radius: 14px;
     margin-bottom: 1.25rem;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    box-shadow: none;
 }
 .lp-user-icon--blue {
-    background: linear-gradient(
-        135deg,
-        rgba(67, 99, 145, 0.12),
-        rgba(67, 99, 145, 0.06)
-    );
+    background: rgba(67, 99, 145, 0.08);
     color: #436391;
 }
 .lp-user-icon--pink {
-    background: linear-gradient(
-        135deg,
-        rgba(242, 174, 188, 0.25),
-        rgba(242, 174, 188, 0.1)
-    );
+    background: rgba(242, 174, 188, 0.2);
     color: #c4607a;
 }
 .lp-user-title {
@@ -739,23 +660,7 @@
     color: #e8899d;
 }
 .lp-user-corner {
-    position: absolute;
-    bottom: -30px;
-    right: -30px;
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    opacity: 0.07;
-    transition: opacity 0.3s;
-}
-.lp-user-card:hover .lp-user-corner {
-    opacity: 0.13;
-}
-.lp-user-corner--blue {
-    background: #436391;
-}
-.lp-user-corner--pink {
-    background: #f2aebc;
+    display: none;
 }
 
 /* Core Experience */
@@ -830,27 +735,17 @@
     position: relative;
 }
 .lp-experience-glow {
-    position: absolute;
-    inset: -20px;
-    border-radius: 40px;
-    background: linear-gradient(
-        135deg,
-        rgba(242, 174, 188, 0.25),
-        rgba(67, 99, 145, 0.15)
-    );
-    filter: blur(40px);
-    z-index: 0;
+    display: none;
 }
 .lp-experience-card {
     position: relative;
     z-index: 1;
     background: #fff;
-    border-radius: 28px;
+    border-radius: 20px;
     padding: 1.75rem;
-    border: 1px solid rgba(242, 174, 188, 0.3);
+    border: 1px solid rgba(242, 174, 188, 0.4);
     box-shadow:
-        0 24px 64px rgba(67, 99, 145, 0.12),
-        0 4px 16px rgba(242, 174, 188, 0.15);
+        0 10px 30px rgba(67, 99, 145, 0.08);
 }
 .lp-dashboard-header {
     display: flex;
@@ -1002,52 +897,18 @@
 .lp-cta {
     position: relative;
     overflow: hidden;
-    padding: 7rem 1.5rem;
-    background: linear-gradient(
-        160deg,
-        #2d3f5e 0%,
-        #436391 40%,
-        #5a7aaa 70%,
-        #2d3f5e 100%
-    );
+    padding: 6.5rem 1.5rem;
+    background: #273b57;
 }
 .lp-cta-blob {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    pointer-events: none;
-}
-.lp-cta-blob-1 {
-    width: 500px;
-    height: 500px;
-    background: rgba(242, 174, 188, 0.25);
-    top: -100px;
-    left: -100px;
-    animation: lp-blob 18s ease-in-out infinite;
-}
-.lp-cta-blob-2 {
-    width: 400px;
-    height: 400px;
-    background: rgba(242, 220, 219, 0.15);
-    bottom: -80px;
-    right: -80px;
-    animation: lp-blob2 22s ease-in-out infinite;
-}
-.lp-cta-blob-3 {
-    width: 300px;
-    height: 300px;
-    background: rgba(255, 255, 255, 0.08);
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    animation: lp-blob3 14s ease-in-out infinite;
+    display: none;
 }
 .lp-cta-grid {
     position: absolute;
     inset: 0;
     background-image: radial-gradient(
         circle,
-        rgba(255, 255, 255, 0.08) 1px,
+        rgba(255, 255, 255, 0.05) 1px,
         transparent 1px
     );
     background-size: 28px 28px;
@@ -1074,10 +935,10 @@
 }
 .lp-cta-h2 {
     font-size: clamp(2rem, 5vw, 3.5rem);
-    font-weight: 800;
+    font-weight: 700;
     color: #fff;
-    letter-spacing: -0.03em;
-    line-height: 1.15;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
     margin: 0;
 }
 .lp-cta-h2-accent {
@@ -1085,7 +946,7 @@
 }
 .lp-cta-desc {
     font-size: 1.0625rem;
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba(255, 255, 255, 0.8);
     line-height: 1.7;
     margin: 0;
     max-width: 520px;
@@ -1100,40 +961,39 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 1rem 2.5rem;
-    border-radius: 14px;
-    background: #fff;
+    padding: 0.875rem 2.25rem;
+    border-radius: 12px;
+    background: #ffffff;
     color: #436391;
     font-size: 1rem;
-    font-weight: 700;
+    font-weight: 600;
     border: none;
     cursor: pointer;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     transition: all 0.2s;
 }
 .lp-btn-cta-primary:hover {
-    background: #f2dcdb;
+    background: #fbf1f3;
     transform: translateY(-2px);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 .lp-btn-cta-outline {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 1rem 2rem;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
+    padding: 0.875rem 2rem;
+    border-radius: 12px;
+    background: transparent;
     color: #fff;
     font-size: 1rem;
     font-weight: 600;
-    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
     cursor: pointer;
     transition: all 0.2s;
 }
 .lp-btn-cta-outline:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.6);
     transform: translateY(-2px);
 }
 .lp-cta-trust {
