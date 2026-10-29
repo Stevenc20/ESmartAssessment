@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { ArrowRight } from 'lucide-react';
+import { UserPlus, LogIn } from 'lucide-react';
 import { login } from '@/routes';
 
 export default function CtaSection() {
@@ -35,12 +35,13 @@ export default function CtaSection() {
                 <div className="lp-cta-actions">
                     <a href="/auth/google">
                         <button className="lp-btn-cta-primary">
+                            <UserPlus className="h-4 w-4" />
                             Daftar Gratis Sekarang
-                            <ArrowRight className="h-4 w-4" />
                         </button>
                     </a>
                     <Link href={login()}>
                         <button className="lp-btn-cta-outline">
+                            <LogIn className="h-4 w-4" />
                             Sudah punya akun? Masuk
                         </button>
                     </Link>

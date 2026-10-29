@@ -1,5 +1,4 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen } from 'lucide-react';
 
 const footerLinks = {
     Produk: [
@@ -42,11 +41,6 @@ export default function Footer() {
                         penilaian terintegrasi untuk ekosistem pendidikan
                         modern.
                     </p>
-                    <div className="lp-footer-socials">
-                        <div className="lp-footer-social-icon">
-                            <BookOpen className="h-4 w-4" />
-                        </div>
-                    </div>
                 </div>
 
                 {/* Link columns */}

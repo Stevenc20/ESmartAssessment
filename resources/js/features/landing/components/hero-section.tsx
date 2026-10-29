@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, ArrowRight, ChevronDown } from 'lucide-react';
+import { BookOpen, MonitorPlay, ChevronDown } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { login } from '@/routes';
 
@@ -104,11 +104,11 @@ export default function HeroSection({ onScrollDown }: HeroSectionProps) {
                         <button className="lp-btn-hero-primary">
                             <BookOpen className="h-4 w-4" />
                             Mulai Sekarang
-                            <ArrowRight className="h-4 w-4" />
                         </button>
                     </a>
                     <Link href={login()}>
                         <button className="lp-btn-hero-outline">
+                            <MonitorPlay className="h-4 w-4" />
                             Lihat Demo
                         </button>
                     </Link>
