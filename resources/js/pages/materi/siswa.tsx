@@ -212,9 +212,47 @@ export default function MateriSiswa({
     stats: Stats;
 }) {
     const { errors } = usePage().props;
-    const [activeRoadmap, setActiveRoadmap] = useState<number | null>(
-        roadmaps.length > 0 ? roadmaps[0].id : null,
-    );
+
+    // Auto-select latest active roadmap based on current date (month & year) or latest available
+    const initialRoadmapId = useMemo(() => {
+        if (!roadmaps || roadmaps.length === 0) return null;
+
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1; // 1-12
+
+        // 1. Exact match current year & current month
+        const currentMonthMatch = roadmaps.find(
+            (r) => Number(r.tahun) === currentYear && Number(r.bulan) === currentMonth
+        );
+        if (currentMonthMatch) return currentMonthMatch.id;
+
+        // 2. Or the latest roadmap that is <= current year and month with published meetings
+        const activeOrPast = roadmaps
+            .filter((r) => {
+                const periodValue = Number(r.tahun) * 12 + Number(r.bulan);
+                const currentPeriod = currentYear * 12 + currentMonth;
+                return periodValue <= currentPeriod && (r.pertemuan?.length ?? 0) > 0;
+            })
+            .sort((a, b) => {
+                const aVal = Number(a.tahun) * 12 + Number(a.bulan);
+                const bVal = Number(b.tahun) * 12 + Number(b.bulan);
+                return bVal - aVal;
+            });
+
+        if (activeOrPast.length > 0) return activeOrPast[0].id;
+
+        // 3. Or highest period overall
+        const sortedByPeriod = [...roadmaps].sort((a, b) => {
+            const aVal = Number(a.tahun) * 12 + Number(a.bulan);
+            const bVal = Number(b.tahun) * 12 + Number(b.bulan);
+            return bVal - aVal;
+        });
+
+        return sortedByPeriod[0]?.id ?? roadmaps[0].id;
+    }, [roadmaps]);
+
+    const [activeRoadmap, setActiveRoadmap] = useState<number | null>(initialRoadmapId);
     const [filter, setFilter] = useState<FilterType>('all');
 
     const persen =

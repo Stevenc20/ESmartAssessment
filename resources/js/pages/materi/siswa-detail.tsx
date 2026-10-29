@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
     BookOpen,
@@ -11,16 +11,15 @@ import {
     Folder,
     HelpCircle,
     PlayCircle,
-    Upload,
-    X,
+    UploadCloud,
     Paperclip,
-    Plus,
-    AlertCircle,
+    ChevronDown,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import MateriForumChat, { type DiscussionItem } from '@/components/materi/materi-forum-chat';
 import MateriPollWidget, { type PollData } from '@/components/materi/materi-poll-widget';
+import UploadTugasModal, { type TargetTugas } from '@/components/assessment/upload-tugas-modal';
 
 /* ── Types ── */
 type QuizItem = {
@@ -180,70 +179,20 @@ function formatBytes(bytes: number): string {
 }
 
 /* ── Tugas Card ── */
-function TugasCard({ tugas }: { tugas: TugasItem }) {
-    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-    const [uploadProgress, setUploadProgress] = useState(0);
-    const fileRef = useRef<HTMLInputElement>(null);
+function TugasCard({
+    tugas,
+    materiJudul,
+    onOpenUpload,
+}: {
+    tugas: TugasItem;
+    materiJudul: string;
+    onOpenUpload: (target: TargetTugas) => void;
+}) {
     const cfg = tugasStatusConfig[tugas.status];
-
-    const { setData, post, processing, errors, clearErrors } = useForm<{
-        files: File[];
-    }>({
-        files: [],
-    });
-
-    function addFiles(newFiles: FileList | File[]) {
-        const fileArr = Array.from(newFiles);
-        clearErrors();
-        setSelectedFiles((prev) => {
-            const existingKeys = new Set(prev.map((f) => `${f.name}-${f.size}`));
-            const filtered = fileArr.filter(
-                (f) => !existingKeys.has(`${f.name}-${f.size}`)
-            );
-            const updated = [...prev, ...filtered];
-            setData('files', updated);
-            return updated;
-        });
-    }
-
-    function removeFile(index: number) {
-        setSelectedFiles((prev) => {
-            const updated = prev.filter((_, i) => i !== index);
-            setData('files', updated);
-            return updated;
-        });
-    }
-
-    function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-        if (e.target.files && e.target.files.length > 0) {
-            addFiles(e.target.files);
-            if (fileRef.current) fileRef.current.value = '';
-        }
-    }
-
-    function submitTugas() {
-        if (selectedFiles.length === 0) return;
-
-        post(`/materi-saya/tugas/${tugas.id}/submit`, {
-            preserveScroll: true,
-            forceFormData: true,
-            only: ['flash', 'materi'],
-            onProgress: (progress) => setUploadProgress(progress?.percentage ?? 0),
-            onSuccess: () => {
-                setSelectedFiles([]);
-                setData('files', []);
-                setUploadProgress(0);
-                if (fileRef.current) fileRef.current.value = '';
-            },
-            onFinish: () => setUploadProgress(0),
-        });
-    }
 
     const canSubmit =
         tugas.status === 'tersedia' ||
         (tugas.status === 'dikirim' && (tugas.max_revisi === 0 || tugas.revisi_ke <= tugas.max_revisi));
-
-    const totalSelectedSize = selectedFiles.reduce((acc, f) => acc + f.size, 0);
 
     return (
         <div className="rounded-xl border border-slate-200 bg-white p-4">
@@ -350,95 +299,30 @@ function TugasCard({ tugas }: { tugas: TugasItem }) {
             )}
 
             {canSubmit && (
-                <div className="mt-3 rounded-lg border border-dashed border-slate-300 bg-slate-50/80 p-3 space-y-2.5">
-                    <input
-                        ref={fileRef}
-                        type="file"
-                        multiple
-                        accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.zip,.rar,.7z,.tar,.gz,.bz2,.jpg,.jpeg,.png,.gif,.webp,.bmp,.svg,.ico,.heic,.tif,.tiff,.psd,.psb,.ai,.eps,.indd,.cdr,.raw,.cr2,.nef,.sketch,.fig,.xd,.dng,.blend,.fbx,.obj,.mp4,.mov,.avi"
-                        onChange={handleFile}
-                        className="hidden"
-                    />
-
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => fileRef.current?.click()}
-                                className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs transition-colors hover:bg-slate-50 hover:border-blue-400"
-                            >
-                                <Upload className="h-3.5 w-3.5 text-blue-600" />
-                                {selectedFiles.length > 0 ? 'Tambah File Lain' : 'Pilih File (Bisa Banyak)'}
-                            </button>
-                            <span className="text-[11px] text-slate-400">
-                                PSD, AI, EPS, SVG, PNG, JPG, PDF, ZIP, dll (Maks. 250MB)
-                            </span>
-                        </div>
-
-                        {selectedFiles.length > 0 && (
-                            <button
-                                type="button"
-                                onClick={submitTugas}
-                                disabled={processing}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 shadow-xs"
-                            >
-                                {processing
-                                    ? uploadProgress > 0
-                                        ? `Mengupload ${uploadProgress}%`
-                                        : 'Mengupload...'
-                                    : tugas.status === 'tersedia'
-                                    ? `Kumpulkan (${selectedFiles.length} File)`
-                                    : `Kirim Revisi (${selectedFiles.length} File)`}
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Selected files preview */}
-                    {selectedFiles.length > 0 && (
-                        <div className="space-y-1.5 pt-1">
-                            <div className="text-[11px] font-semibold text-slate-600">
-                                File terpilih ({selectedFiles.length} file &middot; {formatBytes(totalSelectedSize)}):
-                            </div>
-                            <div className="max-h-36 overflow-y-auto divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
-                                {selectedFiles.map((file, idx) => {
-                                    const ext = file.name.split('.').pop()?.toUpperCase() || 'FILE';
-                                    return (
-                                        <div
-                                            key={`${file.name}-${idx}`}
-                                            className="flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs"
-                                        >
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-600 uppercase">
-                                                    {ext}
-                                                </span>
-                                                <span className="truncate max-w-[220px] font-medium text-slate-700">
-                                                    {file.name}
-                                                </span>
-                                                <span className="text-[10px] text-slate-400">
-                                                    ({formatBytes(file.size)})
-                                                </span>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => removeFile(idx)}
-                                                className="rounded p-1 text-slate-400 hover:text-red-500"
-                                                title="Hapus"
-                                            >
-                                                <X className="h-3.5 w-3.5" />
-                                            </button>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {errors.files && (
-                        <div className="flex items-center gap-1.5 text-xs text-red-500">
-                            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                            <span>{errors.files}</span>
-                        </div>
-                    )}
+                <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                    <p className="text-xs text-slate-400">
+                        PSD, AI, EPS, SVG, PNG, JPG, PDF, ZIP (Maks. 250MB/file)
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() =>
+                            onOpenUpload({
+                                id: tugas.id,
+                                judul: tugas.judul,
+                                deskripsi: tugas.deskripsi,
+                                materi: materiJudul,
+                                bobot: tugas.bobot,
+                                max_revisi: tugas.max_revisi,
+                                revisi_ke: tugas.revisi_ke,
+                                status: tugas.status,
+                                files: tugas.files,
+                            })
+                        }
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-blue-700"
+                    >
+                        <UploadCloud className="h-3.5 w-3.5" />
+                        {tugas.status === 'tersedia' ? 'Upload Tugas' : 'Upload Revisi'}
+                    </button>
                 </div>
             )}
         </div>
@@ -465,6 +349,56 @@ export default function MateriSiswaDetail({
     const [startQuiz, setStartQuiz] = useState(false);
     const [confirmRetake, setConfirmRetake] = useState(false);
     const [liveSession, setLiveSession] = useState(materi.live_session ?? null);
+    const [uploadTarget, setUploadTarget] = useState<TargetTugas | null>(null);
+    const [showScrollHint, setShowScrollHint] = useState(false);
+
+    const hasResources = Boolean(
+        materi.pdf_file ||
+        materi.drive_link ||
+        (materi.folders?.length ?? 0) > 0 ||
+        (materi.files?.length ?? 0) > 0
+    );
+    const hasTugas = (materi.tugas?.length ?? 0) > 0;
+
+    useEffect(() => {
+        if (!hasResources && !hasTugas) return;
+
+        // Show scroll hint if target sections exist and are not already in viewport
+        const checkVisibility = () => {
+            const filesEl = document.getElementById('files-section');
+            const tugasEl = document.getElementById('penugasan-section');
+
+            const isVisible = (el: HTMLElement | null) => {
+                if (!el) return false;
+                const rect = el.getBoundingClientRect();
+                return rect.top < window.innerHeight && rect.bottom > 0;
+            };
+
+            const eitherVisible = isVisible(filesEl) || isVisible(tugasEl);
+            // If already scrolled down past the sections or they are in viewport, hide hint
+            if (eitherVisible || window.scrollY > 1200) {
+                setShowScrollHint(false);
+            } else {
+                setShowScrollHint(true);
+            }
+        };
+
+        const timer = setTimeout(checkVisibility, 350);
+        window.addEventListener('scroll', checkVisibility, { passive: true });
+
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('scroll', checkVisibility);
+        };
+    }, [hasResources, hasTugas]);
+
+    const scrollToSection = (id: string) => {
+        setShowScrollHint(false);
+        const el = document.getElementById(id);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
 
     useEffect(() => {
         if (window.location.hash) {
@@ -716,7 +650,7 @@ export default function MateriSiswaDetail({
                         materi.drive_link ||
                         (materi.folders?.length ?? 0) > 0 ||
                         (materi.files?.length ?? 0) > 0) && (
-                        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                        <div id="files-section" className="overflow-hidden rounded-xl border border-slate-200 bg-white scroll-mt-24">
                             <div className="border-b border-slate-100 px-5 py-3">
                                 <div className="flex items-center gap-2">
                                     <FileText className="h-4 w-4 text-slate-500" />
@@ -1064,7 +998,12 @@ export default function MateriSiswaDetail({
                             </div>
                             <div className="space-y-3 p-4">
                                 {materi.tugas.map((tugas) => (
-                                    <TugasCard key={tugas.id} tugas={tugas} />
+                                    <TugasCard
+                                        key={tugas.id}
+                                        tugas={tugas}
+                                        materiJudul={materi.judul}
+                                        onOpenUpload={(target) => setUploadTarget(target)}
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -1079,6 +1018,54 @@ export default function MateriSiswaDetail({
                     <MateriForumChat materiId={materi.id} discussions={materi.discussions ?? []} />
                 </div>
             </div>
+
+            {/* Quick Navigation / Scroll Hint to Files & Tasks */}
+            {showScrollHint && (hasResources || hasTugas) && (
+                <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 rounded-full border border-slate-200/90 bg-white/95 px-3.5 py-2 shadow-lg backdrop-blur-md transition-all animate-bounce hover:animate-none">
+                    <span className="text-xs font-semibold text-slate-700 hidden sm:inline">
+                        Bagian Materi:
+                    </span>
+                    {hasResources && (
+                        <button
+                            type="button"
+                            onClick={() => scrollToSection('files-section')}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        >
+                            <FileText className="h-3.5 w-3.5 text-blue-600" />
+                            File & Link
+                            <ChevronDown className="h-3 w-3" />
+                        </button>
+                    )}
+                    {hasTugas && (
+                        <button
+                            type="button"
+                            onClick={() => scrollToSection('penugasan-section')}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100 transition-colors"
+                        >
+                            <Clock className="h-3.5 w-3.5 text-blue-600" />
+                            Penugasan
+                            <ChevronDown className="h-3 w-3" />
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => setShowScrollHint(false)}
+                        className="ml-1 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                        title="Tutup petunjuk"
+                    >
+                        <span className="sr-only">Tutup</span>
+                        &times;
+                    </button>
+                </div>
+            )}
+
+            {/* Upload Modal (Multiple File Support like Google Drive & Assessment page) */}
+            <UploadTugasModal
+                target={uploadTarget}
+                open={uploadTarget !== null}
+                onClose={() => setUploadTarget(null)}
+                onSuccessCallback={() => router.reload({ only: ['materi', 'flash'] })}
+            />
         </>
     );
 }
