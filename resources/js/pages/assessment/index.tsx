@@ -10,6 +10,7 @@ import {
     XCircle,
     Paperclip,
     Download,
+    FileText,
 } from 'lucide-react';
 import UploadTugasModal, { type TargetTugas, type SubmissionFile } from '@/components/assessment/upload-tugas-modal';
 
