@@ -73,6 +73,7 @@ type StudentMatrixItem = {
     created_at: string;
     pertemuan_scores: Record<number, PertemuanScore>;
     rata_rata: number;
+    predikat?: string;
 };
 
 type KelasItem = {
@@ -280,7 +281,7 @@ export default function MateriPenilaian({
                             className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 shadow-sm shrink-0"
                         >
                             <FileSpreadsheet className="h-4 w-4" />
-                            Tarik / Export Excel (CSV)
+                            Tarik / Export Excel (.xls)
                         </Button>
                     </div>
 
@@ -567,17 +568,22 @@ export default function MateriPenilaian({
                                                 })}
 
                                                 <td className="px-4 py-3 text-center bg-emerald-50/40">
-                                                    <span
-                                                        className={`inline-block rounded-lg px-2.5 py-1 text-xs font-black ${
-                                                            s.rata_rata >= 70
-                                                                ? 'bg-emerald-600 text-white'
-                                                                : s.rata_rata > 0
-                                                                ? 'bg-amber-600 text-white'
-                                                                : 'bg-slate-200 text-slate-500'
-                                                        }`}
-                                                    >
-                                                        {s.rata_rata}
-                                                    </span>
+                                                    <div className="flex flex-col items-center justify-center">
+                                                        <span
+                                                            className={`inline-block rounded-lg px-2.5 py-1 text-xs font-black ${
+                                                                s.rata_rata >= 70
+                                                                    ? 'bg-emerald-600 text-white'
+                                                                    : s.rata_rata > 0
+                                                                    ? 'bg-amber-600 text-white'
+                                                                    : 'bg-slate-200 text-slate-500'
+                                                            }`}
+                                                        >
+                                                            {s.rata_rata}
+                                                        </span>
+                                                        <span className="mt-1 text-[11px] font-bold text-slate-600">
+                                                            ({s.predikat ?? (s.rata_rata >= 75 ? 'A' : 'B')})
+                                                        </span>
+                                                    </div>
                                                 </td>
                                                 <td className="px-3 py-3 text-center">
                                                     <div className="flex items-center justify-center gap-1">
@@ -714,8 +720,11 @@ export default function MateriPenilaian({
                                         <GraduationCap className="h-3.5 w-3.5 text-slate-400" />
                                         Rata-Rata Nilai Akhir:
                                     </span>
-                                    <span className="font-black text-sm text-emerald-600">
+                                    <span className="font-black text-sm text-emerald-600 flex items-center gap-1">
                                         {selectedStudent.rata_rata}
+                                        <span className="text-xs font-bold text-slate-600">
+                                            ({selectedStudent.predikat ?? (selectedStudent.rata_rata >= 75 ? 'A' : 'B')})
+                                        </span>
                                     </span>
                                 </div>
                             </div>

@@ -1469,6 +1469,11 @@ class MateriController extends Controller
         return 'tidak aktif';
     }
 
+    private function calculatePredikatNilai(float $nilai): string
+    {
+        return $nilai >= 75 ? 'A' : 'B';
+    }
+
     public function penilaianIndex(Request $request)
     {
         $pertemuanList = Pertemuan::with(['roadmap', 'materi.quiz', 'materi.tugas', 'materi.linkedMateri.quiz', 'materi.linkedMateri.tugas'])
@@ -1481,14 +1486,21 @@ class MateriController extends Controller
         // Calculate available assessment counts across meetings
         $totalQuizzesAvailable = 0;
         $totalTugasAvailable = 0;
+        $totalPertemuanWithAssessment = 0;
         foreach ($pertemuanList as $p) {
             $materiList = $p->materi;
             $srcMateri = $materiList->map(fn ($m) => $m->source());
-            if ($srcMateri->flatMap(fn ($m) => $m->quiz)->isNotEmpty()) {
+            $hasQuiz = $srcMateri->flatMap(fn ($m) => $m->quiz)->isNotEmpty();
+            $hasTugas = $srcMateri->flatMap(fn ($m) => $m->tugas)->isNotEmpty();
+
+            if ($hasQuiz) {
                 $totalQuizzesAvailable++;
             }
-            if ($srcMateri->flatMap(fn ($m) => $m->tugas)->isNotEmpty()) {
+            if ($hasTugas) {
                 $totalTugasAvailable++;
+            }
+            if ($hasQuiz || $hasTugas) {
+                $totalPertemuanWithAssessment++;
             }
         }
         $totalAssessmentsAvailable = $totalQuizzesAvailable + $totalTugasAvailable;
@@ -1538,7 +1550,7 @@ class MateriController extends Controller
             return sprintf('%02d-%s-%s', $tingkatNum, $jurusan, $siswa->name);
         })->values();
 
-        $matrix = $students->map(function ($siswa) use ($pertemuanList, $totalAssessmentsAvailable, $totalQuizzesAvailable, $totalTugasAvailable) {
+        $matrix = $students->map(function ($siswa) use ($pertemuanList, $totalAssessmentsAvailable, $totalQuizzesAvailable, $totalTugasAvailable, $totalPertemuanWithAssessment) {
             $kelasObj = $siswa->kelas()
                 ->whereNull('siswa_kelas.tanggal_keluar')
                 ->first() ?? $siswa->kelas()->latest('siswa_kelas.tanggal_masuk')->first();
@@ -1621,7 +1633,10 @@ class MateriController extends Controller
                 ];
             }
 
-            $overallAvg = $countEvaluated > 0 ? round($totalScoreSum / $countEvaluated, 2) : 0;
+            $overallAvg = $totalPertemuanWithAssessment > 0
+                ? round($totalScoreSum / $totalPertemuanWithAssessment, 2)
+                : ($countEvaluated > 0 ? round($totalScoreSum / $countEvaluated, 2) : 0);
+            $predikat = $this->calculatePredikatNilai($overallAvg);
             $totalDone = $quizzesDoneCount + $tugasDoneCount;
             $statusKeaktifan = $this->calculateKeaktifan($totalAssessmentsAvailable, $totalDone);
 
@@ -1643,6 +1658,7 @@ class MateriController extends Controller
                 'created_at' => $siswa->created_at ? $siswa->created_at->format('d M Y H:i') : '-',
                 'pertemuan_scores' => $pertemuanScores,
                 'rata_rata' => $overallAvg,
+                'predikat' => $predikat,
             ];
         });
 
@@ -1707,14 +1723,21 @@ class MateriController extends Controller
         // Calculate available assessment counts across meetings
         $totalQuizzesAvailable = 0;
         $totalTugasAvailable = 0;
+        $totalPertemuanWithAssessment = 0;
         foreach ($pertemuanList as $p) {
             $materiList = $p->materi;
             $srcMateri = $materiList->map(fn ($m) => $m->source());
-            if ($srcMateri->flatMap(fn ($m) => $m->quiz)->isNotEmpty()) {
+            $hasQuiz = $srcMateri->flatMap(fn ($m) => $m->quiz)->isNotEmpty();
+            $hasTugas = $srcMateri->flatMap(fn ($m) => $m->tugas)->isNotEmpty();
+
+            if ($hasQuiz) {
                 $totalQuizzesAvailable++;
             }
-            if ($srcMateri->flatMap(fn ($m) => $m->tugas)->isNotEmpty()) {
+            if ($hasTugas) {
                 $totalTugasAvailable++;
+            }
+            if ($hasQuiz || $hasTugas) {
+                $totalPertemuanWithAssessment++;
             }
         }
         $totalAssessmentsAvailable = $totalQuizzesAvailable + $totalTugasAvailable;
@@ -1764,21 +1787,49 @@ class MateriController extends Controller
             return sprintf('%02d-%s-%s', $tingkatNum, $jurusan, $siswa->name);
         })->values();
 
-        $filename = 'rekap_penilaian_siswa_'.date('Y-m-d_H-i-s').'.csv';
+        $filename = 'rekap_penilaian_siswa_'.date('Y-m-d_H-i-s').'.xls';
 
         $headers = [
-            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Type' => 'application/vnd.ms-excel; charset=utf-8',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
         ];
 
-        $callback = function () use ($students, $pertemuanList, $totalAssessmentsAvailable) {
-            $file = fopen('php://output', 'w');
+        $callback = function () use ($students, $pertemuanList, $totalAssessmentsAvailable, $totalPertemuanWithAssessment) {
+            $output = fopen('php://output', 'w');
 
-            fwrite($file, "\xEF\xBB\xBF");
-
-            $columns = ['no', 'nama', 'kelas', 'status keaktifan', 'nilai U'];
-
-            fputcsv($file, $columns);
+            // Excel XML/HTML format that opens cleanly and professionally formatted in MS Excel, Sheets, etc.
+            fwrite($output, "<html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns=\"http://www.w3.org/TR/REC-html40\">\r\n");
+            fwrite($output, "<head>\r\n");
+            fwrite($output, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\r\n");
+            fwrite($output, "<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Rekap Penilaian</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->\r\n");
+            fwrite($output, "<style>\r\n");
+            fwrite($output, "  table { border-collapse: collapse; font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-size: 11pt; }\r\n");
+            fwrite($output, "  th { background-color: #1E293B; color: #FFFFFF; font-weight: bold; text-align: center; border: 1px solid #CBD5E1; padding: 10px 14px; }\r\n");
+            fwrite($output, "  td { border: 1px solid #CBD5E1; padding: 8px 12px; vertical-align: middle; }\r\n");
+            fwrite($output, "  .text-center { text-align: center; }\r\n");
+            fwrite($output, "  .text-left { text-align: left; }\r\n");
+            fwrite($output, "  .text-right { text-align: right; }\r\n");
+            fwrite($output, "  .num-format { mso-number-format: '0\\.00'; text-align: right; font-weight: bold; }\r\n");
+            fwrite($output, "  .text-format { mso-number-format: '\\@'; }\r\n");
+            fwrite($output, "  .status-aktif { color: #166534; font-weight: bold; text-transform: capitalize; text-align: center; }\r\n");
+            fwrite($output, "  .status-kurang { color: #B45309; font-weight: bold; text-transform: capitalize; text-align: center; }\r\n");
+            fwrite($output, "  .status-tidak { color: #991B1B; font-weight: bold; text-transform: capitalize; text-align: center; }\r\n");
+            fwrite($output, "</style>\r\n");
+            fwrite($output, "</head>\r\n");
+            fwrite($output, "<body>\r\n");
+            fwrite($output, "<table border=\"1\">\r\n");
+            fwrite($output, "  <thead>\r\n");
+            fwrite($output, "    <tr>\r\n");
+            fwrite($output, "      <th style=\"width: 50px;\">no</th>\r\n");
+            fwrite($output, "      <th style=\"width: 250px;\">nama</th>\r\n");
+            fwrite($output, "      <th style=\"width: 140px;\">kelas</th>\r\n");
+            fwrite($output, "      <th style=\"width: 160px;\">status keaktifan</th>\r\n");
+            fwrite($output, "      <th style=\"width: 100px;\">nilai U</th>\r\n");
+            fwrite($output, "    </tr>\r\n");
+            fwrite($output, "  </thead>\r\n");
+            fwrite($output, "  <tbody>\r\n");
 
             $no = 1;
             foreach ($students as $siswa) {
@@ -1850,22 +1901,34 @@ class MateriController extends Controller
                     }
                 }
 
-                $nilaiU = $countEvaluated > 0 ? round($totalScoreSum / $countEvaluated, 2) : 0;
+                $nilaiU = $totalPertemuanWithAssessment > 0
+                    ? round($totalScoreSum / $totalPertemuanWithAssessment, 2)
+                    : ($countEvaluated > 0 ? round($totalScoreSum / $countEvaluated, 2) : 0);
+                $predikat = $this->calculatePredikatNilai($nilaiU);
                 $totalDone = $quizzesDoneCount + $tugasDoneCount;
                 $statusKeaktifan = $this->calculateKeaktifan($totalAssessmentsAvailable, $totalDone);
 
-                $row = [
-                    $no++,
-                    $siswa->name,
-                    $formattedKelas,
-                    $statusKeaktifan,
-                    $nilaiU,
-                ];
+                $statusClass = match ($statusKeaktifan) {
+                    'aktif' => 'status-aktif',
+                    'kurang aktif' => 'status-kurang',
+                    default => 'status-tidak',
+                };
 
-                fputcsv($file, $row);
+                fwrite($output, "    <tr>\r\n");
+                fwrite($output, '      <td class="text-center">'.htmlspecialchars((string) $no++)."</td>\r\n");
+                fwrite($output, '      <td class="text-left">'.htmlspecialchars($siswa->name)."</td>\r\n");
+                fwrite($output, '      <td class="text-center text-format">'.htmlspecialchars($formattedKelas)."</td>\r\n");
+                fwrite($output, '      <td class="'.$statusClass.'">'.htmlspecialchars($statusKeaktifan)."</td>\r\n");
+                fwrite($output, '      <td class="num-format">'.number_format($nilaiU, 2, '.', '')."<br/><span style=\"font-size:9pt;font-weight:normal;color:#475569;\">(".$predikat.")</span></td>\r\n");
+                fwrite($output, "    </tr>\r\n");
             }
 
-            fclose($file);
+            fwrite($output, "  </tbody>\r\n");
+            fwrite($output, "</table>\r\n");
+            fwrite($output, "</body>\r\n");
+            fwrite($output, "</html>\r\n");
+
+            fclose($output);
         };
 
         return response()->stream($callback, 200, $headers);
