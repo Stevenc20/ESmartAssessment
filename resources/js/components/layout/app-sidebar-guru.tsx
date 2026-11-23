@@ -7,6 +7,7 @@ import {
     GraduationCap,
     LayoutGrid,
     Megaphone,
+    Users,
     UserX,
 } from 'lucide-react';
 import AppLogo from '@/components/layout/app-logo';
@@ -32,6 +33,7 @@ export function AppSidebarGuru() {
         { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
         { title: 'Pengumuman', href: '/pengumuman', icon: Megaphone, badge: unreadCounts.pengumuman },
         { title: 'Pertemuan', href: '/pertemuan', icon: Calendar },
+        { title: 'Data Siswa', href: '/guru/siswa', icon: Users },
         { title: 'Laporan Absensi', href: '/laporan/absensi', icon: BarChart3 },
         { title: 'Materi Pembelajaran', href: '/materi', icon: BookOpen },
         { title: 'Rekap Penilaian Siswa', href: '/penilaian-materi', icon: FileSpreadsheet },
