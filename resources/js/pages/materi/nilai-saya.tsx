@@ -31,6 +31,7 @@ type PertemuanProgressItem = {
 type Props = {
     stats: {
         overall_avg: number;
+        grade?: string;
         total_pertemuan: number;
         completed_quizzes: number;
         submitted_tasks: number;
@@ -74,8 +75,15 @@ export default function NilaiSaya({ stats, pertemuanProgress }: Props) {
                                 <Trophy className="h-4 w-4 text-emerald-600" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-black text-emerald-600">
-                                    {stats.overall_avg}
+                                <div className="flex items-baseline gap-2">
+                                    <div className="text-2xl font-black text-emerald-600">
+                                        {stats.overall_avg}
+                                    </div>
+                                    {stats.grade && (
+                                        <span className="text-xs font-bold text-slate-500">
+                                            ({stats.grade})
+                                        </span>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

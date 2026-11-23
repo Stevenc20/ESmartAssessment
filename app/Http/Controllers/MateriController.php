@@ -1946,6 +1946,27 @@ class MateriController extends Controller
 
         $absensiRecords = Absensi::where('siswa_id', $siswaId)->get()->keyBy('pertemuan_id');
 
+        $totalQuizzesAvailable = 0;
+        $totalTugasAvailable = 0;
+        $totalPertemuanWithAssessment = 0;
+
+        foreach ($pertemuanList as $p) {
+            $materiList = $p->materi;
+            $srcMateri = $materiList->map(fn ($m) => $m->source());
+            $hasQuiz = $srcMateri->flatMap(fn ($m) => $m->quiz)->isNotEmpty();
+            $hasTugas = $srcMateri->flatMap(fn ($m) => $m->tugas)->isNotEmpty();
+
+            if ($hasQuiz) {
+                $totalQuizzesAvailable++;
+            }
+            if ($hasTugas) {
+                $totalTugasAvailable++;
+            }
+            if ($hasQuiz || $hasTugas) {
+                $totalPertemuanWithAssessment++;
+            }
+        }
+
         $pertemuanProgress = [];
         $totalScoreSum = 0;
         $countEvaluated = 0;
@@ -2017,11 +2038,15 @@ class MateriController extends Controller
             ];
         }
 
-        $overallAvg = $countEvaluated > 0 ? round($totalScoreSum / $countEvaluated, 2) : 0;
+        $overallAvg = $totalPertemuanWithAssessment > 0
+            ? round($totalScoreSum / $totalPertemuanWithAssessment, 2)
+            : ($countEvaluated > 0 ? round($totalScoreSum / $countEvaluated, 2) : 0);
+        $predikat = $this->calculatePredikatNilai($overallAvg);
 
         return Inertia::render('materi/nilai-saya', [
             'stats' => [
                 'overall_avg' => $overallAvg,
+                'grade' => $predikat,
                 'total_pertemuan' => $pertemuanList->count(),
                 'completed_quizzes' => $completedQuizzesCount,
                 'submitted_tasks' => $submittedTasksCount,

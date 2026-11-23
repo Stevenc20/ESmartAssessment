@@ -179,19 +179,23 @@ class DashboardController extends Controller
             }
 
             $badgeStats = app(\App\Services\BadgeService::class)->getStudentStats($user);
-            $rataNilai = $badgeStats['assessment_avg_score'] > 0 ? $badgeStats['assessment_avg_score'] : null;
-            $assessmentSelesai = $badgeStats['materi_count'];
+            $scoreData = app(\App\Services\PenilaianScoreService::class)->calculateStudentScore($user);
+            $rataNilai = $scoreData['overall_avg'];
+            $assessmentSelesai = $scoreData['total_done'];
 
             $badgeCount = StudentBadge::where('siswa_id', $siswaId)->count();
 
             $totalPoints = (int) StudentPoint::where('siswa_id', $siswaId)->sum('point');
 
-            $rataRataSemua = PengumpulanTugas::whereHas('penilaian')
-                ->with('penilaian')
-                ->get()
-                ->groupBy('siswa_id')
-                ->map(fn ($items) => round($items->avg(fn ($p) => $p->penilaian->nilai), 2))
-                ->sortDesc();
+            $allStudents = User::whereHas('role', function ($q) {
+                $q->where('role_name', 'siswa');
+            })->where('status', 'active')->get();
+
+            $scoreService = app(\App\Services\PenilaianScoreService::class);
+            $rataRataSemua = $allStudents->mapWithKeys(function ($s) use ($scoreService) {
+                $sc = $scoreService->calculateStudentScore($s);
+                return [$s->id => $sc['overall_avg']];
+            })->sortDesc();
 
             $ranking = null;
             $totalSiswaRanked = 0;
@@ -270,9 +274,7 @@ class DashboardController extends Controller
                 ->values()
                 ->map(fn ($item) => collect($item)->except('sort_time')->toArray());
 
-            $grade = $rataNilai !== null
-                ? ($rataNilai >= 90 ? 'A' : ($rataNilai >= 80 ? 'B' : ($rataNilai >= 70 ? 'C' : ($rataNilai >= 60 ? 'D' : 'E'))))
-                : null;
+            $grade = $scoreData['grade'];
 
             $studentDashboard = [
                 'assessmentSelesai' => $assessmentSelesai,
