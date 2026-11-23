@@ -1516,7 +1516,27 @@ class MateriController extends Controller
             });
         }
 
-        $students = $query->get();
+        $students = $query->get()->sortBy(function ($siswa) {
+            $kelasObj = $siswa->kelas()
+                ->whereNull('siswa_kelas.tanggal_keluar')
+                ->first() ?? $siswa->kelas()->latest('siswa_kelas.tanggal_masuk')->first();
+
+            $tingkatRaw = (string) ($kelasObj?->tingkat ?? $siswa->kelas ?? '99');
+            $tingkatNum = 99;
+            if ($tingkatRaw === '10' || strtoupper($tingkatRaw) === 'X') {
+                $tingkatNum = 10;
+            } elseif ($tingkatRaw === '11' || strtoupper($tingkatRaw) === 'XI') {
+                $tingkatNum = 11;
+            } elseif ($tingkatRaw === '12' || strtoupper($tingkatRaw) === 'XII') {
+                $tingkatNum = 12;
+            } elseif (is_numeric($tingkatRaw)) {
+                $tingkatNum = (int) $tingkatRaw;
+            }
+
+            $jurusan = (string) ($siswa->jurusan ?? '');
+
+            return sprintf('%02d-%s-%s', $tingkatNum, $jurusan, $siswa->name);
+        })->values();
 
         $matrix = $students->map(function ($siswa) use ($pertemuanList, $totalAssessmentsAvailable, $totalQuizzesAvailable, $totalTugasAvailable) {
             $kelasObj = $siswa->kelas()
@@ -1722,7 +1742,27 @@ class MateriController extends Controller
             });
         }
 
-        $students = $query->get();
+        $students = $query->get()->sortBy(function ($siswa) {
+            $kelasObj = $siswa->kelas()
+                ->whereNull('siswa_kelas.tanggal_keluar')
+                ->first() ?? $siswa->kelas()->latest('siswa_kelas.tanggal_masuk')->first();
+
+            $tingkatRaw = (string) ($kelasObj?->tingkat ?? $siswa->kelas ?? '99');
+            $tingkatNum = 99;
+            if ($tingkatRaw === '10' || strtoupper($tingkatRaw) === 'X') {
+                $tingkatNum = 10;
+            } elseif ($tingkatRaw === '11' || strtoupper($tingkatRaw) === 'XI') {
+                $tingkatNum = 11;
+            } elseif ($tingkatRaw === '12' || strtoupper($tingkatRaw) === 'XII') {
+                $tingkatNum = 12;
+            } elseif (is_numeric($tingkatRaw)) {
+                $tingkatNum = (int) $tingkatRaw;
+            }
+
+            $jurusan = (string) ($siswa->jurusan ?? '');
+
+            return sprintf('%02d-%s-%s', $tingkatNum, $jurusan, $siswa->name);
+        })->values();
 
         $filename = 'rekap_penilaian_siswa_'.date('Y-m-d_H-i-s').'.csv';
 

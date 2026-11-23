@@ -112,7 +112,7 @@ test('guru dapat melihat kolom status keaktifan pada rekap penilaian', function 
     expect($student2Data['kelas_formatted'])->toBe('XI-DKV-1');
 });
 
-test('guru dapat mengekspor rekap penilaian dengan format excel kolom yang diminta', function () {
+test('guru dapat mengekspor rekap penilaian dengan format excel kolom yang diminta dan urut dari kelas 10 lalu 11', function () {
     $guruRole = Role::firstOrCreate(['role_name' => 'guru']);
     $siswaRole = Role::firstOrCreate(['role_name' => 'siswa']);
     $ta = TahunAjaran::firstOrCreate(['tahun' => '2026/2027'], ['status' => 'active']);
@@ -123,15 +123,27 @@ test('guru dapat mengekspor rekap penilaian dengan format excel kolom yang dimin
     ]);
 
     $kelas11 = Kelas::create(['nama_kelas' => 'Ascend 11 DKV 2', 'tingkat' => '11', 'tahun_ajaran_id' => $ta->id]);
+    $kelas10 = Kelas::create(['nama_kelas' => 'Genesis 10 RPL', 'tingkat' => '10', 'tahun_ajaran_id' => $ta->id]);
 
-    $siswa = User::factory()->create([
-        'name' => 'Budi Siswa',
+    // Create siswa kelas 11 first in DB
+    $siswa11 = User::factory()->create([
+        'name' => 'Budi Siswa XI',
         'role_id' => $siswaRole->id,
         'kelas' => '11',
         'jurusan' => 'DKV_2',
         'status' => 'active',
     ]);
-    $siswa->kelas()->attach($kelas11->id, ['tanggal_masuk' => now()->toDateString()]);
+    $siswa11->kelas()->attach($kelas11->id, ['tanggal_masuk' => now()->toDateString()]);
+
+    // Create siswa kelas 10 after
+    $siswa10 = User::factory()->create([
+        'name' => 'Andi Siswa X',
+        'role_id' => $siswaRole->id,
+        'kelas' => '10',
+        'jurusan' => 'RPL_PPLG',
+        'status' => 'active',
+    ]);
+    $siswa10->kelas()->attach($kelas10->id, ['tanggal_masuk' => now()->toDateString()]);
 
     $response = $this->actingAs($guru)->get('/penilaian-materi/export');
     $response->assertOk();
@@ -144,6 +156,11 @@ test('guru dapat mengekspor rekap penilaian dengan format excel kolom yang dimin
 
     // Check header row: no, nama, kelas, status keaktifan, nilai U
     expect($content)->toContain('no,nama,kelas,"status keaktifan","nilai U"');
-    expect($content)->toContain('Budi Siswa');
-    expect($content)->toContain('XI-DKV-2');
+    expect($content)->toContain('Andi Siswa X');
+    expect($content)->toContain('Budi Siswa XI');
+
+    // Posisi kelas 10 harus muncul sebelum kelas 11
+    $posX = strpos($content, 'X-RPL/PPLG');
+    $posXI = strpos($content, 'XI-DKV-2');
+    expect($posX)->toBeLessThan($posXI);
 });
