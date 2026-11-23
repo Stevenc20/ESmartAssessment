@@ -1378,6 +1378,97 @@ class MateriController extends Controller
         return response()->json(['url' => Storage::url($path)]);
     }
 
+    private function formatKelasDisplay(?string $tingkat, ?string $jurusan, ?string $namaKelasFallback = null): string
+    {
+        $tingkatStr = trim((string) $tingkat);
+        $jurusanRaw = trim((string) $jurusan);
+
+        // Normalize tingkat to roman numerals
+        $romanTingkat = '';
+        if ($tingkatStr === '10' || strtoupper($tingkatStr) === 'X') {
+            $romanTingkat = 'X';
+        } elseif ($tingkatStr === '11' || strtoupper($tingkatStr) === 'XI') {
+            $romanTingkat = 'XI';
+        } elseif ($tingkatStr === '12' || strtoupper($tingkatStr) === 'XII') {
+            $romanTingkat = 'XII';
+        }
+
+        // If tingkat not found from $tingkat, try parsing from $namaKelasFallback
+        if ($romanTingkat === '' && !empty($namaKelasFallback)) {
+            if (preg_match('/\b(12|XII)\b/i', $namaKelasFallback)) {
+                $romanTingkat = 'XII';
+            } elseif (preg_match('/\b(11|XI)\b/i', $namaKelasFallback)) {
+                $romanTingkat = 'XI';
+            } elseif (preg_match('/\b(10|X)\b/i', $namaKelasFallback)) {
+                $romanTingkat = 'X';
+            }
+        }
+
+        // Normalize jurusan
+        $jurusanFormatted = '';
+        if (!empty($jurusanRaw) && $jurusanRaw !== '-') {
+            $j = strtoupper($jurusanRaw);
+            if (str_contains($j, 'DKV_1') || str_contains($j, 'DKV 1') || str_contains($j, 'DKV-1')) {
+                $jurusanFormatted = 'DKV-1';
+            } elseif (str_contains($j, 'DKV_2') || str_contains($j, 'DKV 2') || str_contains($j, 'DKV-2')) {
+                $jurusanFormatted = 'DKV-2';
+            } elseif (str_contains($j, 'RPL') || str_contains($j, 'PPLG')) {
+                $jurusanFormatted = 'RPL/PPLG';
+            } elseif (str_contains($j, 'AKL')) {
+                $jurusanFormatted = 'AKL';
+            } elseif (str_contains($j, 'MPLB')) {
+                $jurusanFormatted = 'MPLB';
+            } elseif (str_contains($j, 'BISNIS') || str_contains($j, 'RITEL')) {
+                $jurusanFormatted = 'Bisnis Ritel';
+            } else {
+                $jurusanFormatted = $jurusanRaw;
+            }
+        }
+
+        // If jurusan not found, try parsing from $namaKelasFallback
+        if ($jurusanFormatted === '' && !empty($namaKelasFallback)) {
+            $n = strtoupper($namaKelasFallback);
+            if (str_contains($n, 'DKV 1') || str_contains($n, 'DKV-1')) {
+                $jurusanFormatted = 'DKV-1';
+            } elseif (str_contains($n, 'DKV 2') || str_contains($n, 'DKV-2')) {
+                $jurusanFormatted = 'DKV-2';
+            } elseif (str_contains($n, 'RPL') || str_contains($n, 'PPLG')) {
+                $jurusanFormatted = 'RPL/PPLG';
+            } elseif (str_contains($n, 'AKL')) {
+                $jurusanFormatted = 'AKL';
+            } elseif (str_contains($n, 'MPLB')) {
+                $jurusanFormatted = 'MPLB';
+            }
+        }
+
+        if ($romanTingkat !== '' && $jurusanFormatted !== '') {
+            return "{$romanTingkat}-{$jurusanFormatted}";
+        }
+
+        if ($romanTingkat !== '') {
+            return $romanTingkat;
+        }
+
+        return !empty($namaKelasFallback) ? $namaKelasFallback : '-';
+    }
+
+    private function calculateKeaktifan(int $totalAvailable, int $completedCount): string
+    {
+        if ($totalAvailable === 0) {
+            return 'tidak aktif';
+        }
+
+        if ($completedCount >= $totalAvailable) {
+            return 'aktif';
+        }
+
+        if ($completedCount >= ceil($totalAvailable / 2)) {
+            return 'kurang aktif';
+        }
+
+        return 'tidak aktif';
+    }
+
     public function penilaianIndex(Request $request)
     {
         $pertemuanList = Pertemuan::with(['roadmap', 'materi.quiz', 'materi.tugas', 'materi.linkedMateri.quiz', 'materi.linkedMateri.tugas'])
@@ -1386,6 +1477,21 @@ class MateriController extends Controller
                 return sprintf('%04d-%02d-%04d', $p->roadmap->tahun ?? 0, $p->roadmap->bulan ?? 0, $p->urutan);
             })
             ->values();
+
+        // Calculate available assessment counts across meetings
+        $totalQuizzesAvailable = 0;
+        $totalTugasAvailable = 0;
+        foreach ($pertemuanList as $p) {
+            $materiList = $p->materi;
+            $srcMateri = $materiList->map(fn ($m) => $m->source());
+            if ($srcMateri->flatMap(fn ($m) => $m->quiz)->isNotEmpty()) {
+                $totalQuizzesAvailable++;
+            }
+            if ($srcMateri->flatMap(fn ($m) => $m->tugas)->isNotEmpty()) {
+                $totalTugasAvailable++;
+            }
+        }
+        $totalAssessmentsAvailable = $totalQuizzesAvailable + $totalTugasAvailable;
 
         $query = User::whereHas('role', function ($q) {
             $q->where('role_name', 'siswa');
@@ -1412,7 +1518,7 @@ class MateriController extends Controller
 
         $students = $query->get();
 
-        $matrix = $students->map(function ($siswa) use ($pertemuanList) {
+        $matrix = $students->map(function ($siswa) use ($pertemuanList, $totalAssessmentsAvailable, $totalQuizzesAvailable, $totalTugasAvailable) {
             $kelasObj = $siswa->kelas()
                 ->whereNull('siswa_kelas.tanggal_keluar')
                 ->first() ?? $siswa->kelas()->latest('siswa_kelas.tanggal_masuk')->first();
@@ -1423,30 +1529,48 @@ class MateriController extends Controller
             }
 
             $jurusan = $siswa->jurusan ?? '-';
+            $tingkat = $kelasObj?->tingkat ?? $siswa->kelas;
+            $formattedKelas = $this->formatKelasDisplay($tingkat, $jurusan, $namaKelas);
 
             $pertemuanScores = [];
             $totalScoreSum = 0;
             $countEvaluated = 0;
+            $quizzesDoneCount = 0;
+            $tugasDoneCount = 0;
 
             foreach ($pertemuanList as $p) {
                 $materiList = $p->materi;
                 $materiIds = $materiList->pluck('id');
                 $srcMateri = $materiList->map(fn ($m) => $m->source());
 
-                $quizScores = ProgressMateri::where('siswa_id', $siswa->id)
+                $quizProgress = ProgressMateri::where('siswa_id', $siswa->id)
                     ->whereIn('materi_id', $materiIds)
-                    ->whereNotNull('quiz_score')
-                    ->pluck('quiz_score');
+                    ->where(function ($q) {
+                        $q->whereNotNull('quiz_score')
+                            ->orWhere('quiz_attempts', '>', 0);
+                    })
+                    ->get();
 
+                $quizScores = $quizProgress->pluck('quiz_score')->filter(fn ($v) => $v !== null);
                 $maxQuizScore = $quizScores->isNotEmpty() ? round($quizScores->max(), 2) : null;
 
+                $hasQuizInMeeting = $srcMateri->flatMap(fn ($m) => $m->quiz)->isNotEmpty();
+                if ($hasQuizInMeeting && $quizProgress->isNotEmpty()) {
+                    $quizzesDoneCount++;
+                }
+
                 $tugasIds = $srcMateri->flatMap(fn ($m) => $m->tugas)->pluck('id');
-                $tugasNilai = PengumpulanTugas::where('siswa_id', $siswa->id)
+                $pengumpulan = PengumpulanTugas::where('siswa_id', $siswa->id)
                     ->whereIn('tugas_id', $tugasIds)
-                    ->whereHas('penilaian')
-                    ->get()
-                    ->map(fn ($ts) => $ts->penilaian?->nilai)
-                    ->filter(fn ($v) => $v !== null);
+                    ->get();
+
+                if ($tugasIds->isNotEmpty() && $pengumpulan->isNotEmpty()) {
+                    $tugasDoneCount++;
+                }
+
+                $tugasNilai = $pengumpulan
+                    ->filter(fn ($ts) => $ts->penilaian && $ts->penilaian->nilai !== null)
+                    ->map(fn ($ts) => $ts->penilaian->nilai);
 
                 $avgTugasScore = $tugasNilai->isNotEmpty() ? round($tugasNilai->avg(), 2) : null;
 
@@ -1464,7 +1588,6 @@ class MateriController extends Controller
                     $countEvaluated++;
                 }
 
-                $hasQuiz = $srcMateri->flatMap(fn ($m) => $m->quiz)->isNotEmpty();
                 $hasTugas = $tugasIds->isNotEmpty();
 
                 $pertemuanScores[$p->id] = [
@@ -1473,12 +1596,14 @@ class MateriController extends Controller
                     'quiz_score' => $maxQuizScore,
                     'tugas_score' => $avgTugasScore,
                     'combined_score' => $combinedScore,
-                    'has_quiz' => $hasQuiz,
+                    'has_quiz' => $hasQuizInMeeting,
                     'has_tugas' => $hasTugas,
                 ];
             }
 
             $overallAvg = $countEvaluated > 0 ? round($totalScoreSum / $countEvaluated, 2) : 0;
+            $totalDone = $quizzesDoneCount + $tugasDoneCount;
+            $statusKeaktifan = $this->calculateKeaktifan($totalAssessmentsAvailable, $totalDone);
 
             return [
                 'id' => $siswa->id,
@@ -1487,9 +1612,14 @@ class MateriController extends Controller
                 'no_hp' => $siswa->no_hp ?? '-',
                 'foto' => $siswa->foto ? Storage::url($siswa->foto) : null,
                 'kelas' => $namaKelas,
+                'kelas_formatted' => $formattedKelas,
                 'kelas_id' => $kelasId,
                 'jurusan' => $jurusan,
                 'status' => $siswa->status ?? 'active',
+                'status_keaktifan' => $statusKeaktifan,
+                'quizzes_done' => $quizzesDoneCount,
+                'tugas_done' => $tugasDoneCount,
+                'total_assessments_available' => $totalAssessmentsAvailable,
                 'created_at' => $siswa->created_at ? $siswa->created_at->format('d M Y H:i') : '-',
                 'pertemuan_scores' => $pertemuanScores,
                 'rata_rata' => $overallAvg,
@@ -1547,12 +1677,27 @@ class MateriController extends Controller
 
     public function penilaianExport(Request $request)
     {
-        $pertemuanList = Pertemuan::with(['roadmap', 'materi.tugas', 'materi.linkedMateri.tugas'])
+        $pertemuanList = Pertemuan::with(['roadmap', 'materi.quiz', 'materi.tugas', 'materi.linkedMateri.quiz', 'materi.linkedMateri.tugas'])
             ->get()
             ->sortBy(function ($p) {
                 return sprintf('%04d-%02d-%04d', $p->roadmap->tahun ?? 0, $p->roadmap->bulan ?? 0, $p->urutan);
             })
             ->values();
+
+        // Calculate available assessment counts across meetings
+        $totalQuizzesAvailable = 0;
+        $totalTugasAvailable = 0;
+        foreach ($pertemuanList as $p) {
+            $materiList = $p->materi;
+            $srcMateri = $materiList->map(fn ($m) => $m->source());
+            if ($srcMateri->flatMap(fn ($m) => $m->quiz)->isNotEmpty()) {
+                $totalQuizzesAvailable++;
+            }
+            if ($srcMateri->flatMap(fn ($m) => $m->tugas)->isNotEmpty()) {
+                $totalTugasAvailable++;
+            }
+        }
+        $totalAssessmentsAvailable = $totalQuizzesAvailable + $totalTugasAvailable;
 
         $query = User::whereHas('role', function ($q) {
             $q->where('role_name', 'siswa');
@@ -1568,6 +1713,15 @@ class MateriController extends Controller
             });
         }
 
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('jurusan', 'like', "%{$search}%");
+            });
+        }
+
         $students = $query->get();
 
         $filename = 'rekap_penilaian_siswa_'.date('Y-m-d_H-i-s').'.csv';
@@ -1577,86 +1731,96 @@ class MateriController extends Controller
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ];
 
-        $callback = function () use ($students, $pertemuanList) {
+        $callback = function () use ($students, $pertemuanList, $totalAssessmentsAvailable) {
             $file = fopen('php://output', 'w');
 
             fwrite($file, "\xEF\xBB\xBF");
 
-            $columns = ['No', 'Nama Siswa', 'Email', 'No. HP', 'Kelas', 'Jurusan'];
-            foreach ($pertemuanList as $p) {
-                $roadmapStr = $p->roadmap ? $p->roadmap->judul.' ' : '';
-                $columns[] = $roadmapStr . 'P' . $p->urutan . ' (Quiz)';
-                $columns[] = $roadmapStr . 'P' . $p->urutan . ' (Tugas)';
-                $columns[] = $roadmapStr . 'P' . $p->urutan . ' (Akhir)';
-            }
-            $columns[] = 'Rata-Rata Akhir';
+            $columns = ['no', 'nama', 'kelas', 'status keaktifan', 'nilai U'];
 
             fputcsv($file, $columns);
 
             $no = 1;
             foreach ($students as $siswa) {
-                $namaKelas = '-';
-                if (is_string($siswa->kelas) && ! empty($siswa->kelas)) {
+                $kelasObj = $siswa->kelas()
+                    ->whereNull('siswa_kelas.tanggal_keluar')
+                    ->first() ?? $siswa->kelas()->latest('siswa_kelas.tanggal_masuk')->first();
+                $namaKelas = $kelasObj?->nama_kelas;
+                if (! $namaKelas && is_string($siswa->kelas) && ! empty($siswa->kelas)) {
                     $namaKelas = $siswa->kelas;
-                } elseif (method_exists($siswa, 'kelas')) {
-                    $kelasObj = $siswa->kelas()->first();
-                    if ($kelasObj) {
-                        $namaKelas = $kelasObj->nama_kelas;
-                    }
                 }
 
                 $jurusan = $siswa->jurusan ?? '-';
-                $noHp = $siswa->no_hp ?? '-';
+                $tingkat = $kelasObj?->tingkat ?? $siswa->kelas;
+                $formattedKelas = $this->formatKelasDisplay($tingkat, $jurusan, $namaKelas);
 
-                $row = [$no++, $siswa->name, $siswa->email, $noHp, $namaKelas, $jurusan];
                 $totalScoreSum = 0;
                 $countEvaluated = 0;
+                $quizzesDoneCount = 0;
+                $tugasDoneCount = 0;
 
                 foreach ($pertemuanList as $p) {
                     $materiList = $p->materi;
                     $materiIds = $materiList->pluck('id');
                     $srcMateri = $materiList->map(fn ($m) => $m->source());
 
-                    $quizScores = ProgressMateri::where('siswa_id', $siswa->id)
+                    $quizProgress = ProgressMateri::where('siswa_id', $siswa->id)
                         ->whereIn('materi_id', $materiIds)
-                        ->whereNotNull('quiz_score')
-                        ->pluck('quiz_score');
+                        ->where(function ($q) {
+                            $q->whereNotNull('quiz_score')
+                                ->orWhere('quiz_attempts', '>', 0);
+                        })
+                        ->get();
 
-                    $maxQuizScore = $quizScores->isNotEmpty() ? round($quizScores->max(), 2) : '-';
+                    $quizScores = $quizProgress->pluck('quiz_score')->filter(fn ($v) => $v !== null);
+                    $maxQuizScore = $quizScores->isNotEmpty() ? round($quizScores->max(), 2) : null;
+
+                    $hasQuizInMeeting = $srcMateri->flatMap(fn ($m) => $m->quiz)->isNotEmpty();
+                    if ($hasQuizInMeeting && $quizProgress->isNotEmpty()) {
+                        $quizzesDoneCount++;
+                    }
 
                     $tugasIds = $srcMateri->flatMap(fn ($m) => $m->tugas)->pluck('id');
-                    $tugasNilai = PengumpulanTugas::where('siswa_id', $siswa->id)
+                    $pengumpulan = PengumpulanTugas::where('siswa_id', $siswa->id)
                         ->whereIn('tugas_id', $tugasIds)
-                        ->whereHas('penilaian')
-                        ->get()
-                        ->map(fn ($ts) => $ts->penilaian?->nilai)
-                        ->filter(fn ($v) => $v !== null);
+                        ->get();
 
-                    $avgTugasScore = $tugasNilai->isNotEmpty() ? round($tugasNilai->avg(), 2) : '-';
-
-                    $combinedScore = '-';
-                    $numericQuiz = is_numeric($maxQuizScore) ? (float) $maxQuizScore : null;
-                    $numericTugas = is_numeric($avgTugasScore) ? (float) $avgTugasScore : null;
-
-                    if ($numericQuiz !== null && $numericTugas !== null) {
-                        $combinedScore = round(($numericQuiz + $numericTugas) / 2, 2);
-                    } elseif ($numericQuiz !== null) {
-                        $combinedScore = $numericQuiz;
-                    } elseif ($numericTugas !== null) {
-                        $combinedScore = $numericTugas;
+                    if ($tugasIds->isNotEmpty() && $pengumpulan->isNotEmpty()) {
+                        $tugasDoneCount++;
                     }
 
-                    if (is_numeric($combinedScore)) {
-                        $totalScoreSum += (float) $combinedScore;
+                    $tugasNilai = $pengumpulan
+                        ->filter(fn ($ts) => $ts->penilaian && $ts->penilaian->nilai !== null)
+                        ->map(fn ($ts) => $ts->penilaian->nilai);
+
+                    $avgTugasScore = $tugasNilai->isNotEmpty() ? round($tugasNilai->avg(), 2) : null;
+
+                    $combinedScore = null;
+                    if ($maxQuizScore !== null && $avgTugasScore !== null) {
+                        $combinedScore = round(($maxQuizScore + $avgTugasScore) / 2, 2);
+                    } elseif ($maxQuizScore !== null) {
+                        $combinedScore = $maxQuizScore;
+                    } elseif ($avgTugasScore !== null) {
+                        $combinedScore = $avgTugasScore;
+                    }
+
+                    if ($combinedScore !== null) {
+                        $totalScoreSum += $combinedScore;
                         $countEvaluated++;
                     }
-
-                    $row[] = $maxQuizScore;
-                    $row[] = $avgTugasScore;
-                    $row[] = $combinedScore;
                 }
 
-                $row[] = $countEvaluated > 0 ? round($totalScoreSum / $countEvaluated, 2) : '0';
+                $nilaiU = $countEvaluated > 0 ? round($totalScoreSum / $countEvaluated, 2) : 0;
+                $totalDone = $quizzesDoneCount + $tugasDoneCount;
+                $statusKeaktifan = $this->calculateKeaktifan($totalAssessmentsAvailable, $totalDone);
+
+                $row = [
+                    $no++,
+                    $siswa->name,
+                    $formattedKelas,
+                    $statusKeaktifan,
+                    $nilaiU,
+                ];
 
                 fputcsv($file, $row);
             }

@@ -62,9 +62,14 @@ type StudentMatrixItem = {
     no_hp: string;
     foto: string | null;
     kelas: string;
+    kelas_formatted?: string;
     kelas_id?: number | null;
     jurusan: string;
     status: string;
+    status_keaktifan: 'aktif' | 'kurang aktif' | 'tidak aktif';
+    quizzes_done?: number;
+    tugas_done?: number;
+    total_assessments_available?: number;
     created_at: string;
     pertemuan_scores: Record<number, PertemuanScore>;
     rata_rata: number;
@@ -99,6 +104,24 @@ function getRoadmapColor(bulan?: number, tahun?: number) {
     const idx = (tahun * 12 + bulan) % HEADER_COLORS.length;
     return HEADER_COLORS[idx];
 }
+
+const KEAKTIFAN_CONFIG: Record<
+    'aktif' | 'kurang aktif' | 'tidak aktif',
+    { label: string; badge: string }
+> = {
+    aktif: {
+        label: 'Aktif',
+        badge: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    },
+    'kurang aktif': {
+        label: 'Kurang Aktif',
+        badge: 'bg-amber-100 text-amber-800 border-amber-200',
+    },
+    'tidak aktif': {
+        label: 'Tidak Aktif',
+        badge: 'bg-rose-100 text-rose-800 border-rose-200',
+    },
+};
 
 export default function MateriPenilaian({
     pertemuanList,
@@ -376,6 +399,9 @@ export default function MateriPenilaian({
                                         <th className="px-4 py-3.5 font-bold border-r border-slate-200 min-w-[110px]">
                                             Jurusan
                                         </th>
+                                        <th className="px-4 py-3.5 font-bold border-r border-slate-200 min-w-[120px] text-center">
+                                            Status Keaktifan
+                                        </th>
 
                                         {pertemuanList.map((p) => {
                                             const colors = getRoadmapColor(p.roadmap_bulan, p.roadmap_tahun);
@@ -409,7 +435,7 @@ export default function MateriPenilaian({
                                     {students.length === 0 ? (
                                         <tr>
                                             <td
-                                                colSpan={6 + pertemuanList.length}
+                                                colSpan={7 + pertemuanList.length}
                                                 className="px-4 py-8 text-center text-slate-400 italic"
                                             >
                                                 Belum ada data siswa / penilaian
@@ -474,11 +500,24 @@ export default function MateriPenilaian({
                                                 </td>
                                                 <td className="px-4 py-3 border-r border-slate-200 font-semibold text-slate-700">
                                                     <span className="inline-flex rounded bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">
-                                                        {s.kelas}
+                                                        {s.kelas_formatted || s.kelas}
                                                     </span>
                                                 </td>
                                                 <td className="px-4 py-3 border-r border-slate-200 text-slate-600 font-medium">
                                                     {s.jurusan}
+                                                </td>
+                                                <td className="px-3 py-3 border-r border-slate-200 text-center">
+                                                    {(() => {
+                                                        const keaktifan = s.status_keaktifan ?? 'tidak aktif';
+                                                        const cfg = KEAKTIFAN_CONFIG[keaktifan] ?? KEAKTIFAN_CONFIG['tidak aktif'];
+                                                        return (
+                                                            <span
+                                                                className={`inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold capitalize ${cfg.badge}`}
+                                                            >
+                                                                {cfg.label}
+                                                            </span>
+                                                        );
+                                                    })()}
                                                 </td>
 
                                                 {pertemuanList.map((p) => {
@@ -607,10 +646,17 @@ export default function MateriPenilaian({
                                     <p className="text-xs text-slate-500">{selectedStudent.email}</p>
                                     <div className="mt-1 flex items-center gap-2">
                                         <span className="inline-flex rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
-                                            Kelas {selectedStudent.kelas}
+                                            Kelas {selectedStudent.kelas_formatted || selectedStudent.kelas}
                                         </span>
                                         <span className="inline-flex rounded-md bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700">
                                             {selectedStudent.jurusan}
+                                        </span>
+                                        <span
+                                            className={`inline-flex rounded-md border px-2 py-0.5 text-[10px] font-bold capitalize ${
+                                                (KEAKTIFAN_CONFIG[selectedStudent.status_keaktifan] ?? KEAKTIFAN_CONFIG['tidak aktif']).badge
+                                            }`}
+                                        >
+                                            {(KEAKTIFAN_CONFIG[selectedStudent.status_keaktifan] ?? KEAKTIFAN_CONFIG['tidak aktif']).label}
                                         </span>
                                     </div>
                                 </div>
